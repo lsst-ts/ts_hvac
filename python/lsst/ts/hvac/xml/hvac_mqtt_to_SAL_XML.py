@@ -4,8 +4,9 @@
 import csv
 import os
 import re
-from lsst.ts.hvac.hvac_enums import Escape
+from lsst.ts.hvac.xml import topic_converter
 from lxml import etree
+
 
 data_dir = 'data/'
 input_dir = data_dir + 'input/'
@@ -16,7 +17,6 @@ command_filename = output_dir + 'HVAC_Commands.xml'
 XML_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 NSMAP = {'xsi': XML_NAMESPACE}
 attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "noNamespaceSchemaLocation")
-
 telemetry_root = etree.Element("SALTelemetrySet",
                                {attr_qname: "http://lsst-sal.tuc.noao.edu/schema/SALTelemetrySet.xsd"},
                                nsmap=NSMAP)
@@ -31,26 +31,6 @@ command_root\
     .addprevious(etree.ProcessingInstruction('xml-stylesheet',
                                              "type='text/xsl' " +
                                              "href='http://lsst-sal.tuc.noao.edu/schema/SALCommandSet.xsl'"))
-
-
-def prepare_topic_for_xml(topic):
-    """
-    Transform a Topic name string into a string that conforms to the naming conventions for Topic names in ts_xml.
-
-    Parameters
-    ----------
-    topic : `str`
-        The Topic name to transform
-    """
-    for k in Escape:
-        # escape at the start of the line
-        topic = re.sub(rf"^{k.value}", rf"{k.name}_", topic)
-        # escape at the end of the line
-        topic = re.sub(rf"{k.value}$", rf"_{k.name}", topic)
-        # escape the rest
-        topic = re.sub(rf"{k.value}", rf"_{k.name}_", topic)
-    topic = topic.lower()
-    return topic
 
 
 def create_xml():
@@ -70,14 +50,14 @@ def create_xml():
                     sub_system = etree.SubElement(st, "Subsystem")
                     sub_system.text = "HVAC"
                     efdb_topic = etree.SubElement(st, "EFDB_Topic")
-                    efdb_topic.text = "HVAC_" + prepare_topic_for_xml(topic)
+                    efdb_topic.text = "HVAC_" + topic_converter.convert_mqtt_to_xml(topic)
                     while True:
                         if re.match(r"PUBLICACION", row_n[7]) and row9:
                             row8 = re.sub(r'PISO([12345])', r'PISO0\1', row_n[8])
                             it = etree.SubElement(st, "item")
                             efdb_name = etree.SubElement(it, "EFDB_Name")
                             efdb_name.text = re.sub(rf"{topic}/", "", row8)
-                            efdb_name.text = prepare_topic_for_xml(efdb_name.text)
+                            efdb_name.text = topic_converter.convert_mqtt_to_xml(efdb_name.text)
                             description = etree.SubElement(it, "Description")
                             description.text = efdb_name.text
                             idl_type = etree.SubElement(it, "IDL_Type")
@@ -94,7 +74,7 @@ def create_xml():
                     st = etree.SubElement(command_root, "SALCommand")
                     sub_system = etree.SubElement(st, "Subsystem")
                     sub_system.text = "HVAC"
-                    prepared_topic_name = prepare_topic_for_xml(topic)
+                    prepared_topic_name = topic_converter.convert_mqtt_to_xml(topic)
                     efdb_topic = etree.SubElement(st, "EFDB_Topic")
                     efdb_topic.text = "HVAC_command_" + prepared_topic_name
                     alias = etree.SubElement(st, "Alias")
@@ -105,7 +85,7 @@ def create_xml():
                             it = etree.SubElement(st, "item")
                             efdb_name = etree.SubElement(it, "EFDB_Name")
                             efdb_name.text = re.sub(rf"{topic}/", "", row8)
-                            efdb_name.text = prepare_topic_for_xml(efdb_name.text)
+                            efdb_name.text = topic_converter.convert_mqtt_to_xml(efdb_name.text)
                             description = etree.SubElement(it, "Description")
                             description.text = efdb_name.text
                             idl_type = etree.SubElement(it, "IDL_Type")
@@ -126,7 +106,7 @@ def create_xml():
     c = etree.ElementTree(command_root)
     c.write(command_filename, pretty_print=True, xml_declaration=True, encoding='utf-8')
 
-    print(open(command_filename).read())
+    # print(open(command_filename).read())
 
 
 if __name__ == "__main__":

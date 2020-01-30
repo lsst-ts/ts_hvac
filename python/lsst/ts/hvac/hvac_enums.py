@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class Escape(Enum):
-    FWDSL = "/"
-    PERC = "%"
-    DASH = "-"
+    BARRAOBL = "/"
+    PCTO = "%"
+    GUION = "-"
     AMPER = "&"
-    SPACE = " "
+    ESPACIO = " "

@@ -20,15 +20,17 @@ attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "noNamespa
 telemetry_root = etree.Element("SALTelemetrySet",
                                {attr_qname: "http://lsst-sal.tuc.noao.edu/schema/SALTelemetrySet.xsd"},
                                nsmap=NSMAP)
-telemetry_root.addprevious(etree.ProcessingInstruction('xml-stylesheet',
-                                                       "type='text/xsl' \
-                                             href='http://lsst-sal.tuc.noao.edu/schema/SALTelemetrySet.xsl'"))
+telemetry_root\
+    .addprevious(etree.ProcessingInstruction('xml-stylesheet',
+                                             "type='text/xsl' " +
+                                             "href='http://lsst-sal.tuc.noao.edu/schema/SALTelemetrySet.xsl'"))
 command_root = etree.Element("SALCommandSet",
                              {attr_qname: "http://lsst-sal.tuc.noao.edu/schema/SALCommandSet.xsd"},
                              nsmap=NSMAP)
-command_root.addprevious(etree.ProcessingInstruction('xml-stylesheet',
-                                                     "type='text/xsl' \
-                                             href='http://lsst-sal.tuc.noao.edu/schema/SALCommandSet.xsl'"))
+command_root\
+    .addprevious(etree.ProcessingInstruction('xml-stylesheet',
+                                             "type='text/xsl' " +
+                                             "href='http://lsst-sal.tuc.noao.edu/schema/SALCommandSet.xsl'"))
 
 
 def prepare_topic_for_xml(topic):
@@ -92,8 +94,11 @@ def create_xml():
                     st = etree.SubElement(command_root, "SALCommand")
                     sub_system = etree.SubElement(st, "Subsystem")
                     sub_system.text = "HVAC"
+                    prepared_topic_name = prepare_topic_for_xml(topic)
                     efdb_topic = etree.SubElement(st, "EFDB_Topic")
-                    efdb_topic.text = "HVAC_command_" + prepare_topic_for_xml(topic)
+                    efdb_topic.text = "HVAC_command_" + prepared_topic_name
+                    alias = etree.SubElement(st, "Alias")
+                    alias.text = prepared_topic_name
                     while True:
                         if re.match(r"SUSCRIPCION", row_n[7]) and row9:
                             row8 = re.sub(r'PISO([12345])', r'PISO0\1', row_n[8])

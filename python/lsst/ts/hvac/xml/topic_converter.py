@@ -1,5 +1,5 @@
 import re
-from lsst.ts.hvac.hvac_enums import Escape
+from lsst.ts.hvac.hvac_enums import Escape, dictionary
 
 
 def convert_mqtt_to_xml(topic):
@@ -36,7 +36,7 @@ def convert_xml_to_mqtt(xml):
         The Topic name XML string to transform
     """
     # convert camelcase to lower case prepended with an underscore
-    xml = '_' + re.sub(r"([A-Z])", lambda m: m.group(1).lower(), xml)
+    xml = "_" + re.sub(r"([A-Z])", lambda m: m.group(1).lower(), xml)
     # make everything upper case because that is what the MQTT topics should be
     xml = xml.upper()
     # unescape special characters
@@ -50,3 +50,13 @@ def convert_xml_to_mqtt(xml):
     return xml
 
 
+def translate_spanish_to_english(topic):
+    topic = re.sub(r"^LSST/", r"", topic)
+    topic = re.sub(r"_", r" ", topic)
+    topic = re.sub(r"-", r" ", topic)
+    topic = re.sub(r"&", r" and ", topic)
+    topic = re.sub(r"/", r" - ", topic)
+    for key in dictionary.keys():
+        topic = re.sub(rf"{key}", rf"{dictionary[key]} ", topic)
+    topic = re.sub(r"  ", r" ", topic)
+    return topic.strip()

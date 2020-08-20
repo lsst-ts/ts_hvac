@@ -64,7 +64,6 @@ def collect_telemetry_topics_and_items(row):
     global telemetry_topics
     topic_found = False
     topic = row[8]
-    st = None
     for hvac_topic in HvacTopic:
         if hvac_topic.value in topic:
             # Treat topic "LSST/PISO1/TEMPERATURA_AMBIENTE" differently until
@@ -124,6 +123,12 @@ def collect_command_topics_and_items(row):
         raise ValueError(f"Topic {topic} not found.")
 
 
+def add_timestamp_to_telemetry_topics():
+    global telemetry_topics
+    for telemetry_topic in telemetry_topics:
+        telemetry_topics[telemetry_topic]["timestamp"] = "double"
+
+
 def collect_topics_and_items():
     with open(dat_control_filename) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=";")
@@ -132,6 +137,7 @@ def collect_topics_and_items():
                 collect_telemetry_topics_and_items(row)
             if row[7] == "SUSCRIPCION":
                 collect_command_topics_and_items(row)
+    add_timestamp_to_telemetry_topics()
 
 
 def translate_item(item):
@@ -149,17 +155,30 @@ def create_telemetry_xml():
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
         efdb_topic.text = "HVAC_" + telemetry_topic
         for telemetry_item in telemetry_topics[telemetry_topic]:
-            it = etree.SubElement(st, "item")
-            efdb_name = etree.SubElement(it, "EFDB_Name")
-            efdb_name.text = telemetry_item
-            description = etree.SubElement(it, "Description")
-            description.text = translate_item(telemetry_item)
-            idl_type = etree.SubElement(it, "IDL_Type")
-            idl_type.text = telemetry_topics[telemetry_topic][telemetry_item]
-            units = etree.SubElement(it, "Units")
-            units.text = "unitless"
-            count = etree.SubElement(it, "Count")
-            count.text = "1"
+            if telemetry_item == "timestamp":
+                it = etree.SubElement(st, "item")
+                efdb_name = etree.SubElement(it, "EFDB_Name")
+                efdb_name.text = telemetry_item
+                description = etree.SubElement(it, "Description")
+                description.text = "Time at which the data was determined (TAI unix seconds)."
+                idl_type = etree.SubElement(it, "IDL_Type")
+                idl_type.text = telemetry_topics[telemetry_topic][telemetry_item]
+                units = etree.SubElement(it, "Units")
+                units.text = "second"
+                count = etree.SubElement(it, "Count")
+                count.text = "1"
+            else:
+                it = etree.SubElement(st, "item")
+                efdb_name = etree.SubElement(it, "EFDB_Name")
+                efdb_name.text = telemetry_item
+                description = etree.SubElement(it, "Description")
+                description.text = translate_item(telemetry_item)
+                idl_type = etree.SubElement(it, "IDL_Type")
+                idl_type.text = telemetry_topics[telemetry_topic][telemetry_item]
+                units = etree.SubElement(it, "Units")
+                units.text = "unitless"
+                count = etree.SubElement(it, "Count")
+                count.text = "1"
     t = etree.ElementTree(telemetry_root)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

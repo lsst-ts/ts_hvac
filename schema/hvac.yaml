@@ -1,5 +1,5 @@
 $schema: http://json-schema.org/draft-07/schema#
-$id: https://github.com/lsst-ts/ts_ess/blob/master/schema/ess.yaml
+$id: https://github.com/lsst-ts/ts_ess/blob/master/schema/hvac.yaml
 # title must end with one or more spaces followed by the schema version, which must begin with "v"
 title: HVAC v1
 description: Schema for HVAC configuration files

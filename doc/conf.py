@@ -8,4 +8,4 @@ import lsst.ts.hvac
 
 
 _g = globals()
-_g.update(build_package_configs(project_name="ts_hvac", version=lsst.ts.hvac.version.__version__))
+_g.update(build_package_configs(project_name="ts_hvac", version=lsst.ts.hvac.__version__))

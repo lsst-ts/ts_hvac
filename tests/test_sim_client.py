@@ -42,22 +42,16 @@ class SimClientTestCase(asynctest.TestCase):
         self.assertEqual(expected_comando_encendido, self.mqtt_client.chiller01_p01.comandoEncendido)
 
         expected_setpoint_activo = 110
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.chiller01P01(
                 setpoint_activo=expected_setpoint_activo, comando_encendido=expected_comando_encendido
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
         expected_setpoint_activo = -11
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.chiller01P01(
                 setpoint_activo=expected_setpoint_activo, comando_encendido=expected_comando_encendido
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
     async def test_crack01P02(self):
         expected_setpoint_humidificador = 90
@@ -81,7 +75,7 @@ class SimClientTestCase(asynctest.TestCase):
         self.assertEqual(expected_comando_encendido, self.mqtt_client.crack01_p02.comandoEncendido)
 
         expected_setpoint_humidificador = 110
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.crack01P02(
                 setpoint_humidificador=expected_setpoint_humidificador,
                 setpoint_deshumidificador=expected_setpoint_deshumidificador,
@@ -89,12 +83,9 @@ class SimClientTestCase(asynctest.TestCase):
                 set_point_heating=expected_set_point_heating,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
         expected_setpoint_humidificador = -11
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.crack01P02(
                 setpoint_humidificador=expected_setpoint_humidificador,
                 setpoint_deshumidificador=expected_setpoint_deshumidificador,
@@ -102,9 +93,6 @@ class SimClientTestCase(asynctest.TestCase):
                 set_point_heating=expected_set_point_heating,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
     async def test_fancoil01P02(self):
         expected_perc_apertura_valvula_frio = 90
@@ -134,7 +122,7 @@ class SimClientTestCase(asynctest.TestCase):
         self.assertEqual(expected_comando_encendido, self.mqtt_client.fancoil01_p02.comandoEncendido)
 
         expected_setpoint_heating_night = 110
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.fancoil01P02(
                 perc_apertura_valvula_frio=expected_perc_apertura_valvula_frio,
                 setpoint_cooling_day=expected_setpoint_cooling_day,
@@ -144,12 +132,9 @@ class SimClientTestCase(asynctest.TestCase):
                 setpoint_trabajo=expected_setpoint_trabajo,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
         expected_setpoint_heating_night = -11
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.fancoil01P02(
                 perc_apertura_valvula_frio=expected_perc_apertura_valvula_frio,
                 setpoint_cooling_day=expected_setpoint_cooling_day,
@@ -159,9 +144,6 @@ class SimClientTestCase(asynctest.TestCase):
                 setpoint_trabajo=expected_setpoint_trabajo,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
     async def test_manejadoraLower01P05(self):
         expected_setpoint_trabajo = 90
@@ -190,7 +172,7 @@ class SimClientTestCase(asynctest.TestCase):
         self.assertEqual(expected_comando_encendido, self.mqtt_client.manejadora_lower01_p05.comandoEncendido)
 
         expected_setpoint_trabajo = 110
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.manejadoraLower01P05(
                 setpoint_trabajo=expected_setpoint_trabajo,
                 setpoint_ventilador_min=expected_setpoint_ventilador_min,
@@ -198,12 +180,9 @@ class SimClientTestCase(asynctest.TestCase):
                 temperatura_anticongelante=expected_temperatura_anticongelante,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
         expected_setpoint_trabajo = -11
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.manejadoraLower01P05(
                 setpoint_trabajo=expected_setpoint_trabajo,
                 setpoint_ventilador_min=expected_setpoint_ventilador_min,
@@ -211,9 +190,6 @@ class SimClientTestCase(asynctest.TestCase):
                 temperatura_anticongelante=expected_temperatura_anticongelante,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
     async def test_manejadoraSblancaP04(self):
         expected_valor_consigna = 90
@@ -236,28 +212,22 @@ class SimClientTestCase(asynctest.TestCase):
         self.assertEqual(expected_comando_encendido, self.mqtt_client.manejadora_sblanca_p04.comandoEncendido)
 
         expected_valor_consigna = 110
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.manejadoraSblancaP04(
                 valor_consigna=expected_valor_consigna,
                 setpoint_ventilador_min=expected_setpoint_ventilador_min,
                 setpoint_ventilador_max=expected_setpoint_ventilador_max,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
         expected_valor_consigna = -11
-        try:
+        with self.assertRaises(ValueError):
             await self.mqtt_client.manejadoraSblancaP04(
                 valor_consigna=expected_valor_consigna,
                 setpoint_ventilador_min=expected_setpoint_ventilador_min,
                 setpoint_ventilador_max=expected_setpoint_ventilador_max,
                 comando_encendido=expected_comando_encendido,
             )
-            self.fail("Expected a ValueError.")
-        except ValueError:
-            pass
 
     async def test_vea01P01(self):
         expected_comando_encendido = True

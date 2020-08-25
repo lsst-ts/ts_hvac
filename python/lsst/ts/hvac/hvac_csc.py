@@ -40,7 +40,10 @@ class HvacCsc(salobj.ConfigurableCsc):
     initial_state : `salobj.State`
         The initial state of the CSC
     simulation_mode : `int`
-        Simulation mode (1) or not (0)
+         Simulation mode. Allowed values:
+
+        * 0: regular operation.
+        * 1: simulation: use a mock low level HVAC controller.
     """
 
     def __init__(
@@ -58,14 +61,16 @@ class HvacCsc(salobj.ConfigurableCsc):
             simulation_mode=simulation_mode,
         )
         self.mqtt_client = None
-        self.telemetry_task = None
-        self.log.info("__init__")
+        self.telemetry_task = salobj.make_done_future()
+        if simulation_mode not in (0, 1):
+            raise salobj.ExpectedError(f"Simulation_mode={simulation_mode} must be 0 or 1")
+        self.log.info("HvacCsc constructed")
 
     async def connect(self):
         """Start the HVAC MQTT client or start the mock client, if in
         simulation mode.
         """
-        self.log.info("Connecting")
+        self.log.info("Connecting.")
         self.log.info(self.config)
         self.log.info(f"self.simulation_mode = {self.simulation_mode}")
         if self.config is None:
@@ -84,13 +89,13 @@ class HvacCsc(salobj.ConfigurableCsc):
 
         self.mqtt_client.connect()
         self.telemetry_task = asyncio.create_task(self.get_telemetry())
+        self.log.info("Connected.")
 
     async def disconnect(self):
         """Disconnect the HVAQ client, if connected.
         """
         self.log.info("Disconnecting")
-        if self.telemetry_task:
-            self.telemetry_task.cancel()
+        self.telemetry_task.cancel()
         if self.connected:
             self.mqtt_client.disconnect()
 
@@ -109,8 +114,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         self.config = config
 
     async def implement_simulation_mode(self, simulation_mode):
-        if simulation_mode not in (0, 1):
-            raise salobj.ExpectedError(f"Simulation_mode={simulation_mode} must be 0 or 1")
+        pass
 
     async def do_chiller01P01(self, data):
         self.assert_enabled()
@@ -226,39 +230,48 @@ class HvacCsc(salobj.ConfigurableCsc):
     async def get_telemetry(self):
         try:
             while True:
-                await self.mqtt_client.telemetry_available
-                self.log.info("Telemetry available!")
-                self.tel_BombaAguaFriaP01.set_put(vars(self.mqtt_client.bomba_agua_fria_p01))
-                self.tel_Chiller01P01.set_put(vars(self.mqtt_client.chiller01_p01))
-                self.tel_Crack01P02.set_put(vars(self.mqtt_client.crack01_p02))
-                self.tel_DamperLowerP04.set_put(vars(self.mqtt_client.damper_lower_p04))
-                self.tel_Fancoil01P02.set_put(vars(self.mqtt_client.fancoil01_p02))
-                self.tel_ManejadoraLower01P05.set_put(vars(self.mqtt_client.manejadora_lower01_p05))
-                self.tel_ManejadoraSblancaP04.set_put(vars(self.mqtt_client.manejadora_sblanca_p04))
-                self.tel_ManejadraSblancaP04.set_put(vars(self.mqtt_client.manejadra_sblanca_p04))
-                self.tel_ManejadoraSlimpiaP04.set_put(vars(self.mqtt_client.manejadora_slimpia_p04))
-                self.tel_ManejadoraZzzP04.set_put(vars(self.mqtt_client.manejadora_zzz_p04))
-                self.tel_TemperatuaAmbienteP01.set_put(vars(self.mqtt_client.temperatua_ambiente_p01))
-                self.tel_ValvulaP01.set_put(vars(self.mqtt_client.valvula_p01))
-                self.tel_Vea01P01.set_put(vars(self.mqtt_client.vea01_p01))
-                self.tel_Vea01P05.set_put(vars(self.mqtt_client.vea01_p05))
-                self.tel_Vea03P04.set_put(vars(self.mqtt_client.vea03_p04))
-                self.tel_Vea04P04.set_put(vars(self.mqtt_client.vea04_p04))
-                self.tel_Vea08P05.set_put(vars(self.mqtt_client.vea08_p05))
-                self.tel_Vea09P05.set_put(vars(self.mqtt_client.vea09_p05))
-                self.tel_Vea10P05.set_put(vars(self.mqtt_client.vea10_p05))
-                self.tel_Vea11P05.set_put(vars(self.mqtt_client.vea11_p05))
-                self.tel_Vea12P05.set_put(vars(self.mqtt_client.vea12_p05))
-                self.tel_Vea13P05.set_put(vars(self.mqtt_client.vea13_p05))
-                self.tel_Vea14P05.set_put(vars(self.mqtt_client.vea14_p05))
-                self.tel_Vea15P05.set_put(vars(self.mqtt_client.vea15_p05))
-                self.tel_Vea16P05.set_put(vars(self.mqtt_client.vea16_p05))
-                self.tel_Vea17P05.set_put(vars(self.mqtt_client.vea17_p05))
-                self.tel_Vec01P01.set_put(vars(self.mqtt_client.vec01_p01))
-                self.tel_Vex03P04.set_put(vars(self.mqtt_client.vex03_p04))
-                self.tel_Vex04P04.set_put(vars(self.mqtt_client.vex04_p04))
-                self.tel_Vin01P01.set_put(vars(self.mqtt_client.vin01_p01))
-                self.tel_ZonaCargaP04.set_put(vars(self.mqtt_client.zona_carga_p04))
+                self.log.info(
+                    "self.mqtt_client.telemetry_available.is_set() "
+                    f"= {self.mqtt_client.telemetry_available.is_set()}"
+                )
+                await asyncio.sleep(0.1)
+                if self.mqtt_client.telemetry_available.is_set():
+                    self.log.info("Telemetry available!")
+                    self.tel_bombaAguaFriaP01.set_put(**vars(self.mqtt_client.bomba_agua_fria_p01))
+                    self.tel_chiller01P01.set_put(**vars(self.mqtt_client.chiller01_p01))
+                    self.tel_crack01P02.set_put(**vars(self.mqtt_client.crack01_p02))
+                    self.tel_damperLowerP04.set_put(**vars(self.mqtt_client.damper_lower_p04))
+                    self.tel_fancoil01P02.set_put(**vars(self.mqtt_client.fancoil01_p02))
+                    self.tel_manejadoraLower01P05.set_put(**vars(self.mqtt_client.manejadora_lower01_p05))
+                    self.tel_manejadoraSblancaP04.set_put(**vars(self.mqtt_client.manejadora_sblanca_p04))
+                    self.tel_manejadraSblancaP04.set_put(**vars(self.mqtt_client.manejadra_sblanca_p04))
+                    self.tel_manejadoraSlimpiaP04.set_put(**vars(self.mqtt_client.manejadora_slimpia_p04))
+                    self.tel_manejadoraZzzP04.set_put(**vars(self.mqtt_client.manejadora_zzz_p04))
+                    self.tel_temperatuaAmbienteP01.set_put(**vars(self.mqtt_client.temperatua_ambiente_p01))
+                    self.tel_valvulaP01.set_put(**vars(self.mqtt_client.valvula_p01))
+                    self.tel_vea01P01.set_put(**vars(self.mqtt_client.vea01_p01))
+                    self.tel_vea01P05.set_put(**vars(self.mqtt_client.vea01_p05))
+                    self.tel_vea03P04.set_put(**vars(self.mqtt_client.vea03_p04))
+                    self.tel_vea04P04.set_put(**vars(self.mqtt_client.vea04_p04))
+                    self.tel_vea08P05.set_put(**vars(self.mqtt_client.vea08_p05))
+                    self.tel_vea09P05.set_put(**vars(self.mqtt_client.vea09_p05))
+                    self.tel_vea10P05.set_put(**vars(self.mqtt_client.vea10_p05))
+                    self.tel_vea11P05.set_put(**vars(self.mqtt_client.vea11_p05))
+                    self.tel_vea12P05.set_put(**vars(self.mqtt_client.vea12_p05))
+                    self.tel_vea13P05.set_put(**vars(self.mqtt_client.vea13_p05))
+                    self.tel_vea14P05.set_put(**vars(self.mqtt_client.vea14_p05))
+                    self.tel_vea15P05.set_put(**vars(self.mqtt_client.vea15_p05))
+                    self.tel_vea16P05.set_put(**vars(self.mqtt_client.vea16_p05))
+                    self.tel_vea17P05.set_put(**vars(self.mqtt_client.vea17_p05))
+                    self.tel_vec01P01.set_put(**vars(self.mqtt_client.vec01_p01))
+                    self.tel_vex03P04.set_put(**vars(self.mqtt_client.vex03_p04))
+                    self.tel_vex04P04.set_put(**vars(self.mqtt_client.vex04_p04))
+                    self.tel_vin01P01.set_put(**vars(self.mqtt_client.vin01_p01))
+                    self.tel_zonaCargaP04.set_put(**vars(self.mqtt_client.zona_carga_p04))
+                    self.mqtt_client.telemetry_available.clear()
+        except asyncio.CancelledError:
+            # Normal exit
+            pass
         except Exception:
             self.log.exception(f"get_telemetry() failed")
 
@@ -266,7 +279,7 @@ class HvacCsc(salobj.ConfigurableCsc):
     def connected(self):
         if self.mqtt_client is None:
             return False
-        return True
+        return self.mqtt_client.connected
 
     @staticmethod
     def get_config_pkg():

@@ -34,8 +34,6 @@ __all__ = [
 
 import random
 
-from lsst.ts import salobj
-
 
 class BombaAguaFriaP01:
     """Class holding the HVAC_bombaAguaFriaP01 telemetry status for the
@@ -45,11 +43,11 @@ class BombaAguaFriaP01:
     def __init__(self):
         self.estadoFuncionamiento = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
-        if self.estadoFuncionamiento:
-            self.timestamp = salobj.current_tai()
+        # Nothing to be done here though for completeness sake I keep the
+        # method. Also, in the near future additional fields may be added.
+        pass
 
 
 class Chiller01P01:
@@ -82,7 +80,6 @@ class Chiller01P01:
         self.compresor03Alarmado = -99.99
         self.compresor04Alarmado = -99.99
         self.alarmaGeneral = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
@@ -109,7 +106,6 @@ class Chiller01P01:
             self.compresor03Alarmado = random.randint(450, 550) / 10.0
             self.compresor04Alarmado = random.randint(450, 550) / 10.0
             self.alarmaGeneral = random.randint(450, 550) / 10.0
-            self.timestamp = salobj.current_tai()
 
 
 class Crack01P02:
@@ -132,7 +128,6 @@ class Crack01P02:
         self.estadoDeUnidad = -99.99
         self.modoOperacionUnidad = -99.99
         self.numeroCircuitos = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
@@ -141,16 +136,11 @@ class Crack01P02:
             self.temperaturaInyeccion = random.randint(180, 220) / 10.0
             self.temperaturaRetorno = random.randint(180, 220) / 10.0
             self.humedadSala = random.randint(450, 550) / 10.0
-            self.setpointHumidificador = random.randint(450, 550) / 10.0
-            self.setpointDeshumidificador = random.randint(450, 550) / 10.0
-            self.setPointCooling = random.randint(450, 550) / 10.0
-            self.setPointHeating = random.randint(450, 550) / 10.0
             self.aperturaValvula = random.randint(450, 550) / 10.0
             self.requerimientoHumificador = random.randint(450, 550) / 10.0
             self.estadoDeUnidad = random.randint(450, 550) / 10.0
             self.modoOperacionUnidad = random.randint(450, 550) / 10.0
             self.numeroCircuitos = random.randint(450, 550) / 10.0
-            self.timestamp = salobj.current_tai()
 
 
 class DamperLowerP04:
@@ -159,11 +149,11 @@ class DamperLowerP04:
 
     def __init__(self):
         self.comando = False
-        self.timestamp = 0.0
 
     async def update_status(self):
-        if self.comando:
-            self.timestamp = salobj.current_tai()
+        # Nothing to be done here though for completeness sake I keep the
+        # method. Also, in the near future additional fields may be added.
+        pass
 
 
 class Fancoil01P02:
@@ -182,7 +172,6 @@ class Fancoil01P02:
         self.setpointCoolingNight = -99.99
         self.setpointHeatingNight = -99.99
         self.setpointTrabajo = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
@@ -190,13 +179,6 @@ class Fancoil01P02:
             self.estadoOperacion = self.comandoEncendido
             self.estadoCalefactor = self.comandoEncendido
             self.estadoVentilador = self.comandoEncendido
-            self.aperturaValvulaFrio = random.randint(180, 220) / 10.0
-            self.setpointCoolingDay = random.randint(450, 550) / 10.0
-            self.setpointHeatingDay = random.randint(450, 550) / 10.0
-            self.setpointCoolingNight = random.randint(450, 550) / 10.0
-            self.setpointHeatingNight = random.randint(450, 550) / 10.0
-            self.setpointTrabajo = random.randint(450, 550) / 10.0
-            self.timestamp = salobj.current_tai()
 
 
 class ManejadoraLower01P05:
@@ -221,7 +203,6 @@ class ManejadoraLower01P05:
         self.temperaturaAnticongelante = -99.99
         self.temperaturaInyeccion = -99.99
         self.temperaturaRetorno = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
@@ -234,14 +215,9 @@ class ManejadoraLower01P05:
             self.caudalVentiladorImpulsion = False
             self.estadoValvula = self.comandoEncendido
             self.valorConsigna = random.randint(450, 550) / 10.0
-            self.setpointTrabajo = random.randint(450, 550) / 10.0
-            self.setpointVentiladorMin = random.randint(450, 550) / 10.0
-            self.setpointVentiladorMax = random.randint(450, 550) / 10.0
             self.setPointVentImpulsion = random.randint(450, 550) / 10.0
-            self.temperaturaAnticongelante = random.randint(180, 220) / 10.0
             self.temperaturaInyeccion = random.randint(180, 220) / 10.0
             self.temperaturaRetorno = random.randint(180, 220) / 10.0
-            self.timestamp = salobj.current_tai()
 
 
 class ManejadoraSblancaP04:
@@ -267,7 +243,6 @@ class ManejadoraSblancaP04:
         self.setpointVentiladorMin = -99.99
         self.setpointVentiladorMax = -99.99
         self.temperaturaSala = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
@@ -278,17 +253,13 @@ class ManejadoraSblancaP04:
             self.calefaccionEtapa01 = self.comandoEncendido
             self.calefaccionEtapa02 = self.comandoEncendido
             self.estadoFuncionamiento = self.comandoEncendido
-            self.valorConsigna = random.randint(450, 550) / 10.0
             self.estadoTemperaturaExterior = random.randint(450, 550) / 10.0
             self.estadoTemperaturaAnticongelante = random.randint(450, 550) / 10.0
             self.setpointTrabajo = random.randint(450, 550) / 10.0
             self.temperaturaInyeccion = random.randint(180, 220) / 10.0
             self.temperaturaRetorno = random.randint(180, 220) / 10.0
             self.caudalVentiladorImpulsion = random.randint(450, 550) / 10.0
-            self.setpointVentiladorMin = random.randint(450, 550) / 10.0
-            self.setpointVentiladorMax = random.randint(450, 550) / 10.0
             self.temperaturaSala = random.randint(180, 220) / 10.0
-            self.timestamp = salobj.current_tai()
 
 
 class ManejadraSblancaP04:
@@ -297,11 +268,9 @@ class ManejadraSblancaP04:
 
     def __init__(self):
         self.estadoTemperaturaAmbiente = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         self.estadoTemperaturaAmbiente = random.randint(180, 220) / 10.0
-        self.timestamp = salobj.current_tai()
 
 
 class ManejadoraSlimpiaP04:
@@ -310,11 +279,9 @@ class ManejadoraSlimpiaP04:
 
     def __init__(self):
         self.temperaturaSala = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         self.temperaturaSala = random.randint(180, 220) / 10.0
-        self.timestamp = salobj.current_tai()
 
 
 class ManejadoraZzzP04:
@@ -324,12 +291,10 @@ class ManejadoraZzzP04:
     def __init__(self):
         self.ai4 = -99.99
         self.ai5 = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         self.ai4 = random.randint(180, 220) / 10.0
         self.ai5 = random.randint(180, 220) / 10.0
-        self.timestamp = salobj.current_tai()
 
 
 class TemperatuaAmbienteP01:
@@ -338,11 +303,9 @@ class TemperatuaAmbienteP01:
 
     def __init__(self):
         self.temperaturaAmbiente = -99.99
-        self.timestamp = 0.0
 
     async def update_status(self):
         self.temperaturaAmbiente = random.randint(180, 220) / 10.0
-        self.timestamp = salobj.current_tai()
 
 
 class ValvulaP01:
@@ -355,7 +318,6 @@ class ValvulaP01:
         self.estadoValvula04 = False
         self.estadoValvula05 = False
         self.estadoValvula06 = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         self.estadoValvula12 = False
@@ -363,7 +325,6 @@ class ValvulaP01:
         self.estadoValvula04 = False
         self.estadoValvula05 = False
         self.estadoValvula06 = False
-        self.timestamp = salobj.current_tai()
 
 
 class Vea01P01:
@@ -374,13 +335,11 @@ class Vea01P01:
         self.estadoFuncionamiento = False
         self.estadoSelector = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.estadoFuncionamiento = self.comandoEncendido
             self.estadoSelector = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea01P05:
@@ -391,13 +350,11 @@ class Vea01P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea08P05:
@@ -408,13 +365,11 @@ class Vea08P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea09P05:
@@ -425,13 +380,11 @@ class Vea09P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea10P05:
@@ -442,13 +395,11 @@ class Vea10P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea11P05:
@@ -459,13 +410,11 @@ class Vea11P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea12P05:
@@ -476,13 +425,11 @@ class Vea12P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea13P05:
@@ -493,13 +440,11 @@ class Vea13P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea14P05:
@@ -510,13 +455,11 @@ class Vea14P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea15P05:
@@ -527,13 +470,11 @@ class Vea15P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea16P05:
@@ -544,13 +485,11 @@ class Vea16P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea17P05:
@@ -561,13 +500,11 @@ class Vea17P05:
         self.estadoFuncionamiento = False
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
             self.estadoFuncionamiento = self.comandoEncendido
-            self.timestamp = salobj.current_tai()
 
 
 class Vea03P04:
@@ -576,11 +513,11 @@ class Vea03P04:
 
     def __init__(self):
         self.estadoFuncionamiento = False
-        self.timestamp = 0.0
 
     async def update_status(self):
-        if self.estadoFuncionamiento:
-            self.timestamp = salobj.current_tai()
+        # Nothing to be done here though for completeness sake I keep the
+        # method. Also, in the near future additional fields may be added.
+        pass
 
 
 class Vea04P04:
@@ -589,11 +526,11 @@ class Vea04P04:
 
     def __init__(self):
         self.estadoFuncionamiento = False
-        self.timestamp = 0.0
 
     async def update_status(self):
-        if self.estadoFuncionamiento:
-            self.timestamp = salobj.current_tai()
+        # Nothing to be done here though for completeness sake I keep the
+        # method. Also, in the near future additional fields may be added.
+        pass
 
 
 class Vec01P01:
@@ -604,13 +541,11 @@ class Vec01P01:
         self.estadoFuncionamiento = False
         self.estadoSelector = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.estadoFuncionamiento = self.comandoEncendido
             self.estadoSelector = False
-            self.timestamp = salobj.current_tai()
 
 
 class Vex03P04:
@@ -620,12 +555,10 @@ class Vex03P04:
     def __init__(self):
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
-            self.timestamp = salobj.current_tai()
 
 
 class Vex04P04:
@@ -635,12 +568,10 @@ class Vex04P04:
     def __init__(self):
         self.fallaTermica = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.fallaTermica = False
-            self.timestamp = salobj.current_tai()
 
 
 class Vin01P01:
@@ -651,13 +582,11 @@ class Vin01P01:
         self.estadoFuncionamiento = False
         self.estadoSelector = False
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
         if self.comandoEncendido:
             self.estadoFuncionamiento = self.comandoEncendido
             self.estadoSelector = False
-            self.timestamp = salobj.current_tai()
 
 
 class ZonaCargaP04:
@@ -666,8 +595,8 @@ class ZonaCargaP04:
 
     def __init__(self):
         self.comandoEncendido = False
-        self.timestamp = 0.0
 
     async def update_status(self):
-        if self.comandoEncendido:
-            self.timestamp = salobj.current_tai()
+        # Nothing to be done here though for completeness sake I keep the
+        # method. Also, in the near future additional fields may be added.
+        pass

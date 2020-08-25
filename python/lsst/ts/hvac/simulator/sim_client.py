@@ -74,9 +74,9 @@ def validate_percentage(percentage):
 class SimClient:
     def __init__(self):
         self.log = logging.getLogger("SimClient")
-        self.log.info("__init__")
         self.telemetry_task = None
-        self.telemetry_available = asyncio.Event
+        self.telemetry_available = asyncio.Event()
+        self.connected = False
 
         self.bomba_agua_fria_p01 = BombaAguaFriaP01()
         self.chiller01_p01 = Chiller01P01()
@@ -110,10 +110,13 @@ class SimClient:
         self.vin01_p01 = Vin01P01()
         self.zona_carga_p04 = ZonaCargaP04()
 
+        self.log.info("SimClient constructed")
+
     def connect(self):
         """Starts the publishing of telemetry.
         """
         self.telemetry_task = asyncio.create_task(self.publish_telemetry())
+        self.connected = True
         self.log.info("Connected.")
 
     def disconnect(self):
@@ -121,6 +124,7 @@ class SimClient:
         """
         if self.telemetry_task:
             self.telemetry_task.cancel()
+        self.connected = False
         self.log.info("Disconnected.")
 
     async def chiller01P01(self, setpoint_activo, comando_encendido):
@@ -435,38 +439,46 @@ class SimClient:
         """
         try:
             while True:
-                await self.bomba_agua_fria_p01.update_status()
-                await self.chiller01_p01.update_status()
-                await self.crack01_p02.update_status()
-                await self.damper_lower_p04.update_status()
-                await self.fancoil01_p02.update_status()
-                await self.manejadora_lower01_p05.update_status()
-                await self.manejadora_sblanca_p04.update_status()
-                await self.manejadora_slimpia_p04.update_status()
-                await self.manejadora_zzz_p04.update_status()
-                await self.manejadra_sblanca_p04.update_status()
-                await self.temperatua_ambiente_p01.update_status()
-                await self.valvula_p01.update_status()
-                await self.vea01_p01.update_status()
-                await self.vea01_p05.update_status()
-                await self.vea03_p04.update_status()
-                await self.vea04_p04.update_status()
-                await self.vea08_p05.update_status()
-                await self.vea09_p05.update_status()
-                await self.vea10_p05.update_status()
-                await self.vea11_p05.update_status()
-                await self.vea12_p05.update_status()
-                await self.vea13_p05.update_status()
-                await self.vea14_p05.update_status()
-                await self.vea15_p05.update_status()
-                await self.vea16_p05.update_status()
-                await self.vea17_p05.update_status()
-                await self.vec01_p01.update_status()
-                await self.vex03_p04.update_status()
-                await self.vex04_p04.update_status()
-                await self.vin01_p01.update_status()
-                await self.zona_carga_p04.update_status()
+                self.log.info("self.telemetry_available.is_set() " f"= {self.telemetry_available.is_set()}")
+                await asyncio.sleep(0.1)
+                if not self.telemetry_available.is_set():
+                    self.log.info("Publishing telemetry.")
+                    await self.bomba_agua_fria_p01.update_status()
+                    await self.chiller01_p01.update_status()
+                    await self.crack01_p02.update_status()
+                    await self.damper_lower_p04.update_status()
+                    await self.fancoil01_p02.update_status()
+                    await self.manejadora_lower01_p05.update_status()
+                    await self.manejadora_sblanca_p04.update_status()
+                    await self.manejadora_slimpia_p04.update_status()
+                    await self.manejadora_zzz_p04.update_status()
+                    await self.manejadra_sblanca_p04.update_status()
+                    await self.temperatua_ambiente_p01.update_status()
+                    await self.valvula_p01.update_status()
+                    await self.vea01_p01.update_status()
+                    await self.vea01_p05.update_status()
+                    await self.vea03_p04.update_status()
+                    await self.vea04_p04.update_status()
+                    await self.vea08_p05.update_status()
+                    await self.vea09_p05.update_status()
+                    await self.vea10_p05.update_status()
+                    await self.vea11_p05.update_status()
+                    await self.vea12_p05.update_status()
+                    await self.vea13_p05.update_status()
+                    await self.vea14_p05.update_status()
+                    await self.vea15_p05.update_status()
+                    await self.vea16_p05.update_status()
+                    await self.vea17_p05.update_status()
+                    await self.vec01_p01.update_status()
+                    await self.vex03_p04.update_status()
+                    await self.vex04_p04.update_status()
+                    await self.vin01_p01.update_status()
+                    await self.zona_carga_p04.update_status()
 
-                await asyncio.sleep(1.0)
+                    await asyncio.sleep(1.0)
+                    self.telemetry_available.set()
+        except asyncio.CancelledError:
+            # Normal exit
+            pass
         except Exception:
             self.log.exception(f"publish_telemetry() failed")

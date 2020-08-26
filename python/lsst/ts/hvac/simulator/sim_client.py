@@ -51,37 +51,37 @@ class SimClient:
         self.telemetry_available = asyncio.Event()
         self.connected = False
 
-        self.bomba_agua_fria_p01 = telemetry.BombaAguaFriaP01()
-        self.chiller01_p01 = telemetry.Chiller01P01()
-        self.crack01_p02 = telemetry.Crack01P02()
-        self.damper_lower_p04 = telemetry.DamperLowerP04()
-        self.fancoil01_p02 = telemetry.Fancoil01P02()
-        self.manejadora_lower01_p05 = telemetry.ManejadoraLower01P05()
-        self.manejadora_sblanca_p04 = telemetry.ManejadoraSblancaP04()
-        self.manejadora_slimpia_p04 = telemetry.ManejadoraSlimpiaP04()
-        self.manejadora_zzz_p04 = telemetry.ManejadoraZzzP04()
-        self.manejadra_sblanca_p04 = telemetry.ManejadraSblancaP04()
-        self.temperatua_ambiente_p01 = telemetry.TemperatuaAmbienteP01()
-        self.valvula_p01 = telemetry.ValvulaP01()
-        self.vea01_p01 = telemetry.Vea01P01()
-        self.vea01_p05 = telemetry.Vea01P05()
-        self.vea03_p04 = telemetry.Vea03P04()
-        self.vea04_p04 = telemetry.Vea04P04()
-        self.vea08_p05 = telemetry.Vea08P05()
-        self.vea09_p05 = telemetry.Vea09P05()
-        self.vea10_p05 = telemetry.Vea10P05()
-        self.vea11_p05 = telemetry.Vea11P05()
-        self.vea12_p05 = telemetry.Vea12P05()
-        self.vea13_p05 = telemetry.Vea13P05()
-        self.vea14_p05 = telemetry.Vea14P05()
-        self.vea15_p05 = telemetry.Vea15P05()
-        self.vea16_p05 = telemetry.Vea16P05()
-        self.vea17_p05 = telemetry.Vea17P05()
-        self.vec01_p01 = telemetry.Vec01P01()
-        self.vex03_p04 = telemetry.Vex03P04()
-        self.vex04_p04 = telemetry.Vex04P04()
-        self.vin01_p01 = telemetry.Vin01P01()
-        self.zona_carga_p04 = telemetry.ZonaCargaP04()
+        self.tel_bomba_agua_fria_p01 = telemetry.BombaAguaFriaP01()
+        self.tel_chiller01_p01 = telemetry.Chiller01P01()
+        self.tel_crack01_p02 = telemetry.Crack01P02()
+        self.tel_damper_lower_p04 = telemetry.DamperLowerP04()
+        self.tel_fancoil01_p02 = telemetry.Fancoil01P02()
+        self.tel_manejadora_lower01_p05 = telemetry.ManejadoraLower01P05()
+        self.tel_manejadora_sblanca_p04 = telemetry.ManejadoraSblancaP04()
+        self.tel_manejadora_slimpia_p04 = telemetry.ManejadoraSlimpiaP04()
+        self.tel_manejadora_zzz_p04 = telemetry.ManejadoraZzzP04()
+        self.tel_manejadra_sblanca_p04 = telemetry.ManejadraSblancaP04()
+        self.tel_temperatua_ambiente_p01 = telemetry.TemperatuaAmbienteP01()
+        self.tel_valvula_p01 = telemetry.ValvulaP01()
+        self.tel_vea01_p01 = telemetry.Vea01P01()
+        self.tel_vea01_p05 = telemetry.Vea01P05()
+        self.tel_vea03_p04 = telemetry.Vea03P04()
+        self.tel_vea04_p04 = telemetry.Vea04P04()
+        self.tel_vea08_p05 = telemetry.Vea08P05()
+        self.tel_vea09_p05 = telemetry.Vea09P05()
+        self.tel_vea10_p05 = telemetry.Vea10P05()
+        self.tel_vea11_p05 = telemetry.Vea11P05()
+        self.tel_vea12_p05 = telemetry.Vea12P05()
+        self.tel_vea13_p05 = telemetry.Vea13P05()
+        self.tel_vea14_p05 = telemetry.Vea14P05()
+        self.tel_vea15_p05 = telemetry.Vea15P05()
+        self.tel_vea16_p05 = telemetry.Vea16P05()
+        self.tel_vea17_p05 = telemetry.Vea17P05()
+        self.tel_vec01_p01 = telemetry.Vec01P01()
+        self.tel_vex03_p04 = telemetry.Vex03P04()
+        self.tel_vex04_p04 = telemetry.Vex04P04()
+        self.tel_vin01_p01 = telemetry.Vin01P01()
+        self.tel_zona_carga_p04 = telemetry.ZonaCargaP04()
 
         self.log.info("SimClient constructed")
 
@@ -100,7 +100,7 @@ class SimClient:
         self.connected = False
         self.log.info("Disconnected.")
 
-    async def chiller01P01(self, setpoint_activo, comando_encendido):
+    async def do_chiller01P01(self, setpoint_activo, comando_encendido):
         """Command Chiller 01 on the first floor.
 
         Parameters
@@ -111,10 +111,10 @@ class SimClient:
             Switched on or off.
         """
         validate_percentage(setpoint_activo)
-        self.chiller01_p01.setpointActivo = setpoint_activo
-        self.chiller01_p01.comandoEncendido = comando_encendido
+        self.tel_chiller01_p01.setpointActivo = setpoint_activo
+        self.tel_chiller01_p01.comandoEncendido = comando_encendido
 
-    async def crack01P02(
+    async def do_crack01P02(
         self,
         setpoint_humidificador,
         setpoint_deshumidificador,
@@ -141,13 +141,13 @@ class SimClient:
         validate_percentage(setpoint_deshumidificador)
         validate_percentage(set_point_cooling)
         validate_percentage(set_point_heating)
-        self.crack01_p02.setpointHumidificador = setpoint_humidificador
-        self.crack01_p02.setpointDeshumidificador = setpoint_deshumidificador
-        self.crack01_p02.setPointCooling = set_point_cooling
-        self.crack01_p02.setPointHeating = set_point_heating
-        self.crack01_p02.comandoEncendido = comando_encendido
+        self.tel_crack01_p02.setpointHumidificador = setpoint_humidificador
+        self.tel_crack01_p02.setpointDeshumidificador = setpoint_deshumidificador
+        self.tel_crack01_p02.setPointCooling = set_point_cooling
+        self.tel_crack01_p02.setPointHeating = set_point_heating
+        self.tel_crack01_p02.comandoEncendido = comando_encendido
 
-    async def fancoil01P02(
+    async def do_fancoil01P02(
         self,
         perc_apertura_valvula_frio,
         setpoint_cooling_day,
@@ -182,15 +182,15 @@ class SimClient:
         validate_percentage(setpoint_cooling_night)
         validate_percentage(setpoint_heating_night)
         validate_percentage(setpoint_trabajo)
-        self.fancoil01_p02.aperturaValvulaFrio = perc_apertura_valvula_frio
-        self.fancoil01_p02.setpointCoolingDay = setpoint_cooling_day
-        self.fancoil01_p02.setpointHeatingDay = setpoint_heating_day
-        self.fancoil01_p02.setpointCoolingNight = setpoint_cooling_night
-        self.fancoil01_p02.setpointHeatingNight = setpoint_heating_night
-        self.fancoil01_p02.setpointTrabajo = setpoint_trabajo
-        self.fancoil01_p02.comandoEncendido = comando_encendido
+        self.tel_fancoil01_p02.aperturaValvulaFrio = perc_apertura_valvula_frio
+        self.tel_fancoil01_p02.setpointCoolingDay = setpoint_cooling_day
+        self.tel_fancoil01_p02.setpointHeatingDay = setpoint_heating_day
+        self.tel_fancoil01_p02.setpointCoolingNight = setpoint_cooling_night
+        self.tel_fancoil01_p02.setpointHeatingNight = setpoint_heating_night
+        self.tel_fancoil01_p02.setpointTrabajo = setpoint_trabajo
+        self.tel_fancoil01_p02.comandoEncendido = comando_encendido
 
-    async def manejadoraLower01P05(
+    async def do_manejadoraLower01P05(
         self,
         setpoint_trabajo,
         setpoint_ventilador_min,
@@ -216,13 +216,13 @@ class SimClient:
         validate_percentage(setpoint_trabajo)
         validate_percentage(setpoint_ventilador_min)
         validate_percentage(setpoint_ventilador_max)
-        self.manejadora_lower01_p05.setpointTrabajo = setpoint_trabajo
-        self.manejadora_lower01_p05.setpointVentiladorMin = setpoint_ventilador_min
-        self.manejadora_lower01_p05.setpointVentiladorMax = setpoint_ventilador_max
-        self.manejadora_lower01_p05.temperaturaAnticongelante = temperatura_anticongelante
-        self.manejadora_lower01_p05.comandoEncendido = comando_encendido
+        self.tel_manejadora_lower01_p05.setpointTrabajo = setpoint_trabajo
+        self.tel_manejadora_lower01_p05.setpointVentiladorMin = setpoint_ventilador_min
+        self.tel_manejadora_lower01_p05.setpointVentiladorMax = setpoint_ventilador_max
+        self.tel_manejadora_lower01_p05.temperaturaAnticongelante = temperatura_anticongelante
+        self.tel_manejadora_lower01_p05.comandoEncendido = comando_encendido
 
-    async def manejadoraSblancaP04(
+    async def do_manejadoraSblancaP04(
         self, valor_consigna, setpoint_ventilador_min, setpoint_ventilador_max, comando_encendido,
     ):
         """Command the Sala Blanca Manejadora on the fourth floor.
@@ -241,12 +241,12 @@ class SimClient:
         validate_percentage(valor_consigna)
         validate_percentage(setpoint_ventilador_min)
         validate_percentage(setpoint_ventilador_max)
-        self.manejadora_sblanca_p04.valorConsigna = valor_consigna
-        self.manejadora_sblanca_p04.setpointVentiladorMin = setpoint_ventilador_min
-        self.manejadora_sblanca_p04.setpointVentiladorMax = setpoint_ventilador_max
-        self.manejadora_sblanca_p04.comandoEncendido = comando_encendido
+        self.tel_manejadora_sblanca_p04.valorConsigna = valor_consigna
+        self.tel_manejadora_sblanca_p04.setpointVentiladorMin = setpoint_ventilador_min
+        self.tel_manejadora_sblanca_p04.setpointVentiladorMax = setpoint_ventilador_max
+        self.tel_manejadora_sblanca_p04.comandoEncendido = comando_encendido
 
-    async def vea01P01(self, comando_encendido):
+    async def do_vea01P01(self, comando_encendido):
         """Command VEA 01 on the first floor.
 
         Parameters
@@ -254,9 +254,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea01_p01.comandoEncendido = comando_encendido
+        self.tel_vea01_p01.comandoEncendido = comando_encendido
 
-    async def vea01P05(self, comando_encendido):
+    async def do_vea01P05(self, comando_encendido):
         """Command VEA 01 on the fifth floor.
 
         Parameters
@@ -264,9 +264,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea01_p05.comandoEncendido = comando_encendido
+        self.tel_vea01_p05.comandoEncendido = comando_encendido
 
-    async def vea08P05(self, comando_encendido):
+    async def do_vea08P05(self, comando_encendido):
         """Command VEA 08 on the fifth floor.
 
         Parameters
@@ -274,9 +274,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea08_p05.comandoEncendido = comando_encendido
+        self.tel_vea08_p05.comandoEncendido = comando_encendido
 
-    async def vea09P05(self, comando_encendido):
+    async def do_vea09P05(self, comando_encendido):
         """Command VEA 09 on the fifth floor.
 
         Parameters
@@ -284,9 +284,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea09_p05.comandoEncendido = comando_encendido
+        self.tel_vea09_p05.comandoEncendido = comando_encendido
 
-    async def vea10P05(self, comando_encendido):
+    async def do_vea10P05(self, comando_encendido):
         """Command VEA 10 on the fifth floor.
 
         Parameters
@@ -294,9 +294,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea10_p05.comandoEncendido = comando_encendido
+        self.tel_vea10_p05.comandoEncendido = comando_encendido
 
-    async def vea11P05(self, comando_encendido):
+    async def do_vea11P05(self, comando_encendido):
         """Command VEA 11 on the fifth floor.
 
         Parameters
@@ -304,9 +304,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea11_p05.comandoEncendido = comando_encendido
+        self.tel_vea11_p05.comandoEncendido = comando_encendido
 
-    async def vea12P05(self, comando_encendido):
+    async def do_vea12P05(self, comando_encendido):
         """Command VEA 12 on the fifth floor.
 
         Parameters
@@ -314,9 +314,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea12_p05.comandoEncendido = comando_encendido
+        self.tel_vea12_p05.comandoEncendido = comando_encendido
 
-    async def vea13P05(self, comando_encendido):
+    async def do_vea13P05(self, comando_encendido):
         """Command VEA 13 on the fifth floor.
 
         Parameters
@@ -324,9 +324,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea13_p05.comandoEncendido = comando_encendido
+        self.tel_vea13_p05.comandoEncendido = comando_encendido
 
-    async def vea14P05(self, comando_encendido):
+    async def do_vea14P05(self, comando_encendido):
         """Command VEA 14 on the fifth floor.
 
         Parameters
@@ -334,9 +334,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea14_p05.comandoEncendido = comando_encendido
+        self.tel_vea14_p05.comandoEncendido = comando_encendido
 
-    async def vea15P05(self, comando_encendido):
+    async def do_vea15P05(self, comando_encendido):
         """Command VEA 15 on the fifth floor.
 
         Parameters
@@ -344,9 +344,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea15_p05.comandoEncendido = comando_encendido
+        self.tel_vea15_p05.comandoEncendido = comando_encendido
 
-    async def vea16P05(self, comando_encendido):
+    async def do_vea16P05(self, comando_encendido):
         """Command VEA 16 on the fifth floor.
 
         Parameters
@@ -354,9 +354,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea16_p05.comandoEncendido = comando_encendido
+        self.tel_vea16_p05.comandoEncendido = comando_encendido
 
-    async def vea17P05(self, comando_encendido):
+    async def do_vea17P05(self, comando_encendido):
         """Command VEA 17 on the fifth floor.
 
         Parameters
@@ -364,9 +364,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vea17_p05.comandoEncendido = comando_encendido
+        self.tel_vea17_p05.comandoEncendido = comando_encendido
 
-    async def vec01P01(self, comando_encendido):
+    async def do_vec01P01(self, comando_encendido):
         """Command VEC 01 on the first floor.
 
         Parameters
@@ -374,9 +374,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vec01_p01.comandoEncendido = comando_encendido
+        self.tel_vec01_p01.comandoEncendido = comando_encendido
 
-    async def vex03P04(self, comando_encendido):
+    async def do_vex03P04(self, comando_encendido):
         """Command VEX 03 on the fourth floor.
 
         Parameters
@@ -384,9 +384,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vex03_p04.comandoEncendido = comando_encendido
+        self.tel_vex03_p04.comandoEncendido = comando_encendido
 
-    async def vex04P04(self, comando_encendido):
+    async def do_vex04P04(self, comando_encendido):
         """Command VEX 04 on the fourth floor.
 
         Parameters
@@ -394,9 +394,9 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vex04_p04.comandoEncendido = comando_encendido
+        self.tel_vex04_p04.comandoEncendido = comando_encendido
 
-    async def vin01P01(self, comando_encendido):
+    async def do_vin01P01(self, comando_encendido):
         """Command VIN 01 on the first floor.
 
         Parameters
@@ -404,7 +404,7 @@ class SimClient:
         comando_encendido: `bool`
             Switched on or off.
         """
-        self.vin01_p01.comandoEncendido = comando_encendido
+        self.tel_vin01_p01.comandoEncendido = comando_encendido
 
     async def publish_telemetry(self):
         """Publishes telmetry every second to simulate the behaviour of an
@@ -416,37 +416,37 @@ class SimClient:
                 await asyncio.sleep(0.1)
                 if not self.telemetry_available.is_set():
                     self.log.info("Publishing telemetry.")
-                    await self.bomba_agua_fria_p01.update_status()
-                    await self.chiller01_p01.update_status()
-                    await self.crack01_p02.update_status()
-                    await self.damper_lower_p04.update_status()
-                    await self.fancoil01_p02.update_status()
-                    await self.manejadora_lower01_p05.update_status()
-                    await self.manejadora_sblanca_p04.update_status()
-                    await self.manejadora_slimpia_p04.update_status()
-                    await self.manejadora_zzz_p04.update_status()
-                    await self.manejadra_sblanca_p04.update_status()
-                    await self.temperatua_ambiente_p01.update_status()
-                    await self.valvula_p01.update_status()
-                    await self.vea01_p01.update_status()
-                    await self.vea01_p05.update_status()
-                    await self.vea03_p04.update_status()
-                    await self.vea04_p04.update_status()
-                    await self.vea08_p05.update_status()
-                    await self.vea09_p05.update_status()
-                    await self.vea10_p05.update_status()
-                    await self.vea11_p05.update_status()
-                    await self.vea12_p05.update_status()
-                    await self.vea13_p05.update_status()
-                    await self.vea14_p05.update_status()
-                    await self.vea15_p05.update_status()
-                    await self.vea16_p05.update_status()
-                    await self.vea17_p05.update_status()
-                    await self.vec01_p01.update_status()
-                    await self.vex03_p04.update_status()
-                    await self.vex04_p04.update_status()
-                    await self.vin01_p01.update_status()
-                    await self.zona_carga_p04.update_status()
+                    await self.tel_bomba_agua_fria_p01.update_status()
+                    await self.tel_chiller01_p01.update_status()
+                    await self.tel_crack01_p02.update_status()
+                    await self.tel_damper_lower_p04.update_status()
+                    await self.tel_fancoil01_p02.update_status()
+                    await self.tel_manejadora_lower01_p05.update_status()
+                    await self.tel_manejadora_sblanca_p04.update_status()
+                    await self.tel_manejadora_slimpia_p04.update_status()
+                    await self.tel_manejadora_zzz_p04.update_status()
+                    await self.tel_manejadra_sblanca_p04.update_status()
+                    await self.tel_temperatua_ambiente_p01.update_status()
+                    await self.tel_valvula_p01.update_status()
+                    await self.tel_vea01_p01.update_status()
+                    await self.tel_vea01_p05.update_status()
+                    await self.tel_vea03_p04.update_status()
+                    await self.tel_vea04_p04.update_status()
+                    await self.tel_vea08_p05.update_status()
+                    await self.tel_vea09_p05.update_status()
+                    await self.tel_vea10_p05.update_status()
+                    await self.tel_vea11_p05.update_status()
+                    await self.tel_vea12_p05.update_status()
+                    await self.tel_vea13_p05.update_status()
+                    await self.tel_vea14_p05.update_status()
+                    await self.tel_vea15_p05.update_status()
+                    await self.tel_vea16_p05.update_status()
+                    await self.tel_vea17_p05.update_status()
+                    await self.tel_vec01_p01.update_status()
+                    await self.tel_vex03_p04.update_status()
+                    await self.tel_vex04_p04.update_status()
+                    await self.tel_vin01_p01.update_status()
+                    await self.tel_zona_carga_p04.update_status()
 
                     await asyncio.sleep(1.0)
                     self.telemetry_available.set()

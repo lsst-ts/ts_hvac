@@ -118,13 +118,13 @@ class HvacCsc(salobj.ConfigurableCsc):
 
     async def do_chiller01P01(self, data):
         self.assert_enabled()
-        await self.mqtt_client.chiller01P01(
+        await self.mqtt_client.do_chiller01P01(
             setpoint_activo=data.setpointActivo, comando_encendido=data.comandoEncendido
         )
 
     async def do_crack01P02(self, data):
         self.assert_enabled()
-        await self.mqtt_client.crack01P02(
+        await self.mqtt_client.do_crack01P02(
             setpoint_humidificador=data.setpointHumidificador,
             setpoint_deshumidificador=data.setpointDeshumidificador,
             set_point_cooling=data.setPointCooling,
@@ -134,7 +134,7 @@ class HvacCsc(salobj.ConfigurableCsc):
 
     async def do_fancoil01P02(self, data):
         self.assert_enabled()
-        await self.mqtt_client.fancoil01P02(
+        await self.mqtt_client.do_fancoil01P02(
             perc_apertura_valvula_frio=data.percAperturaValvulaFrio,
             setpoint_cooling_day=data.setpointCoolingDay,
             setpoint_heating_day=data.setpointHeatingDay,
@@ -146,7 +146,7 @@ class HvacCsc(salobj.ConfigurableCsc):
 
     async def do_manejadoraLower01P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.manejadoraLower01P05(
+        await self.mqtt_client.do_manejadoraLower01P05(
             setpoint_trabajo=data.setpointTrabajo,
             setpoint_ventilador_min=data.setpointVentiladorMin,
             setpoint_ventilador_max=data.setpointVentiladorMax,
@@ -156,7 +156,7 @@ class HvacCsc(salobj.ConfigurableCsc):
 
     async def do_manejadoraSblancaP04(self, data):
         self.assert_enabled()
-        await self.mqtt_client.manejadoraSblancaP04(
+        await self.mqtt_client.do_manejadoraSblancaP04(
             valor_consigna=data.valorConsigna,
             setpoint_ventilador_min=data.setpointVentiladorMin,
             setpoint_ventilador_max=data.setpointVentiladorMax,
@@ -165,67 +165,67 @@ class HvacCsc(salobj.ConfigurableCsc):
 
     async def do_vea01P01(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea01P01(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea01P01(comando_encendido=data.comandoEncendido)
 
     async def do_vea01P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea01P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea01P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea08P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea08P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea08P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea09P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea09P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea09P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea10P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea10P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea10P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea11P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea11P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea11P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea12P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea12P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea12P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea13P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea13P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea13P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea14P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea14P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea14P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea15P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea15P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea15P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea16P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea16P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea16P05(comando_encendido=data.comandoEncendido)
 
     async def do_vea17P05(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vea17P05(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vea17P05(comando_encendido=data.comandoEncendido)
 
     async def do_vec01P01(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vec01P01(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vec01P01(comando_encendido=data.comandoEncendido)
 
     async def do_vex03P04(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vex03P04(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vex03P04(comando_encendido=data.comandoEncendido)
 
     async def do_vex04P04(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vex04P04(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vex04P04(comando_encendido=data.comandoEncendido)
 
     async def do_vin01P01(self, data):
         self.assert_enabled()
-        await self.mqtt_client.vin01P01(comando_encendido=data.comandoEncendido)
+        await self.mqtt_client.do_vin01P01(comando_encendido=data.comandoEncendido)
 
     async def get_telemetry(self):
         try:
@@ -237,37 +237,39 @@ class HvacCsc(salobj.ConfigurableCsc):
                 await asyncio.sleep(0.1)
                 if self.mqtt_client.telemetry_available.is_set():
                     self.log.info("Telemetry available!")
-                    self.tel_bombaAguaFriaP01.set_put(**vars(self.mqtt_client.bomba_agua_fria_p01))
-                    self.tel_chiller01P01.set_put(**vars(self.mqtt_client.chiller01_p01))
-                    self.tel_crack01P02.set_put(**vars(self.mqtt_client.crack01_p02))
-                    self.tel_damperLowerP04.set_put(**vars(self.mqtt_client.damper_lower_p04))
-                    self.tel_fancoil01P02.set_put(**vars(self.mqtt_client.fancoil01_p02))
-                    self.tel_manejadoraLower01P05.set_put(**vars(self.mqtt_client.manejadora_lower01_p05))
-                    self.tel_manejadoraSblancaP04.set_put(**vars(self.mqtt_client.manejadora_sblanca_p04))
-                    self.tel_manejadraSblancaP04.set_put(**vars(self.mqtt_client.manejadra_sblanca_p04))
-                    self.tel_manejadoraSlimpiaP04.set_put(**vars(self.mqtt_client.manejadora_slimpia_p04))
-                    self.tel_manejadoraZzzP04.set_put(**vars(self.mqtt_client.manejadora_zzz_p04))
-                    self.tel_temperatuaAmbienteP01.set_put(**vars(self.mqtt_client.temperatua_ambiente_p01))
-                    self.tel_valvulaP01.set_put(**vars(self.mqtt_client.valvula_p01))
-                    self.tel_vea01P01.set_put(**vars(self.mqtt_client.vea01_p01))
-                    self.tel_vea01P05.set_put(**vars(self.mqtt_client.vea01_p05))
-                    self.tel_vea03P04.set_put(**vars(self.mqtt_client.vea03_p04))
-                    self.tel_vea04P04.set_put(**vars(self.mqtt_client.vea04_p04))
-                    self.tel_vea08P05.set_put(**vars(self.mqtt_client.vea08_p05))
-                    self.tel_vea09P05.set_put(**vars(self.mqtt_client.vea09_p05))
-                    self.tel_vea10P05.set_put(**vars(self.mqtt_client.vea10_p05))
-                    self.tel_vea11P05.set_put(**vars(self.mqtt_client.vea11_p05))
-                    self.tel_vea12P05.set_put(**vars(self.mqtt_client.vea12_p05))
-                    self.tel_vea13P05.set_put(**vars(self.mqtt_client.vea13_p05))
-                    self.tel_vea14P05.set_put(**vars(self.mqtt_client.vea14_p05))
-                    self.tel_vea15P05.set_put(**vars(self.mqtt_client.vea15_p05))
-                    self.tel_vea16P05.set_put(**vars(self.mqtt_client.vea16_p05))
-                    self.tel_vea17P05.set_put(**vars(self.mqtt_client.vea17_p05))
-                    self.tel_vec01P01.set_put(**vars(self.mqtt_client.vec01_p01))
-                    self.tel_vex03P04.set_put(**vars(self.mqtt_client.vex03_p04))
-                    self.tel_vex04P04.set_put(**vars(self.mqtt_client.vex04_p04))
-                    self.tel_vin01P01.set_put(**vars(self.mqtt_client.vin01_p01))
-                    self.tel_zonaCargaP04.set_put(**vars(self.mqtt_client.zona_carga_p04))
+                    self.tel_bombaAguaFriaP01.set_put(**vars(self.mqtt_client.tel_bomba_agua_fria_p01))
+                    self.tel_chiller01P01.set_put(**vars(self.mqtt_client.tel_chiller01_p01))
+                    self.tel_crack01P02.set_put(**vars(self.mqtt_client.tel_crack01_p02))
+                    self.tel_damperLowerP04.set_put(**vars(self.mqtt_client.tel_damper_lower_p04))
+                    self.tel_fancoil01P02.set_put(**vars(self.mqtt_client.tel_fancoil01_p02))
+                    self.tel_manejadoraLower01P05.set_put(**vars(self.mqtt_client.tel_manejadora_lower01_p05))
+                    self.tel_manejadoraSblancaP04.set_put(**vars(self.mqtt_client.tel_manejadora_sblanca_p04))
+                    self.tel_manejadraSblancaP04.set_put(**vars(self.mqtt_client.tel_manejadra_sblanca_p04))
+                    self.tel_manejadoraSlimpiaP04.set_put(**vars(self.mqtt_client.tel_manejadora_slimpia_p04))
+                    self.tel_manejadoraZzzP04.set_put(**vars(self.mqtt_client.tel_manejadora_zzz_p04))
+                    self.tel_temperatuaAmbienteP01.set_put(
+                        **vars(self.mqtt_client.tel_temperatua_ambiente_p01)
+                    )
+                    self.tel_valvulaP01.set_put(**vars(self.mqtt_client.tel_valvula_p01))
+                    self.tel_vea01P01.set_put(**vars(self.mqtt_client.tel_vea01_p01))
+                    self.tel_vea01P05.set_put(**vars(self.mqtt_client.tel_vea01_p05))
+                    self.tel_vea03P04.set_put(**vars(self.mqtt_client.tel_vea03_p04))
+                    self.tel_vea04P04.set_put(**vars(self.mqtt_client.tel_vea04_p04))
+                    self.tel_vea08P05.set_put(**vars(self.mqtt_client.tel_vea08_p05))
+                    self.tel_vea09P05.set_put(**vars(self.mqtt_client.tel_vea09_p05))
+                    self.tel_vea10P05.set_put(**vars(self.mqtt_client.tel_vea10_p05))
+                    self.tel_vea11P05.set_put(**vars(self.mqtt_client.tel_vea11_p05))
+                    self.tel_vea12P05.set_put(**vars(self.mqtt_client.tel_vea12_p05))
+                    self.tel_vea13P05.set_put(**vars(self.mqtt_client.tel_vea13_p05))
+                    self.tel_vea14P05.set_put(**vars(self.mqtt_client.tel_vea14_p05))
+                    self.tel_vea15P05.set_put(**vars(self.mqtt_client.tel_vea15_p05))
+                    self.tel_vea16P05.set_put(**vars(self.mqtt_client.tel_vea16_p05))
+                    self.tel_vea17P05.set_put(**vars(self.mqtt_client.tel_vea17_p05))
+                    self.tel_vec01P01.set_put(**vars(self.mqtt_client.tel_vec01_p01))
+                    self.tel_vex03P04.set_put(**vars(self.mqtt_client.tel_vex03_p04))
+                    self.tel_vex04P04.set_put(**vars(self.mqtt_client.tel_vex04_p04))
+                    self.tel_vin01P01.set_put(**vars(self.mqtt_client.tel_vin01_p01))
+                    self.tel_zonaCargaP04.set_put(**vars(self.mqtt_client.tel_zona_carga_p04))
                     self.mqtt_client.telemetry_available.clear()
         except asyncio.CancelledError:
             # Normal exit

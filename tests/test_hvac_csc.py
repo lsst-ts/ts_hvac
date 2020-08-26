@@ -71,12 +71,15 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_chiller01P01 = await self.assert_next_sample(topic=self.remote.tel_chiller01P01, flush=True,)
-            self.assertTrue(tel_chiller01P01.compresor01Funcionando is False)
-            self.assertTrue(tel_chiller01P01.compresor02Funcionando is False)
-            self.assertTrue(tel_chiller01P01.compresor03Funcionando is False)
-            self.assertTrue(tel_chiller01P01.compresor04Funcionando is False)
-            self.assertTrue(tel_chiller01P01.comandoEncendido is False)
+            tel_chiller01P01 = await self.assert_next_sample(
+                topic=self.remote.tel_chiller01P01,
+                compresor01Funcionando=False,
+                compresor02Funcionando=False,
+                compresor03Funcionando=False,
+                compresor04Funcionando=False,
+                comandoEncendido=False,
+                flush=True,
+            )
             self.assertAlmostEqual(-99.99, tel_chiller01P01.setpointActivo, places=5)
 
             setpoint_activo = 90
@@ -85,22 +88,28 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 setpointActivo=setpoint_activo, comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
             tel_chiller01P01 = await self.assert_next_sample(topic=self.remote.tel_chiller01P01, flush=True,)
-            tel_chiller01P01 = await self.assert_next_sample(topic=self.remote.tel_chiller01P01, flush=True,)
-            self.assertTrue(tel_chiller01P01.compresor01Funcionando == comando_encendido)
-            self.assertTrue(tel_chiller01P01.compresor02Funcionando == comando_encendido)
-            self.assertTrue(tel_chiller01P01.compresor03Funcionando == comando_encendido)
-            self.assertTrue(tel_chiller01P01.compresor04Funcionando == comando_encendido)
-            self.assertTrue(tel_chiller01P01.comandoEncendido == comando_encendido)
+            tel_chiller01P01 = await self.assert_next_sample(
+                topic=self.remote.tel_chiller01P01,
+                compresor01Funcionando=comando_encendido,
+                compresor02Funcionando=comando_encendido,
+                compresor03Funcionando=comando_encendido,
+                compresor04Funcionando=comando_encendido,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
             self.assertAlmostEqual(setpoint_activo, tel_chiller01P01.setpointActivo)
 
     async def test_do_crack01P02(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_crack01P02 = await self.assert_next_sample(topic=self.remote.tel_crack01P02, flush=True,)
-            self.assertTrue(tel_crack01P02.estadoFuncionamiento is False)
-            self.assertTrue(tel_crack01P02.estadoPresenciaAlarma is False)
-            self.assertTrue(tel_crack01P02.comandoEncendido is False)
+            tel_crack01P02 = await self.assert_next_sample(
+                topic=self.remote.tel_crack01P02,
+                estadoFuncionamiento=False,
+                estadoPresenciaAlarma=False,
+                comandoEncendido=False,
+                flush=True,
+            )
             self.assertAlmostEqual(-99.99, tel_crack01P02.setpointHumidificador, places=5)
             self.assertAlmostEqual(-99.99, tel_crack01P02.setpointDeshumidificador, places=5)
             self.assertAlmostEqual(-99.99, tel_crack01P02.setPointCooling, places=5)
@@ -120,10 +129,13 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 timeout=STD_TIMEOUT,
             )
             tel_crack01P02 = await self.assert_next_sample(topic=self.remote.tel_crack01P02, flush=True,)
-            tel_crack01P02 = await self.assert_next_sample(topic=self.remote.tel_crack01P02, flush=True,)
-            self.assertTrue(tel_crack01P02.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_crack01P02.estadoPresenciaAlarma is False)
-            self.assertTrue(tel_crack01P02.comandoEncendido == comando_encendido)
+            tel_crack01P02 = await self.assert_next_sample(
+                topic=self.remote.tel_crack01P02,
+                estadoFuncionamiento=comando_encendido,
+                estadoPresenciaAlarma=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
             self.assertAlmostEqual(setpoint_humidificador, tel_crack01P02.setpointHumidificador, places=5)
             self.assertAlmostEqual(
                 setpoint_deshumidificador, tel_crack01P02.setpointDeshumidificador, places=5
@@ -135,12 +147,15 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_fancoil01P02 = await self.assert_next_sample(topic=self.remote.tel_fancoil01P02, flush=True,)
-            self.assertTrue(tel_fancoil01P02.temperaturaSala is False)
-            self.assertTrue(tel_fancoil01P02.estadoOperacion is False)
-            self.assertTrue(tel_fancoil01P02.estadoCalefactor is False)
-            self.assertTrue(tel_fancoil01P02.estadoVentilador is False)
-            self.assertTrue(tel_fancoil01P02.comandoEncendido is False)
+            tel_fancoil01P02 = await self.assert_next_sample(
+                topic=self.remote.tel_fancoil01P02,
+                temperaturaSala=False,
+                estadoOperacion=False,
+                estadoCalefactor=False,
+                estadoVentilador=False,
+                comandoEncendido=False,
+                flush=True,
+            )
             self.assertAlmostEqual(-99.99, tel_fancoil01P02.aperturaValvulaFrio, places=5)
             self.assertAlmostEqual(-99.99, tel_fancoil01P02.setpointCoolingDay, places=5)
             self.assertAlmostEqual(-99.99, tel_fancoil01P02.setpointHeatingDay, places=5)
@@ -166,12 +181,15 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 timeout=STD_TIMEOUT,
             )
             tel_fancoil01P02 = await self.assert_next_sample(topic=self.remote.tel_fancoil01P02, flush=True,)
-            tel_fancoil01P02 = await self.assert_next_sample(topic=self.remote.tel_fancoil01P02, flush=True,)
-            self.assertTrue(tel_fancoil01P02.temperaturaSala == comando_encendido)
-            self.assertTrue(tel_fancoil01P02.estadoOperacion == comando_encendido)
-            self.assertTrue(tel_fancoil01P02.estadoCalefactor == comando_encendido)
-            self.assertTrue(tel_fancoil01P02.estadoVentilador == comando_encendido)
-            self.assertTrue(tel_fancoil01P02.comandoEncendido == comando_encendido)
+            tel_fancoil01P02 = await self.assert_next_sample(
+                topic=self.remote.tel_fancoil01P02,
+                temperaturaSala=comando_encendido,
+                estadoOperacion=comando_encendido,
+                estadoCalefactor=comando_encendido,
+                estadoVentilador=comando_encendido,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
             self.assertAlmostEqual(perc_apertura_valvula_frio, tel_fancoil01P02.aperturaValvulaFrio, places=5)
             self.assertAlmostEqual(setpoint_cooling_day, tel_fancoil01P02.setpointCoolingDay, places=5)
             self.assertAlmostEqual(setpoint_heating_day, tel_fancoil01P02.setpointHeatingDay, places=5)
@@ -184,10 +202,11 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
             tel_manejadoraLower01P05 = await self.assert_next_sample(
-                topic=self.remote.tel_manejadoraLower01P05, flush=True,
+                topic=self.remote.tel_manejadoraLower01P05,
+                estadoFuncionamiento=False,
+                comandoEncendido=False,
+                flush=True,
             )
-            self.assertTrue(tel_manejadoraLower01P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_manejadoraLower01P05.comandoEncendido is False)
             self.assertAlmostEqual(-99.99, tel_manejadoraLower01P05.setpointTrabajo, places=5)
             self.assertAlmostEqual(-99.99, tel_manejadoraLower01P05.setpointVentiladorMin, places=5)
             self.assertAlmostEqual(-99.99, tel_manejadoraLower01P05.setpointVentiladorMax, places=5)
@@ -210,10 +229,11 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 topic=self.remote.tel_manejadoraLower01P05, flush=True,
             )
             tel_manejadoraLower01P05 = await self.assert_next_sample(
-                topic=self.remote.tel_manejadoraLower01P05, flush=True,
+                topic=self.remote.tel_manejadoraLower01P05,
+                estadoFuncionamiento=comando_encendido,
+                comandoEncendido=comando_encendido,
+                flush=True,
             )
-            self.assertTrue(tel_manejadoraLower01P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_manejadoraLower01P05.comandoEncendido == comando_encendido)
             self.assertAlmostEqual(setpoint_trabajo, tel_manejadoraLower01P05.setpointTrabajo, places=5)
             self.assertAlmostEqual(
                 setpoint_ventilador_min, tel_manejadoraLower01P05.setpointVentiladorMin, places=5
@@ -230,10 +250,11 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
             tel_manejadoraSblancaP04 = await self.assert_next_sample(
-                topic=self.remote.tel_manejadoraSblancaP04, flush=True,
+                topic=self.remote.tel_manejadoraSblancaP04,
+                estadoFuncionamiento=False,
+                comandoEncendido=False,
+                flush=True,
             )
-            self.assertTrue(tel_manejadoraSblancaP04.estadoFuncionamiento is False)
-            self.assertTrue(tel_manejadoraSblancaP04.comandoEncendido is False)
             self.assertAlmostEqual(-99.99, tel_manejadoraSblancaP04.valorConsigna, places=5)
             self.assertAlmostEqual(-99.99, tel_manejadoraSblancaP04.setpointVentiladorMin, places=5)
             self.assertAlmostEqual(-99.99, tel_manejadoraSblancaP04.setpointVentiladorMax, places=5)
@@ -253,10 +274,11 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 topic=self.remote.tel_manejadoraSblancaP04, flush=True,
             )
             tel_manejadoraSblancaP04 = await self.assert_next_sample(
-                topic=self.remote.tel_manejadoraSblancaP04, flush=True,
+                topic=self.remote.tel_manejadoraSblancaP04,
+                estadoFuncionamiento=comando_encendido,
+                comandoEncendido=comando_encendido,
+                flush=True,
             )
-            self.assertTrue(tel_manejadoraSblancaP04.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_manejadoraSblancaP04.comandoEncendido == comando_encendido)
             self.assertAlmostEqual(valor_consigna, tel_manejadoraSblancaP04.valorConsigna, places=5)
             self.assertAlmostEqual(
                 setpoint_ventilador_min, tel_manejadoraSblancaP04.setpointVentiladorMin, places=5
@@ -269,299 +291,421 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea01P01 = await self.assert_next_sample(topic=self.remote.tel_vea01P01, flush=True,)
-            self.assertTrue(tel_vea01P01.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea01P01.estadoSelector is False)
-            self.assertTrue(tel_vea01P01.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea01P01,
+                estadoFuncionamiento=False,
+                estadoSelector=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea01P01.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
 
-            tel_vea01P01 = await self.assert_next_sample(topic=self.remote.tel_vea01P01, flush=True,)
-            tel_vea01P01 = await self.assert_next_sample(topic=self.remote.tel_vea01P01, flush=True,)
-            self.assertTrue(tel_vea01P01.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea01P01.estadoSelector == comando_encendido)
-            self.assertTrue(tel_vea01P01.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea01P01, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea01P01,
+                estadoFuncionamiento=comando_encendido,
+                estadoSelector=comando_encendido,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea01P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea01P05 = await self.assert_next_sample(topic=self.remote.tel_vea01P05, flush=True,)
-            self.assertTrue(tel_vea01P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea01P05.fallaTermica is False)
-            self.assertTrue(tel_vea01P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea01P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea01P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea01P05 = await self.assert_next_sample(topic=self.remote.tel_vea01P05, flush=True,)
-            tel_vea01P05 = await self.assert_next_sample(topic=self.remote.tel_vea01P05, flush=True,)
-            self.assertTrue(tel_vea01P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea01P05.fallaTermica is False)
-            self.assertTrue(tel_vea01P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea01P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea01P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea08P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea08P05 = await self.assert_next_sample(topic=self.remote.tel_vea08P05, flush=True,)
-            self.assertTrue(tel_vea08P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea08P05.fallaTermica is False)
-            self.assertTrue(tel_vea08P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea08P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea08P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea08P05 = await self.assert_next_sample(topic=self.remote.tel_vea08P05, flush=True,)
-            tel_vea08P05 = await self.assert_next_sample(topic=self.remote.tel_vea08P05, flush=True,)
-            self.assertTrue(tel_vea08P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea08P05.fallaTermica is False)
-            self.assertTrue(tel_vea08P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea08P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea08P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea09P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea09P05 = await self.assert_next_sample(topic=self.remote.tel_vea09P05, flush=True,)
-            self.assertTrue(tel_vea09P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea09P05.fallaTermica is False)
-            self.assertTrue(tel_vea09P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea09P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea09P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea09P05 = await self.assert_next_sample(topic=self.remote.tel_vea09P05, flush=True,)
-            tel_vea09P05 = await self.assert_next_sample(topic=self.remote.tel_vea09P05, flush=True,)
-            self.assertTrue(tel_vea09P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea09P05.fallaTermica is False)
-            self.assertTrue(tel_vea09P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea09P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea09P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea10P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea10P05 = await self.assert_next_sample(topic=self.remote.tel_vea10P05, flush=True,)
-            self.assertTrue(tel_vea10P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea10P05.fallaTermica is False)
-            self.assertTrue(tel_vea10P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea10P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea10P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea10P05 = await self.assert_next_sample(topic=self.remote.tel_vea10P05, flush=True,)
-            tel_vea10P05 = await self.assert_next_sample(topic=self.remote.tel_vea10P05, flush=True,)
-            self.assertTrue(tel_vea10P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea10P05.fallaTermica is False)
-            self.assertTrue(tel_vea10P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea10P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea10P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea11P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea11P05 = await self.assert_next_sample(topic=self.remote.tel_vea11P05, flush=True,)
-            self.assertTrue(tel_vea11P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea11P05.fallaTermica is False)
-            self.assertTrue(tel_vea11P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea11P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea11P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea11P05 = await self.assert_next_sample(topic=self.remote.tel_vea11P05, flush=True,)
-            tel_vea11P05 = await self.assert_next_sample(topic=self.remote.tel_vea11P05, flush=True,)
-            self.assertTrue(tel_vea11P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea11P05.fallaTermica is False)
-            self.assertTrue(tel_vea11P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea11P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea11P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea12P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea12P05 = await self.assert_next_sample(topic=self.remote.tel_vea12P05, flush=True,)
-            self.assertTrue(tel_vea12P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea12P05.fallaTermica is False)
-            self.assertTrue(tel_vea12P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea12P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea12P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea12P05 = await self.assert_next_sample(topic=self.remote.tel_vea12P05, flush=True,)
-            tel_vea12P05 = await self.assert_next_sample(topic=self.remote.tel_vea12P05, flush=True,)
-            self.assertTrue(tel_vea12P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea12P05.fallaTermica is False)
-            self.assertTrue(tel_vea12P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea12P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea12P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea13P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea13P05 = await self.assert_next_sample(topic=self.remote.tel_vea13P05, flush=True,)
-            self.assertTrue(tel_vea13P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea13P05.fallaTermica is False)
-            self.assertTrue(tel_vea13P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea13P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea13P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea13P05 = await self.assert_next_sample(topic=self.remote.tel_vea13P05, flush=True,)
-            tel_vea13P05 = await self.assert_next_sample(topic=self.remote.tel_vea13P05, flush=True,)
-            self.assertTrue(tel_vea13P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea13P05.fallaTermica is False)
-            self.assertTrue(tel_vea13P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea13P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea13P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea14P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea14P05 = await self.assert_next_sample(topic=self.remote.tel_vea14P05, flush=True,)
-            self.assertTrue(tel_vea14P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea14P05.fallaTermica is False)
-            self.assertTrue(tel_vea14P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea14P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea14P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea14P05 = await self.assert_next_sample(topic=self.remote.tel_vea14P05, flush=True,)
-            tel_vea14P05 = await self.assert_next_sample(topic=self.remote.tel_vea14P05, flush=True,)
-            self.assertTrue(tel_vea14P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea14P05.fallaTermica is False)
-            self.assertTrue(tel_vea14P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea14P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea14P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea15P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea15P05 = await self.assert_next_sample(topic=self.remote.tel_vea15P05, flush=True,)
-            self.assertTrue(tel_vea15P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea15P05.fallaTermica is False)
-            self.assertTrue(tel_vea15P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea15P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea15P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea15P05 = await self.assert_next_sample(topic=self.remote.tel_vea15P05, flush=True,)
-            tel_vea15P05 = await self.assert_next_sample(topic=self.remote.tel_vea15P05, flush=True,)
-            self.assertTrue(tel_vea15P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea15P05.fallaTermica is False)
-            self.assertTrue(tel_vea15P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea15P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea15P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea16P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea16P05 = await self.assert_next_sample(topic=self.remote.tel_vea16P05, flush=True,)
-            self.assertTrue(tel_vea16P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea16P05.fallaTermica is False)
-            self.assertTrue(tel_vea16P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea16P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea16P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea16P05 = await self.assert_next_sample(topic=self.remote.tel_vea16P05, flush=True,)
-            tel_vea16P05 = await self.assert_next_sample(topic=self.remote.tel_vea16P05, flush=True,)
-            self.assertTrue(tel_vea16P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea16P05.fallaTermica is False)
-            self.assertTrue(tel_vea16P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea16P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea16P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vea17P05(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vea17P05 = await self.assert_next_sample(topic=self.remote.tel_vea17P05, flush=True,)
-            self.assertTrue(tel_vea17P05.estadoFuncionamiento is False)
-            self.assertTrue(tel_vea17P05.fallaTermica is False)
-            self.assertTrue(tel_vea17P05.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea17P05,
+                estadoFuncionamiento=False,
+                fallaTermica=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vea17P05.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vea17P05 = await self.assert_next_sample(topic=self.remote.tel_vea17P05, flush=True,)
-            tel_vea17P05 = await self.assert_next_sample(topic=self.remote.tel_vea17P05, flush=True,)
-            self.assertTrue(tel_vea17P05.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vea17P05.fallaTermica is False)
-            self.assertTrue(tel_vea17P05.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea17P05, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vea17P05,
+                estadoFuncionamiento=comando_encendido,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vec01P01(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vec01P01 = await self.assert_next_sample(topic=self.remote.tel_vec01P01, flush=True,)
-            self.assertTrue(tel_vec01P01.estadoFuncionamiento is False)
-            self.assertTrue(tel_vec01P01.estadoSelector is False)
-            self.assertTrue(tel_vec01P01.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vec01P01,
+                estadoFuncionamiento=False,
+                estadoSelector=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vec01P01.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vec01P01 = await self.assert_next_sample(topic=self.remote.tel_vec01P01, flush=True,)
-            tel_vec01P01 = await self.assert_next_sample(topic=self.remote.tel_vec01P01, flush=True,)
-            self.assertTrue(tel_vec01P01.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vec01P01.estadoSelector is False)
-            self.assertTrue(tel_vec01P01.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vec01P01, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vec01P01,
+                estadoFuncionamiento=comando_encendido,
+                estadoSelector=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vex03P04(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vex03P04 = await self.assert_next_sample(topic=self.remote.tel_vex03P04, flush=True,)
-            self.assertTrue(tel_vex03P04.fallaTermica is False)
-            self.assertTrue(tel_vex03P04.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vex03P04, fallaTermica=False, comandoEncendido=False, flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vex03P04.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vex03P04 = await self.assert_next_sample(topic=self.remote.tel_vex03P04, flush=True,)
-            tel_vex03P04 = await self.assert_next_sample(topic=self.remote.tel_vex03P04, flush=True,)
-            self.assertTrue(tel_vex03P04.fallaTermica is False)
-            self.assertTrue(tel_vex03P04.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vex03P04, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vex03P04,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vex04P04(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vex04P04 = await self.assert_next_sample(topic=self.remote.tel_vex04P04, flush=True,)
-            self.assertTrue(tel_vex04P04.fallaTermica is False)
-            self.assertTrue(tel_vex04P04.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vex04P04, fallaTermica=False, comandoEncendido=False, flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vex04P04.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vex04P04 = await self.assert_next_sample(topic=self.remote.tel_vex04P04, flush=True,)
-            tel_vex04P04 = await self.assert_next_sample(topic=self.remote.tel_vex04P04, flush=True,)
-            self.assertTrue(tel_vex04P04.fallaTermica is False)
-            self.assertTrue(tel_vex04P04.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vex04P04, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vex04P04,
+                fallaTermica=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )
 
     async def test_do_vin01P01(self):
         async with self.make_csc(initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1):
             await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
-            tel_vin01P01 = await self.assert_next_sample(topic=self.remote.tel_vin01P01, flush=True,)
-            self.assertTrue(tel_vin01P01.estadoFuncionamiento is False)
-            self.assertTrue(tel_vin01P01.estadoSelector is False)
-            self.assertTrue(tel_vin01P01.comandoEncendido is False)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vin01P01,
+                estadoFuncionamiento=False,
+                estadoSelector=False,
+                comandoEncendido=False,
+                flush=True,
+            )
 
             comando_encendido = True
             await self.remote.cmd_vin01P01.set_start(
                 comandoEncendido=comando_encendido, timeout=STD_TIMEOUT,
             )
-            tel_vin01P01 = await self.assert_next_sample(topic=self.remote.tel_vin01P01, flush=True,)
-            tel_vin01P01 = await self.assert_next_sample(topic=self.remote.tel_vin01P01, flush=True,)
-            self.assertTrue(tel_vin01P01.estadoFuncionamiento == comando_encendido)
-            self.assertTrue(tel_vin01P01.estadoSelector is False)
-            self.assertTrue(tel_vin01P01.comandoEncendido == comando_encendido)
+            await self.assert_next_sample(
+                topic=self.remote.tel_vin01P01, flush=True,
+            )
+            await self.assert_next_sample(
+                topic=self.remote.tel_vin01P01,
+                estadoFuncionamiento=comando_encendido,
+                estadoSelector=False,
+                comandoEncendido=comando_encendido,
+                flush=True,
+            )

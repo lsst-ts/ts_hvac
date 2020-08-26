@@ -49,6 +49,8 @@ class HvacCsc(salobj.ConfigurableCsc):
     def __init__(
         self, config_dir=None, initial_state=salobj.State.STANDBY, simulation_mode=0,
     ):
+        if simulation_mode not in (0, 1):
+            raise salobj.ExpectedError(f"Simulation_mode={simulation_mode} must be 0 or 1")
         schema_path = pathlib.Path(__file__).resolve().parents[4].joinpath("schema", "hvac.yaml")
         self.config = None
         self._config_dir = config_dir
@@ -62,8 +64,6 @@ class HvacCsc(salobj.ConfigurableCsc):
         )
         self.mqtt_client = None
         self.telemetry_task = salobj.make_done_future()
-        if simulation_mode not in (0, 1):
-            raise salobj.ExpectedError(f"Simulation_mode={simulation_mode} must be 0 or 1")
         self.log.info("HvacCsc constructed")
 
     async def connect(self):

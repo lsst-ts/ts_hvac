@@ -24,39 +24,7 @@ __all__ = ["SimClient"]
 import asyncio
 import logging
 
-from lsst.ts.hvac.simulator.sim_telemetry import (
-    BombaAguaFriaP01,
-    Chiller01P01,
-    Crack01P02,
-    DamperLowerP04,
-    Fancoil01P02,
-    ManejadoraLower01P05,
-    ManejadoraSblancaP04,
-    ManejadoraSlimpiaP04,
-    ManejadoraZzzP04,
-    ManejadraSblancaP04,
-    TemperatuaAmbienteP01,
-    ValvulaP01,
-    Vea01P01,
-    Vea01P05,
-    Vea03P04,
-    Vea04P04,
-    Vea08P05,
-    Vea09P05,
-    Vea10P05,
-    Vea11P05,
-    Vea12P05,
-    Vea13P05,
-    Vea14P05,
-    Vea15P05,
-    Vea16P05,
-    Vea17P05,
-    Vec01P01,
-    Vex03P04,
-    Vex04P04,
-    Vin01P01,
-    ZonaCargaP04,
-)
+from lsst.ts.hvac.simulator import telemetry
 
 
 def validate_percentage(percentage):
@@ -66,9 +34,14 @@ def validate_percentage(percentage):
     ----------
     percentage: `float`
         The percentage to validate.
+
+    Raises
+    ------
+    ValueError
+        If the percentage is out of range.
     """
     if percentage < 0 or percentage > 100:
-        raise ValueError("Invalid value encountered.")
+        raise ValueError(f"Invalid percentage {percentage} encountered.")
 
 
 class SimClient:
@@ -78,37 +51,37 @@ class SimClient:
         self.telemetry_available = asyncio.Event()
         self.connected = False
 
-        self.bomba_agua_fria_p01 = BombaAguaFriaP01()
-        self.chiller01_p01 = Chiller01P01()
-        self.crack01_p02 = Crack01P02()
-        self.damper_lower_p04 = DamperLowerP04()
-        self.fancoil01_p02 = Fancoil01P02()
-        self.manejadora_lower01_p05 = ManejadoraLower01P05()
-        self.manejadora_sblanca_p04 = ManejadoraSblancaP04()
-        self.manejadora_slimpia_p04 = ManejadoraSlimpiaP04()
-        self.manejadora_zzz_p04 = ManejadoraZzzP04()
-        self.manejadra_sblanca_p04 = ManejadraSblancaP04()
-        self.temperatua_ambiente_p01 = TemperatuaAmbienteP01()
-        self.valvula_p01 = ValvulaP01()
-        self.vea01_p01 = Vea01P01()
-        self.vea01_p05 = Vea01P05()
-        self.vea03_p04 = Vea03P04()
-        self.vea04_p04 = Vea04P04()
-        self.vea08_p05 = Vea08P05()
-        self.vea09_p05 = Vea09P05()
-        self.vea10_p05 = Vea10P05()
-        self.vea11_p05 = Vea11P05()
-        self.vea12_p05 = Vea12P05()
-        self.vea13_p05 = Vea13P05()
-        self.vea14_p05 = Vea14P05()
-        self.vea15_p05 = Vea15P05()
-        self.vea16_p05 = Vea16P05()
-        self.vea17_p05 = Vea17P05()
-        self.vec01_p01 = Vec01P01()
-        self.vex03_p04 = Vex03P04()
-        self.vex04_p04 = Vex04P04()
-        self.vin01_p01 = Vin01P01()
-        self.zona_carga_p04 = ZonaCargaP04()
+        self.bomba_agua_fria_p01 = telemetry.BombaAguaFriaP01()
+        self.chiller01_p01 = telemetry.Chiller01P01()
+        self.crack01_p02 = telemetry.Crack01P02()
+        self.damper_lower_p04 = telemetry.DamperLowerP04()
+        self.fancoil01_p02 = telemetry.Fancoil01P02()
+        self.manejadora_lower01_p05 = telemetry.ManejadoraLower01P05()
+        self.manejadora_sblanca_p04 = telemetry.ManejadoraSblancaP04()
+        self.manejadora_slimpia_p04 = telemetry.ManejadoraSlimpiaP04()
+        self.manejadora_zzz_p04 = telemetry.ManejadoraZzzP04()
+        self.manejadra_sblanca_p04 = telemetry.ManejadraSblancaP04()
+        self.temperatua_ambiente_p01 = telemetry.TemperatuaAmbienteP01()
+        self.valvula_p01 = telemetry.ValvulaP01()
+        self.vea01_p01 = telemetry.Vea01P01()
+        self.vea01_p05 = telemetry.Vea01P05()
+        self.vea03_p04 = telemetry.Vea03P04()
+        self.vea04_p04 = telemetry.Vea04P04()
+        self.vea08_p05 = telemetry.Vea08P05()
+        self.vea09_p05 = telemetry.Vea09P05()
+        self.vea10_p05 = telemetry.Vea10P05()
+        self.vea11_p05 = telemetry.Vea11P05()
+        self.vea12_p05 = telemetry.Vea12P05()
+        self.vea13_p05 = telemetry.Vea13P05()
+        self.vea14_p05 = telemetry.Vea14P05()
+        self.vea15_p05 = telemetry.Vea15P05()
+        self.vea16_p05 = telemetry.Vea16P05()
+        self.vea17_p05 = telemetry.Vea17P05()
+        self.vec01_p01 = telemetry.Vec01P01()
+        self.vex03_p04 = telemetry.Vex03P04()
+        self.vex04_p04 = telemetry.Vex04P04()
+        self.vin01_p01 = telemetry.Vin01P01()
+        self.zona_carga_p04 = telemetry.ZonaCargaP04()
 
         self.log.info("SimClient constructed")
 

@@ -66,13 +66,13 @@ class MqttClient:
         Parameters
         ----------
         setpoint_humidificador: `float`
-            The setpoint for the humidificator.
+            The setpoint for the humidificator (0 to 100%).
         setpoint_deshumidificador: `float`
-            The setpoint for the deshumificator.
+            The setpoint for the deshumificator (0 to 100%).
         set_point_cooling: `float`
-            The setpoint for the cooling.
+            The setpoint for the cooling (0 to 100%).
         set_point_heating: `float`
-            The setpoint for the heating.
+            The setpoint for the heating (0 to 100%).
         comando_encendido: `bool`
             Switched on or off.
         """
@@ -93,17 +93,17 @@ class MqttClient:
         Parameters
         ----------
         perc_apertura_valvula_frio: `float`
-            The percentage of opening of the cold valve.
+            The percentage of opening of the cold valve (0 to 100%).
         setpoint_cooling_day: `float`
-            The setpoint for the cooling during the day.
+            The setpoint for the cooling during the day (0 to 100%).
         setpoint_heating_day: `float`
-            The setpoint for the heating during the day.
+            The setpoint for the heating during the day (0 to 100%).
         setpoint_cooling_night: `float`
-            The setpoint for the cooling during the night.
+            The setpoint for the cooling during the night (0 to 100%).
         setpoint_heating_night: `float`
-            The setpoint for the heating during the night.
+            The setpoint for the heating during the night (0 to 100%).
         setpoint_trabajo: `float`
-            The setpoint for the 'work'.
+            The setpoint for the 'work' (0 to 100%).
         comando_encendido: `bool`
             Switched on or off.
         """
@@ -122,13 +122,13 @@ class MqttClient:
         Parameters
         ----------
         setpoint_trabajo: `float`
-            The setpoint for the 'work'.
+            The setpoint for the 'work' (0 to 100%).
         setpoint_ventilador_min: `float`
-            The minimum setpoint for the fan.
+            The minimum setpoint for the fan (0 to 100%).
         setpoint_ventilador_max: `float`
-            The maximum setpoint for the fan.
+            The maximum setpoint for the fan (0 to 100%).
         temperatura_anticongelante: `float`
-            The temperature of the anti-freeze.
+            The temperature of the anti-freeze (Celsius).
         comando_encendido: `bool`
             Switched on or off.
         """
@@ -142,11 +142,11 @@ class MqttClient:
         Parameters
         ----------
         valor_consigna: `float`
-            The value of the 'consigna'.
+            The value of the 'consigna' (0 to 100%).
         setpoint_ventilador_min: `float`
-            The minimum setpoint for the fan.
+            The minimum setpoint for the fan (0 to 100%).
         setpoint_ventilador_max: `float`
-            The maximum setpoint for the fan.
+            The maximum setpoint for the fan (0 to 100%).
         comando_encendido: `bool`
             Switched on or off.
         """

@@ -64,7 +64,6 @@ def collect_telemetry_topics_and_items(row):
     global telemetry_topics
     topic_found = False
     topic = row[8]
-    st = None
     for hvac_topic in HvacTopic:
         if hvac_topic.value in topic:
             # Treat topic "LSST/PISO1/TEMPERATURA_AMBIENTE" differently until

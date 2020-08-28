@@ -275,7 +275,7 @@ class HvacCsc(salobj.ConfigurableCsc):
             # Normal exit
             pass
         except Exception:
-            self.log.exception(f"get_telemetry() failed")
+            self.log.exception("get_telemetry() failed")
 
     @property
     def connected(self):

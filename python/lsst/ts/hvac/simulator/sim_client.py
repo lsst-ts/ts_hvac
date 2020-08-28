@@ -454,4 +454,4 @@ class SimClient:
             # Normal exit
             pass
         except Exception:
-            self.log.exception(f"publish_telemetry() failed")
+            self.log.exception("publish_telemetry() failed")

@@ -5,6 +5,15 @@ title: HVAC v1
 description: Schema for HVAC configuration files
 type: object
 properties:
+  host:
+    description: IP address of the TCP/IP interface
+    type: string
+    format: hostname
+    default: "eas-hvac01.cp.lsst.org"
+  port:
+    description: Port number of the TCP/IP interface
+    type: integer
+    default: 1883
   connection_timeout:
     description: Time limit for connecting to the TCP/IP interface (sec)
     type: number

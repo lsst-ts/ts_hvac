@@ -1,6 +1,6 @@
 # This file is part of ts_hvac.
 #
-# Developed for the LSST Data Management System.
+# Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -20,307 +20,203 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asynctest
+import json
 import logging
 
-from lsst.ts.hvac.simulator.sim_client import SimClient
+import flake8
 
-logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG)
+import lsst.ts.hvac.simulator.sim_client as sim_client
+from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+
+logging.basicConfig(
+    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
+)
+
+# Make sure that flake8 log level is set to logging.INFO
+flake8.configure_logging(1)
 
 
 class SimClientTestCase(asynctest.TestCase):
     async def setUp(self):
+        """Setup the unit test.
+        """
         self.log = logging.getLogger("SimClientTestCase")
-        self.mqtt_client = SimClient()
+        # Make sure that all topics and their variables are loaded.
+        xml.collect_topics_and_items()
+        self.hvac_topics = xml.hvac_topics
 
-    async def test_chiller01P01(self):
-        expected_setpoint_activo = 90
-        expected_comando_encendido = True
-        await self.mqtt_client.do_chiller01P01(
-            setpoint_activo=expected_setpoint_activo, comando_encendido=expected_comando_encendido
+        # Set up the simulator client.
+        self.mqtt_client = sim_client.SimClient(
+            start_publish_telemetry_every_second=False
         )
-        self.assertEqual(expected_setpoint_activo, self.mqtt_client.tel_chiller01_p01.setpointActivo)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_chiller01_p01.comandoEncendido)
+        # Call connect to make sure that the MQTT client is in the correct
+        # state for the test.
+        await self.mqtt_client.connect()
 
-        expected_setpoint_activo = 110
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_chiller01P01(
-                setpoint_activo=expected_setpoint_activo, comando_encendido=expected_comando_encendido
-            )
+    async def tearDown(self):
+        """Cleanup after the unit test.
+        """
+        if self.mqtt_client:
+            await self.mqtt_client.disconnect()
 
-        expected_setpoint_activo = -11
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_chiller01P01(
-                setpoint_activo=expected_setpoint_activo, comando_encendido=expected_comando_encendido
-            )
+    def collect_mqtt_state(self):
+        """Convenience method to collect all MQTT topics and their values.
 
-    async def test_crack01P02(self):
-        expected_setpoint_humidificador = 90
-        expected_setpoint_deshumidificador = 80
-        expected_set_point_cooling = 70
-        expected_set_point_heating = 60
-        expected_comando_encendido = True
-        await self.mqtt_client.do_crack01P02(
-            setpoint_humidificador=expected_setpoint_humidificador,
-            setpoint_deshumidificador=expected_setpoint_deshumidificador,
-            set_point_cooling=expected_set_point_cooling,
-            set_point_heating=expected_set_point_heating,
-            comando_encendido=expected_comando_encendido,
-        )
-        self.assertEqual(
-            expected_setpoint_humidificador, self.mqtt_client.tel_crack01_p02.setpointHumidificador
-        )
-        self.assertEqual(
-            expected_setpoint_deshumidificador, self.mqtt_client.tel_crack01_p02.setpointDeshumidificador
-        )
-        self.assertEqual(expected_set_point_cooling, self.mqtt_client.tel_crack01_p02.setPointCooling)
-        self.assertEqual(expected_set_point_heating, self.mqtt_client.tel_crack01_p02.setPointHeating)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_crack01_p02.comandoEncendido)
+        The structure of the produced dictionary is
 
-        expected_setpoint_humidificador = 110
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_crack01P02(
-                setpoint_humidificador=expected_setpoint_humidificador,
-                setpoint_deshumidificador=expected_setpoint_deshumidificador,
-                set_point_cooling=expected_set_point_cooling,
-                set_point_heating=expected_set_point_heating,
-                comando_encendido=expected_comando_encendido,
-            )
+            topic1: {
+                param1: value1,
+                param2: value2,
+                ...
+            }
+            topic2: {
+                paramA: valueA,
+                paramB: valueB,
+                ...
+            }
+            ...
 
-        expected_setpoint_humidificador = -11
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_crack01P02(
-                setpoint_humidificador=expected_setpoint_humidificador,
-                setpoint_deshumidificador=expected_setpoint_deshumidificador,
-                set_point_cooling=expected_set_point_cooling,
-                set_point_heating=expected_set_point_heating,
-                comando_encendido=expected_comando_encendido,
-            )
+        Returns
+        -------
+        mqtt_state: `dict`
+            A dict containing the state of each enabled topic.
 
-    async def test_fancoil01P02(self):
-        expected_perc_apertura_valvula_frio = 90
-        expected_setpoint_cooling_day = 89
-        expected_setpoint_heating_day = 88
-        expected_setpoint_cooling_night = 87
-        expected_setpoint_heating_night = 86
-        expected_setpoint_trabajo = 85
-        expected_comando_encendido = True
-        await self.mqtt_client.do_fancoil01P02(
-            perc_apertura_valvula_frio=expected_perc_apertura_valvula_frio,
-            setpoint_cooling_day=expected_setpoint_cooling_day,
-            setpoint_heating_day=expected_setpoint_heating_day,
-            setpoint_cooling_night=expected_setpoint_cooling_night,
-            setpoint_heating_night=expected_setpoint_heating_night,
-            setpoint_trabajo=expected_setpoint_trabajo,
-            comando_encendido=expected_comando_encendido,
-        )
-        self.assertEqual(
-            expected_perc_apertura_valvula_frio, self.mqtt_client.tel_fancoil01_p02.aperturaValvulaFrio
-        )
-        self.assertEqual(expected_setpoint_cooling_day, self.mqtt_client.tel_fancoil01_p02.setpointCoolingDay)
-        self.assertEqual(expected_setpoint_heating_day, self.mqtt_client.tel_fancoil01_p02.setpointHeatingDay)
-        self.assertEqual(
-            expected_setpoint_cooling_night, self.mqtt_client.tel_fancoil01_p02.setpointCoolingNight
-        )
-        self.assertEqual(
-            expected_setpoint_heating_night, self.mqtt_client.tel_fancoil01_p02.setpointHeatingNight
-        )
-        self.assertEqual(expected_setpoint_trabajo, self.mqtt_client.tel_fancoil01_p02.setpointTrabajo)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_fancoil01_p02.comandoEncendido)
+        """
+        # This method needs to be called first to ensure that all MQTT topics
+        # publish their values.
+        self.mqtt_client.publish_telemetry()
+        mqtt_state = {}
+        # Next the MQTT messages containing the published values for all topics
+        # need to be collected.
+        msgs = self.mqtt_client.msgs
+        # Finally loop over the messages to fetch the published values of each
+        # topic and collect them per topic.
+        while not len(msgs) == 0:
+            msg = msgs.popleft()
+            topic = msg.topic
+            payload = msg.payload
+            topic, variable = xml.extract_topic_and_item(topic)
+            data = json.loads(payload)
+            if topic not in mqtt_state:
+                mqtt_state[topic] = {}
+            mqtt_state[topic][variable] = data
+        return mqtt_state
 
-        expected_setpoint_heating_night = 110
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_fancoil01P02(
-                perc_apertura_valvula_frio=expected_perc_apertura_valvula_frio,
-                setpoint_cooling_day=expected_setpoint_cooling_day,
-                setpoint_heating_day=expected_setpoint_heating_day,
-                setpoint_cooling_night=expected_setpoint_cooling_night,
-                setpoint_heating_night=expected_setpoint_heating_night,
-                setpoint_trabajo=expected_setpoint_trabajo,
-                comando_encendido=expected_comando_encendido,
-            )
+    def verify_topic_disabled(self, topic):
+        """Verifies that the provided topic is disabled by verifying that
+        it doesn't publish any values.
 
-        expected_setpoint_heating_night = -11
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_fancoil01P02(
-                perc_apertura_valvula_frio=expected_perc_apertura_valvula_frio,
-                setpoint_cooling_day=expected_setpoint_cooling_day,
-                setpoint_heating_day=expected_setpoint_heating_day,
-                setpoint_cooling_night=expected_setpoint_cooling_night,
-                setpoint_heating_night=expected_setpoint_heating_night,
-                setpoint_trabajo=expected_setpoint_trabajo,
-                comando_encendido=expected_comando_encendido,
-            )
+        Parameters
+        ----------
+        topic: `str`
+            The name of the topic.
+        """
+        mqtt_state = self.collect_mqtt_state()
+        self.assertFalse(topic in mqtt_state)
 
-    async def test_manejadoraLower01P05(self):
-        expected_setpoint_trabajo = 90
-        expected_setpoint_ventilador_min = 30
-        expected_setpoint_ventilador_max = 60
-        expected_temperatura_anticongelante = 25
-        expected_comando_encendido = True
-        await self.mqtt_client.do_manejadoraLower01P05(
-            setpoint_trabajo=expected_setpoint_trabajo,
-            setpoint_ventilador_min=expected_setpoint_ventilador_min,
-            setpoint_ventilador_max=expected_setpoint_ventilador_max,
-            temperatura_anticongelante=expected_temperatura_anticongelante,
-            comando_encendido=expected_comando_encendido,
-        )
-        self.assertEqual(
-            expected_setpoint_trabajo, self.mqtt_client.tel_manejadora_lower01_p05.setpointTrabajo
-        )
-        self.assertEqual(
-            expected_setpoint_ventilador_min,
-            self.mqtt_client.tel_manejadora_lower01_p05.setpointVentiladorMin,
-        )
-        self.assertEqual(
-            expected_setpoint_ventilador_max,
-            self.mqtt_client.tel_manejadora_lower01_p05.setpointVentiladorMax,
-        )
-        self.assertEqual(
-            expected_temperatura_anticongelante,
-            self.mqtt_client.tel_manejadora_lower01_p05.temperaturaAnticongelante,
-        )
-        self.assertEqual(
-            expected_comando_encendido, self.mqtt_client.tel_manejadora_lower01_p05.comandoEncendido
-        )
+    def verify_topic_state(self, topic, expected_state):
+        """Verifies that the state as reported by the topic is as expected.
 
-        expected_setpoint_trabajo = 110
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_manejadoraLower01P05(
-                setpoint_trabajo=expected_setpoint_trabajo,
-                setpoint_ventilador_min=expected_setpoint_ventilador_min,
-                setpoint_ventilador_max=expected_setpoint_ventilador_max,
-                temperatura_anticongelante=expected_temperatura_anticongelante,
-                comando_encendido=expected_comando_encendido,
-            )
+        For a description of the expected state dict, see the
+        `determine_expected_state` method in this class.
 
-        expected_setpoint_trabajo = -11
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_manejadoraLower01P05(
-                setpoint_trabajo=expected_setpoint_trabajo,
-                setpoint_ventilador_min=expected_setpoint_ventilador_min,
-                setpoint_ventilador_max=expected_setpoint_ventilador_max,
-                temperatura_anticongelante=expected_temperatura_anticongelante,
-                comando_encendido=expected_comando_encendido,
-            )
+        Parameters
+        ----------
+        topic: `str`
+            The name of the topic.
+        expected_state: `dict`
+            The expected state of the topic.
+        """
+        mqtt_state = self.collect_mqtt_state()
+        self.assertTrue(topic in mqtt_state)
+        variables = mqtt_state[topic]
+        for var in variables:
+            if isinstance(var, bool):
+                self.assertEqual(mqtt_state[topic][var], expected_state[var])
+            elif isinstance(var, dict):
+                self.assertGreaterEqual(
+                    mqtt_state[topic][var], expected_state[var]["min"]
+                )
+                self.assertLessEqual(mqtt_state[topic][var], expected_state[var]["max"])
 
-    async def test_manejadoraSblancaP04(self):
-        expected_valor_consigna = 90
-        expected_setpoint_ventilador_min = 30
-        expected_setpoint_ventilador_max = 60
-        expected_comando_encendido = True
-        await self.mqtt_client.do_manejadoraSblancaP04(
-            valor_consigna=expected_valor_consigna,
-            setpoint_ventilador_min=expected_setpoint_ventilador_min,
-            setpoint_ventilador_max=expected_setpoint_ventilador_max,
-            comando_encendido=expected_comando_encendido,
-        )
-        self.assertEqual(expected_valor_consigna, self.mqtt_client.tel_manejadora_sblanca_p04.valorConsigna)
-        self.assertEqual(
-            expected_setpoint_ventilador_min,
-            self.mqtt_client.tel_manejadora_sblanca_p04.setpointVentiladorMin,
-        )
-        self.assertEqual(
-            expected_setpoint_ventilador_max,
-            self.mqtt_client.tel_manejadora_sblanca_p04.setpointVentiladorMax,
-        )
-        self.assertEqual(
-            expected_comando_encendido, self.mqtt_client.tel_manejadora_sblanca_p04.comandoEncendido
-        )
+    def enable_topic(self, topic):
+        """Enable the topic by sending True to the enable command.
+        """
+        command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
+        value = "true"
+        self.mqtt_client.publish_mqtt_message(command, value)
 
-        expected_valor_consigna = 110
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_manejadoraSblancaP04(
-                valor_consigna=expected_valor_consigna,
-                setpoint_ventilador_min=expected_setpoint_ventilador_min,
-                setpoint_ventilador_max=expected_setpoint_ventilador_max,
-                comando_encendido=expected_comando_encendido,
-            )
+    def disable_topic(self, topic):
+        """Disable the topic by sending False to the enable command.
+        """
+        command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
+        value = "false"
+        self.mqtt_client.publish_mqtt_message(command, value)
 
-        expected_valor_consigna = -11
-        with self.assertRaises(ValueError):
-            await self.mqtt_client.do_manejadoraSblancaP04(
-                valor_consigna=expected_valor_consigna,
-                setpoint_ventilador_min=expected_setpoint_ventilador_min,
-                setpoint_ventilador_max=expected_setpoint_ventilador_max,
-                comando_encendido=expected_comando_encendido,
-            )
+    def determine_expected_state(self, topic):
+        """Determine the expected state of the topic by looping over each
+        variable of the topic and setting an expected value.
 
-    async def test_vea01P01(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea01P01(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea01_p01.comandoEncendido)
+        The expected values either is set to False (in case of a boolean) or to
+        a dictionary containing a min and a max value (in case of a float). If
+        any other idl_type is encountered the unit test fails.
+        The ranges of the min and max values depend on the unit and the limits
+        of the variable.
 
-    async def test_vea01P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea01P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea01_p05.comandoEncendido)
+        Parameters
+        ----------
+        topic: `str`
+            The topic to determine the expected state for.
 
-    async def test_vea08P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea08P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea08_p05.comandoEncendido)
+        Returns
+        -------
+        expected_state: `dict`
+            The expected state.
 
-    async def test_vea09P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea09P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea09_p05.comandoEncendido)
+        """
+        variables = xml.get_items_for_topic(topic)
+        expected_state = {}
+        for variable in variables:
+            var = variables[variable]
+            if var["topic_type"] == "READ":
+                if var["idl_type"] == "boolean":
+                    expected_state[variable] = False
+                elif var["idl_type"] == "float":
+                    lower_limit, upper_limit = var["limits"]
+                    if var["unit"] in ["deg_C", "unitless", "bar", "%"]:
+                        expected_state[variable] = {
+                            "min": lower_limit,
+                            "max": upper_limit,
+                        }
+                    else:
+                        self.fail(
+                            f"Found unexpected unit {var['unit']} for variable {variable}"
+                        )
+                else:
+                    self.fail(
+                        f"Found unexpected idl_type {var['idl_type']} for variable {variable}"
+                    )
+        return expected_state
 
-    async def test_vea10P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea10P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea10_p05.comandoEncendido)
+    async def test_topics(self):
+        """Loop over all topics and perform the following operations for
+        each topic:
 
-    async def test_vea11P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea11P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea11_p05.comandoEncendido)
+            * Verify that the topic is disabled if not always enabled.
+            * Enable the topic if not always enabled.
+            * Verify that the topic publishes values that correspond to the
+            expected range for each value.
+            * Disable the topic if not always enabled.
+            * Verify that the topic is disabled if not always enabled.
 
-    async def test_vea12P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea12P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea12_p05.comandoEncendido)
-
-    async def test_vea13P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea13P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea13_p05.comandoEncendido)
-
-    async def test_vea14P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea14P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea14_p05.comandoEncendido)
-
-    async def test_vea15P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea15P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea15_p05.comandoEncendido)
-
-    async def test_vea16P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea16P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea16_p05.comandoEncendido)
-
-    async def test_vea17P05(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vea17P05(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vea17_p05.comandoEncendido)
-
-    async def test_vec01P01(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vec01P01(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vec01_p01.comandoEncendido)
-
-    async def test_vex03P04(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vex03P04(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vex03_p04.comandoEncendido)
-
-    async def test_vex04P04(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vex04P04(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vex04_p04.comandoEncendido)
-
-    async def test_vin01P01(self):
-        expected_comando_encendido = True
-        await self.mqtt_client.do_vin01P01(comando_encendido=expected_comando_encendido)
-        self.assertEqual(expected_comando_encendido, self.mqtt_client.tel_vin01_p01.comandoEncendido)
+        """
+        topics = xml.get_topics()
+        for topic in topics:
+            expected_state = self.determine_expected_state(topic)
+            if topic not in xml.TOPICS_ALWAYS_ENABLED:
+                self.verify_topic_disabled(topic)
+                self.enable_topic(topic)
+            self.verify_topic_state(topic, expected_state)
+            if topic not in xml.TOPICS_ALWAYS_ENABLED:
+                self.disable_topic(topic)
+                self.verify_topic_disabled(topic)

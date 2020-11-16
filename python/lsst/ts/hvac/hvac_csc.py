@@ -1,6 +1,6 @@
 # This file is part of ts_hvac.
 #
-# Developed for the LSST Data Management System.
+# Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -22,11 +22,49 @@
 __all__ = ["HvacCsc"]
 
 import asyncio
+import json
 import pathlib
 
 from lsst.ts import salobj
+from lsst.ts.hvac.hvac_enums import CommandItem, HvacTopic, TelemetryItem
 from lsst.ts.hvac.mqtt_client import MqttClient
 from lsst.ts.hvac.simulator.sim_client import SimClient
+from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+
+# The number of seconds to collect the state of the HVAC system for before an
+# average is reported via SAL telemetry.
+HVAC_STATE_TRACK_PERIOD = 60
+
+
+class InternalItemState:
+    """Container for the state of the item of a general MQTT topic. A general
+    topic represents an MQTT subsystem (chiller, fan, pump, etc) and an item a
+    value reported by the subsystem (temperature, pressure, etc).
+    """
+
+    def __init__(self):
+        # The value as reported by the MQTT server at start up of the CSC. This
+        # value is reported in the telemetry if no updated values get reported.
+        self.initial_value = None
+        # The most recent average as computed during the last
+        # HVAC_STATE_TRACK_PERIOD.
+        self.recent_average = None
+        # A list of float or bool as collected since the last average was
+        # computed.
+        self.recent_values = []
+        # Keeps track of the data type so no averages are being computed for
+        # bool values.
+        self.data_type = None
+
+    def __str__(self):
+        return (
+            f"InternalItemState["
+            f"initial_value={self.initial_value}, "
+            f"recent_average={self.recent_average}, "
+            f"recent_values={self.recent_values}, "
+            f"data_type={self.data_type}, "
+            f"]"
+        )
 
 
 class HvacCsc(salobj.ConfigurableCsc):
@@ -44,14 +82,26 @@ class HvacCsc(salobj.ConfigurableCsc):
 
         * 0: regular operation.
         * 1: simulation: use a mock low level HVAC controller.
+
+    start_telemetry_publishing: `bool`
+        Indicate if the simulator should start publishing telemetry or not and
+        if the CSC should start a task for publishing telemetry on a regular
+        basis. This should be set to False for unit tests and True for all
+        other situations.
     """
 
+    valid_simulation_modes = (0, 1)
+
     def __init__(
-        self, config_dir=None, initial_state=salobj.State.STANDBY, simulation_mode=0,
+        self,
+        config_dir=None,
+        initial_state=salobj.State.STANDBY,
+        simulation_mode=0,
+        start_telemetry_publishing=True,
     ):
-        if simulation_mode not in (0, 1):
-            raise salobj.ExpectedError(f"Simulation_mode={simulation_mode} must be 0 or 1")
-        schema_path = pathlib.Path(__file__).resolve().parents[4].joinpath("schema", "hvac.yaml")
+        schema_path = (
+            pathlib.Path(__file__).resolve().parents[4].joinpath("schema", "HVAC.yaml")
+        )
         self.config = None
         self._config_dir = config_dir
         super().__init__(
@@ -62,8 +112,19 @@ class HvacCsc(salobj.ConfigurableCsc):
             initial_state=initial_state,
             simulation_mode=simulation_mode,
         )
+
         self.mqtt_client = None
+        self.start_telemetry_publishing = start_telemetry_publishing
         self.telemetry_task = salobj.make_done_future()
+
+        # Keep track of the internal state of the MQTT topics. This will
+        # collect all values for the duration of HVAC_STATE_TRACK_PERIOD before
+        # an average is sent via SAL telemetry. The structure is
+        # "general_topic" : {
+        #     "item": InternalItemState
+        # }
+        self.hvac_state = None
+
         self.log.info("HvacCsc constructed")
 
     async def connect(self):
@@ -78,32 +139,50 @@ class HvacCsc(salobj.ConfigurableCsc):
         if self.connected:
             raise RuntimeError("Already connected")
 
-        if self.simulation_mode == 1:
-            # Connect to the Simulator Client.
-            self.log.info("Connecting to SimClient.")
-            self.mqtt_client = SimClient()
-        else:
-            # Connect to the MQTT Client.
-            self.log.info("Connecting to MqttClient.")
-            self.mqtt_client = MqttClient()
+        # Initialize interal state track keeping
+        self._setup_hvac_state()
 
-        self.mqtt_client.connect()
-        self.telemetry_task = asyncio.create_task(self.get_telemetry())
+        if self.simulation_mode == 1:
+            # Use the Simulator Client.
+            self.log.info("Connecting to SimClient.")
+            self.mqtt_client = SimClient(self.start_telemetry_publishing)
+        else:
+            # Use the MQTT Client.
+            self.log.info("Connecting to MqttClient.")
+            self.mqtt_client = MqttClient(host=self.config.host, port=self.config.port)
+
+        await self.mqtt_client.connect()
+        if self.start_telemetry_publishing:
+            self.telemetry_task = asyncio.create_task(
+                self._publish_telemetry_regularly()
+            )
         self.log.info("Connected.")
 
     async def disconnect(self):
         """Disconnect the HVAQ client, if connected.
         """
-        self.log.info("Disconnecting")
-        self.telemetry_task.cancel()
         if self.connected:
-            self.mqtt_client.disconnect()
+            self.log.info("Disconnecting")
+            self.telemetry_task.cancel()
+            await self.mqtt_client.disconnect()
+
+    def _setup_hvac_state(self):
+        """Set up internal tracking of the MQTT state.
+        """
+        self.hvac_state = {}
+        mqtt_topics_and_items = xml.get_telemetry_mqtt_topics_and_items()
+        for mqtt_topic, items in mqtt_topics_and_items.items():
+            topic_state = {}
+            for item in items:
+                topic_state[item] = InternalItemState()
+                topic_state[item].data_type = items[item]["idl_type"]
+            self.hvac_state[mqtt_topic] = topic_state
 
     async def handle_summary_state(self):
         """Override of the handle_summary_state function to connect or
         disconnect to the HVAC server (or the mock server) when needed.
         """
-        self.log.info(f"handle_summary_state {salobj.State(self.summary_state).name}")
+        self.log.info(f"handle_summary_state {self.summary_state}")
         if self.disabled_or_enabled:
             if not self.connected:
                 await self.connect()
@@ -113,164 +192,77 @@ class HvacCsc(salobj.ConfigurableCsc):
     async def configure(self, config):
         self.config = config
 
-    async def implement_simulation_mode(self, simulation_mode):
-        pass
-
-    async def do_chiller01P01(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_chiller01P01(
-            setpoint_activo=data.setpointActivo, comando_encendido=data.comandoEncendido
+    def _compute_averages_and_send_telemetry(self):
+        self.log.info(
+            f"{HVAC_STATE_TRACK_PERIOD} seconds have passed since the last "
+            f"computation of the averages, so computing now."
         )
+        for topic in self.hvac_state:
+            data = {}
+            for item in self.hvac_state[topic]:
+                if not self.hvac_state[topic][item].recent_values:
+                    self.hvac_state[topic][item].recent_average = self.hvac_state[
+                        topic
+                    ][item].initial_value
+                else:
+                    if self.hvac_state[topic][item].data_type == "float":
+                        self.hvac_state[topic][item].recent_average = sum(
+                            self.hvac_state[topic][item].recent_values
+                        ) / len(self.hvac_state[topic][item].recent_values)
 
-    async def do_crack01P02(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_crack01P02(
-            setpoint_humidificador=data.setpointHumidificador,
-            setpoint_deshumidificador=data.setpointDeshumidificador,
-            set_point_cooling=data.setPointCooling,
-            set_point_heating=data.setPointHeating,
-            comando_encendido=data.comandoEncendido,
-        )
+                if self.hvac_state[topic][item].initial_value is None:
+                    self.log.error(f"{topic}/{item}: {self.hvac_state[topic][item]}")
+                    continue
 
-    async def do_fancoil01P02(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_fancoil01P02(
-            perc_apertura_valvula_frio=data.percAperturaValvulaFrio,
-            setpoint_cooling_day=data.setpointCoolingDay,
-            setpoint_heating_day=data.setpointHeatingDay,
-            setpoint_cooling_night=data.setpointCoolingNight,
-            setpoint_heating_night=data.setpointHeatingNight,
-            setpoint_trabajo=data.setpointTrabajo,
-            comando_encendido=data.comandoEncendido,
-        )
+                self.hvac_state[topic][item].recent_values = []
+                data[TelemetryItem(item).name] = self.hvac_state[topic][
+                    item
+                ].recent_average
 
-    async def do_manejadoraLower01P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_manejadoraLower01P05(
-            setpoint_trabajo=data.setpointTrabajo,
-            setpoint_ventilador_min=data.setpointVentiladorMin,
-            setpoint_ventilador_max=data.setpointVentiladorMax,
-            temperatura_anticongelante=data.temperaturaAnticongelante,
-            comando_encendido=data.comandoEncendido,
-        )
+            if data:
+                telemetry_method = getattr(self, "tel_" + HvacTopic(topic).name)
+                telemetry_method.set_put(**data)
+                self.log.info(f"Telemetry sent to {telemetry_method}")
 
-    async def do_manejadoraSblancaP04(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_manejadoraSblancaP04(
-            valor_consigna=data.valorConsigna,
-            setpoint_ventilador_min=data.setpointVentiladorMin,
-            setpoint_ventilador_max=data.setpointVentiladorMax,
-            comando_encendido=data.comandoEncendido,
-        )
+    def _handle_mqtt_messages(self):
+        msgs = self.mqtt_client.msgs
+        while not len(msgs) == 0:
+            msg = msgs.popleft()
+            topic_and_item = msg.topic
+            payload = msg.payload.decode()
 
-    async def do_vea01P01(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea01P01(comando_encendido=data.comandoEncendido)
+            # Safety check to make sure that no new topics get introduced.
+            if topic_and_item not in xml.hvac_topics:
+                self.log.error(f"Encountered unknown topic {topic_and_item}")
+                continue
 
-    async def do_vea01P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea01P05(comando_encendido=data.comandoEncendido)
+            topic, item = xml.extract_topic_and_item(topic_and_item)
+            item_state = self.hvac_state[topic][item]
+            value = payload
+            if payload not in [
+                "Automatico",
+                "Encendido$20Manual",
+                "Apagado$20Manual",
+            ]:
+                value = json.loads(payload)
 
-    async def do_vea08P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea08P05(comando_encendido=data.comandoEncendido)
+            # Make sure to store the initial value in case the value doesn't
+            # change often or at all.
+            if item_state.initial_value is None:
+                item_state.initial_value = value
+            else:
+                # Store the new value to be able to compute an average.
+                item_state.recent_values.append(value)
 
-    async def do_vea09P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea09P05(comando_encendido=data.comandoEncendido)
+    def publish_telemetry(self):
+        self._handle_mqtt_messages()
+        self._compute_averages_and_send_telemetry()
 
-    async def do_vea10P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea10P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vea11P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea11P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vea12P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea12P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vea13P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea13P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vea14P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea14P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vea15P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea15P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vea16P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea16P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vea17P05(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vea17P05(comando_encendido=data.comandoEncendido)
-
-    async def do_vec01P01(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vec01P01(comando_encendido=data.comandoEncendido)
-
-    async def do_vex03P04(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vex03P04(comando_encendido=data.comandoEncendido)
-
-    async def do_vex04P04(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vex04P04(comando_encendido=data.comandoEncendido)
-
-    async def do_vin01P01(self, data):
-        self.assert_enabled()
-        await self.mqtt_client.do_vin01P01(comando_encendido=data.comandoEncendido)
-
-    async def get_telemetry(self):
+    async def _publish_telemetry_regularly(self):
         try:
             while True:
-                self.log.info(
-                    "self.mqtt_client.telemetry_available.is_set() "
-                    f"= {self.mqtt_client.telemetry_available.is_set()}"
-                )
-                await asyncio.sleep(0.1)
-                if self.mqtt_client.telemetry_available.is_set():
-                    self.log.info("Telemetry available!")
-                    self.tel_bombaAguaFriaP01.set_put(**vars(self.mqtt_client.tel_bomba_agua_fria_p01))
-                    self.tel_chiller01P01.set_put(**vars(self.mqtt_client.tel_chiller01_p01))
-                    self.tel_crack01P02.set_put(**vars(self.mqtt_client.tel_crack01_p02))
-                    self.tel_damperLowerP04.set_put(**vars(self.mqtt_client.tel_damper_lower_p04))
-                    self.tel_fancoil01P02.set_put(**vars(self.mqtt_client.tel_fancoil01_p02))
-                    self.tel_manejadoraLower01P05.set_put(**vars(self.mqtt_client.tel_manejadora_lower01_p05))
-                    self.tel_manejadoraSblancaP04.set_put(**vars(self.mqtt_client.tel_manejadora_sblanca_p04))
-                    self.tel_manejadraSblancaP04.set_put(**vars(self.mqtt_client.tel_manejadra_sblanca_p04))
-                    self.tel_manejadoraSlimpiaP04.set_put(**vars(self.mqtt_client.tel_manejadora_slimpia_p04))
-                    self.tel_manejadoraZzzP04.set_put(**vars(self.mqtt_client.tel_manejadora_zzz_p04))
-                    self.tel_temperatuaAmbienteP01.set_put(
-                        **vars(self.mqtt_client.tel_temperatua_ambiente_p01)
-                    )
-                    self.tel_valvulaP01.set_put(**vars(self.mqtt_client.tel_valvula_p01))
-                    self.tel_vea01P01.set_put(**vars(self.mqtt_client.tel_vea01_p01))
-                    self.tel_vea01P05.set_put(**vars(self.mqtt_client.tel_vea01_p05))
-                    self.tel_vea03P04.set_put(**vars(self.mqtt_client.tel_vea03_p04))
-                    self.tel_vea04P04.set_put(**vars(self.mqtt_client.tel_vea04_p04))
-                    self.tel_vea08P05.set_put(**vars(self.mqtt_client.tel_vea08_p05))
-                    self.tel_vea09P05.set_put(**vars(self.mqtt_client.tel_vea09_p05))
-                    self.tel_vea10P05.set_put(**vars(self.mqtt_client.tel_vea10_p05))
-                    self.tel_vea11P05.set_put(**vars(self.mqtt_client.tel_vea11_p05))
-                    self.tel_vea12P05.set_put(**vars(self.mqtt_client.tel_vea12_p05))
-                    self.tel_vea13P05.set_put(**vars(self.mqtt_client.tel_vea13_p05))
-                    self.tel_vea14P05.set_put(**vars(self.mqtt_client.tel_vea14_p05))
-                    self.tel_vea15P05.set_put(**vars(self.mqtt_client.tel_vea15_p05))
-                    self.tel_vea16P05.set_put(**vars(self.mqtt_client.tel_vea16_p05))
-                    self.tel_vea17P05.set_put(**vars(self.mqtt_client.tel_vea17_p05))
-                    self.tel_vec01P01.set_put(**vars(self.mqtt_client.tel_vec01_p01))
-                    self.tel_vex03P04.set_put(**vars(self.mqtt_client.tel_vex03_p04))
-                    self.tel_vex04P04.set_put(**vars(self.mqtt_client.tel_vex04_p04))
-                    self.tel_vin01P01.set_put(**vars(self.mqtt_client.tel_vin01_p01))
-                    self.tel_zonaCargaP04.set_put(**vars(self.mqtt_client.tel_zona_carga_p04))
-                    self.mqtt_client.telemetry_available.clear()
+                self.publish_telemetry()
+                await asyncio.sleep(HVAC_STATE_TRACK_PERIOD)
         except asyncio.CancelledError:
             # Normal exit
             pass
@@ -287,12 +279,215 @@ class HvacCsc(salobj.ConfigurableCsc):
     def get_config_pkg():
         return "ts_config_ocs"
 
-    @classmethod
-    def add_arguments(cls, parser):
-        super(HvacCsc, cls).add_arguments(parser)
-        parser.add_argument("-s", "--simulate", action="store_true", help="Run in simuation mode?")
+    def _do_enable(self, topic, data):
+        """Send a MQTT message to enable or disable a system.
 
-    @classmethod
-    def add_kwargs_from_args(cls, args, kwargs):
-        super(HvacCsc, cls).add_kwargs_from_args(args, kwargs)
-        kwargs["simulation_mode"] = 1 if args.simulate else 0
+        Parameters
+        ----------
+        topic: `HvacTopic`
+            The HvacTopic used to determine what MQTT topic to send the data
+            to.
+        data: Any
+            The data to send. This is the data received via SAL.
+
+        Returns
+        -------
+        is_published: `bool`
+            True or False indicating whether the message has been published
+            correctly or not.
+        """
+        self.assert_enabled()
+        # Publish the data to the MQTT topic and receive confirmation whether
+        # the publication was done correctly.
+        is_published = self.mqtt_client.publish_mqtt_message(
+            topic.value + "/" + CommandItem.comandoEncendido.value,
+            json.dumps(data.comandoEncendido),
+        )
+        self.log.info(f"{topic.name} enable command sent {is_published}")
+        return is_published
+
+    async def do_chiller01P01_enable(self, data):
+        self._do_enable(HvacTopic.chiller01P01, data)
+
+    async def do_chiller02P01_enable(self, data):
+        self._do_enable(HvacTopic.chiller02P01, data)
+
+    async def do_chiller03P01_enable(self, data):
+        self._do_enable(HvacTopic.chiller03P01, data)
+
+    async def do_crack01P02_enable(self, data):
+        self._do_enable(HvacTopic.crack01P02, data)
+
+    async def do_crack02P02_enable(self, data):
+        self._do_enable(HvacTopic.crack02P02, data)
+
+    async def do_fancoil01P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil01P02, data)
+
+    async def do_fancoil02P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil02P02, data)
+
+    async def do_fancoil03P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil03P02, data)
+
+    async def do_fancoil04P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil04P02, data)
+
+    async def do_fancoil05P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil05P02, data)
+
+    async def do_fancoil06P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil06P02, data)
+
+    async def do_fancoil07P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil07P02, data)
+
+    async def do_fancoil08P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil08P02, data)
+
+    async def do_fancoil09P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil09P02, data)
+
+    async def do_fancoil10P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil10P02, data)
+
+    async def do_fancoil11P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil11P02, data)
+
+    async def do_fancoil12P02_enable(self, data):
+        self._do_enable(HvacTopic.fancoil12P02, data)
+
+    async def do_manejadoraLower01P05_enable(self, data):
+        self._do_enable(HvacTopic.manejadoraLower01P05, data)
+
+    async def do_manejadoraLower02P05_enable(self, data):
+        self._do_enable(HvacTopic.manejadoraLower02P05, data)
+
+    async def do_manejadoraLower03P05_enable(self, data):
+        self._do_enable(HvacTopic.manejadoraLower03P05, data)
+
+    async def do_manejadoraLower04P05_enable(self, data):
+        self._do_enable(HvacTopic.manejadoraLower04P05, data)
+
+    async def do_manejadoraSblancaP04_enable(self, data):
+        self._do_enable(HvacTopic.manejadoraSblancaP04, data)
+
+    async def do_manejadoraSlimpiaP04_enable(self, data):
+        self._do_enable(HvacTopic.manejadoraSlimpiaP04, data)
+
+    async def do_vea01P01_enable(self, data):
+        self._do_enable(HvacTopic.vea01P01, data)
+
+    async def do_vea01P05_enable(self, data):
+        self._do_enable(HvacTopic.vea01P05, data)
+
+    async def do_vea08P05_enable(self, data):
+        self._do_enable(HvacTopic.vea08P05, data)
+
+    async def do_vea09P05_enable(self, data):
+        self._do_enable(HvacTopic.vea09P05, data)
+
+    async def do_vea10P05_enable(self, data):
+        self._do_enable(HvacTopic.vea10P05, data)
+
+    async def do_vea11P05_enable(self, data):
+        self._do_enable(HvacTopic.vea11P05, data)
+
+    async def do_vea12P05_enable(self, data):
+        self._do_enable(HvacTopic.vea12P05, data)
+
+    async def do_vea13P05_enable(self, data):
+        self._do_enable(HvacTopic.vea13P05, data)
+
+    async def do_vea14P05_enable(self, data):
+        self._do_enable(HvacTopic.vea14P05, data)
+
+    async def do_vea15P05_enable(self, data):
+        self._do_enable(HvacTopic.vea15P05, data)
+
+    async def do_vea16P05_enable(self, data):
+        self._do_enable(HvacTopic.vea16P05, data)
+
+    async def do_vea17P05_enable(self, data):
+        self._do_enable(HvacTopic.vea17P05, data)
+
+    async def do_vec01P01_enable(self, data):
+        self._do_enable(HvacTopic.vec01P01, data)
+
+    async def do_vex03LowerP04_enable(self, data):
+        self._do_enable(HvacTopic.vex03LowerP04, data)
+
+    async def do_vex04CargaP04_enable(self, data):
+        self._do_enable(HvacTopic.vex04CargaP04, data)
+
+    async def do_vin01P01_enable(self, data):
+        self._do_enable(HvacTopic.vin01P01, data)
+
+    async def do_chiller01P01_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_chiller02P01_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_chiller03P01_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_crack01P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_crack02P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil01P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil02P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil03P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil04P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil05P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil06P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil07P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil08P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil09P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil10P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil11P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_fancoil12P02_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_manejadoraLower01P05_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_manejadoraLower02P05_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_manejadoraLower03P05_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_manejadoraLower04P05_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_manejadoraSblancaP04_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")
+
+    async def do_manejadoraSlimpiaP04_config(self, data):
+        raise salobj.base.ExpectedError("Not implemented yet.")

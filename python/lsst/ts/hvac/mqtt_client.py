@@ -1,6 +1,6 @@
 # This file is part of ts_hvac.
 #
-# Developed for the LSST Data Management System.
+# Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -21,293 +21,88 @@
 
 __all__ = ["MqttClient"]
 
-import asyncio
+from collections import deque
 import logging
 
-from lsst.ts import salobj
+import paho.mqtt.client as mqtt
+
+LSST_CLIENT_ID = "LSST"
+LSST_GENERAL_TOPIC = "LSST/#"
 
 
 class MqttClient:
-    def __init__(self):
+    """Client class to connect to the HVAC MQTT server.
+
+    Parameters
+    ----------
+    host: `str`
+        The hostname of the MQTT server.
+    port: `int`
+        The port of the MQTT service.
+    """
+
+    def __init__(self, host, port):
         self.log = logging.getLogger("MqttClient")
-        self.log.info("__init__")
-        self.telemetry_available = asyncio.Event
+        self.host = host
+        self.port = port
+        self.client = None
+        self.msgs = deque()
+        self.log.info("MqttClient constructed")
 
-    def connect(self):
-        # TODO Add code to connect to the MQTT server.
-        pass
+    async def connect(self):
+        """Connect the client to the MQTT server.
+        """
+        self.client = mqtt.Client()
+        self.client.on_message = self.on_message
+        self.client.connect(self.host, self.port)
+        self.client.loop_start()
+        self.client.subscribe(LSST_GENERAL_TOPIC)
+        self.log.info("Connected")
 
-    def disconnect(self):
-        # TODO Add code to disconnect from the MQTT server.
-        pass
+    async def disconnect(self):
+        """Disconnect the client from the MQTT server.
+        """
+        self.client.loop_stop()
+        self.client.disconnect()
+        self.log.info("Disconnected")
 
-    async def chiller01P01(self, setpoint_activo, comando_encendido):
-        """Command Chiller 01 on the first floor.
+    def on_message(self, client, userdata, msg):
+        """Callback for when an MQTT message arrives.
 
         Parameters
         ----------
-        setpoint_activo: `float`
-            The setpoint for the activity.
-        comando_encendido: `bool`
-            Switched on or off.
+        client: `mqtt.Client`
+            The client instance for this callback.
+        userdata:
+            The private user data as set in Client() or userdata_set(). May be
+            any data type according to the mqtt.Client API doc and is not set
+            nor used in this class.
+        msg: `mqtt.MQTTMessage`
+            The MQTT message that holds the topic and payload.
         """
-        raise salobj.ExpectedError("Not implemented")
+        self.msgs.append(msg)
 
-    async def crack01P02(
-        self,
-        setpoint_humidificador,
-        setpoint_deshumidificador,
-        set_point_cooling,
-        set_point_heating,
-        comando_encendido,
-    ):
-        """Command Crack 01 on the second floor.
+    def publish_mqtt_message(self, topic, payload):
+        """Publishes the specified payload to the specified topic on the MQTT
+        server.
 
         Parameters
         ----------
-        setpoint_humidificador: `float`
-            The setpoint for the humidificator (0 to 100%).
-        setpoint_deshumidificador: `float`
-            The setpoint for the deshumificator (0 to 100%).
-        set_point_cooling: `float`
-            The setpoint for the cooling (0 to 100%).
-        set_point_heating: `float`
-            The setpoint for the heating (0 to 100%).
-        comando_encendido: `bool`
-            Switched on or off.
+        topic: `str`
+            The topic to publish to.
+        payload: `str`
+            The payload to publish.
+
+        Returns
+        -------
+        is_published: `bool`
+            For now False gets returned since this functionality is disabled.
         """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def fancoil01P02(
-        self,
-        perc_apertura_valvula_frio,
-        setpoint_cooling_day,
-        setpoint_heating_day,
-        setpoint_cooling_night,
-        setpoint_heating_night,
-        setpoint_trabajo,
-        comando_encendido,
-    ):
-        """Command the Fancoil 01 on the second floor.
-
-        Parameters
-        ----------
-        perc_apertura_valvula_frio: `float`
-            The percentage of opening of the cold valve (0 to 100%).
-        setpoint_cooling_day: `float`
-            The setpoint for the cooling during the day (0 to 100%).
-        setpoint_heating_day: `float`
-            The setpoint for the heating during the day (0 to 100%).
-        setpoint_cooling_night: `float`
-            The setpoint for the cooling during the night (0 to 100%).
-        setpoint_heating_night: `float`
-            The setpoint for the heating during the night (0 to 100%).
-        setpoint_trabajo: `float`
-            The setpoint for the 'work' (0 to 100%).
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def manejadoraLower01P05(
-        self,
-        setpoint_trabajo,
-        setpoint_ventilador_min,
-        setpoint_ventilador_max,
-        temperatura_anticongelante,
-        comando_encendido,
-    ):
-        """Command the Lower Manejadora 01 on the fifth floor.
-
-        Parameters
-        ----------
-        setpoint_trabajo: `float`
-            The setpoint for the 'work' (0 to 100%).
-        setpoint_ventilador_min: `float`
-            The minimum setpoint for the fan (0 to 100%).
-        setpoint_ventilador_max: `float`
-            The maximum setpoint for the fan (0 to 100%).
-        temperatura_anticongelante: `float`
-            The temperature of the anti-freeze (Celsius).
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def manejadoraSblancaP04(
-        self, valor_consigna, setpoint_ventilador_min, setpoint_ventilador_max, comando_encendido,
-    ):
-        """Command the Sala Blanca Manejadora on the fourth floor.
-
-        Parameters
-        ----------
-        valor_consigna: `float`
-            The value of the 'consigna' (0 to 100%).
-        setpoint_ventilador_min: `float`
-            The minimum setpoint for the fan (0 to 100%).
-        setpoint_ventilador_max: `float`
-            The maximum setpoint for the fan (0 to 100%).
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea01P01(self, comando_encendido):
-        """Command VEA 01 on the first floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea01P05(self, comando_encendido):
-        """Command VEA 01 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea08P05(self, comando_encendido):
-        """Command VEA 08 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea09P05(self, comando_encendido):
-        """Command VEA 09 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea10P05(self, comando_encendido):
-        """Command VEA 10 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea11P05(self, comando_encendido):
-        """Command VEA 11 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea12P05(self, comando_encendido):
-        """Command VEA 12 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea13P05(self, comando_encendido):
-        """Command VEA 13 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea14P05(self, comando_encendido):
-        """Command VEA 14 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea15P05(self, comando_encendido):
-        """Command VEA 15 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea16P05(self, comando_encendido):
-        """Command VEA 16 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vea17P05(self, comando_encendido):
-        """Command VEA 17 on the fifth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vec01P01(self, comando_encendido):
-        """Command VEC 01 on the first floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vex03P04(self, comando_encendido):
-        """Command VEX 03 on the fourth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vex04P04(self, comando_encendido):
-        """Command VEX 04 on the fourth floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
-
-    async def vin01P01(self, comando_encendido):
-        """Command VIN 01 on the first floor.
-
-        Parameters
-        ----------
-        comando_encendido: `bool`
-            Switched on or off.
-        """
-        raise salobj.ExpectedError("Not implemented")
+        self.log.error(
+            "This functionality is not enabled yet since it is unclear "
+            "whether this CSC will be responsible for this or if this will be "
+            "done via the HVAC software user interface."
+        )
+        return False
+        # msg_info = self.client.publish(topic=topic, payload=payload)
+        # return msg_info.is_published()

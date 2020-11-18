@@ -21,8 +21,11 @@ build:
 test:
   requires:
     - ts-conda-build
-    - ts-salobj
+    - ts-idl {{ idl_version }}
+    - ts-salobj {{ salobj_version }}
+    - pandas
     - paho-mqtt
+    - lxml
   source_files:
     - python
     - bin
@@ -39,10 +42,12 @@ requirements:
     - setuptools_scm
     - setuptools
     - pytest-runner
-    - ts-idl
   run:
     - python
     - setuptools
     - setuptools_scm
-    - ts-salobj
-    - ts-simactuators
+    - ts-idl {{ idl_version }}
+    - ts-salobj {{ salobj_version }}
+    - pandas
+    - paho-mqtt
+    - lxml

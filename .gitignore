@@ -21,4 +21,7 @@ pytest_session.txt
 ospl-error.log
 ospl-info.log
 
+# Created when regenerating the XML files
+python/data/output/
+
 .idea/

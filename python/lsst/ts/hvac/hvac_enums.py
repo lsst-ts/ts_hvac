@@ -1,6 +1,6 @@
 # This file is part of ts_hvac.
 #
-# Developed for the LSST Data Management System.
+# Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
 # (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
@@ -19,9 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = ["SPANISH_TO_ENGLISH_DICTIONARY", "HvacTopic", "TelemetryItem", "CommandItem"]
+
 from enum import Enum
 
-dictionary = {
+SPANISH_TO_ENGLISH_DICTIONARY = {
     "ACTIVO": "Active",
     "AGUA": "Water",
     "ALARMA": "Alarm",
@@ -102,47 +104,54 @@ dictionary = {
 
 
 class HvacTopic(Enum):
-    bombaAguaFriaP01 = "LSST/PISO1/BOMBA_AGUA_FRIA/"
-    chiller01P01 = "LSST/PISO1/CHILLER_01/"
-    crack01P02 = "LSST/PISO2/CRACK01/"
-    damperLowerP04 = "LSST/PISO4/DAMPER_LOWER/"
-    fancoil01P02 = "LSST/PISO2/FANCOIL01/"
-    manejadoraLower01P05 = "LSST/PISO5/MANEJADORA/LOWER_01/"
-    manejadoraSblancaP04 = "LSST/PISO4/MANEJADORA/SBLANCA/"
-    manejadraSblancaP04 = "LSST/PISO4/MANEJADRA/SBLANCA/"
-    manejadoraSlimpiaP04 = "LSST/PISO4/MANEJADORA/SLIMPIA/"
-    # make sure that this next line is listed after all other manejadora lines
-    # because the value contains the first part of the other manejadora lines
-    manejadoraZzzP04 = "LSST/PISO4/MANEJADORA/"
-    temperatuaAmbienteP01 = "LSST/PISO1/TEMPERATURA_AMBIENTE"
-    valvulaP01 = "LSST/PISO1/VALVULA/"
-    vea01P01 = "LSST/PISO1/VEA_01/"
-    vea01P05 = "LSST/PISO5/VEA_01/"
-    vea08P05 = "LSST/PISO5/VEA_08/"
-    vea09P05 = "LSST/PISO5/VEA_09/"
-    vea10P05 = "LSST/PISO5/VEA_10/"
-    vea11P05 = "LSST/PISO5/VEA_11/"
-    vea12P05 = "LSST/PISO5/VEA_12/"
-    vea13P05 = "LSST/PISO5/VEA_13/"
-    vea14P05 = "LSST/PISO5/VEA_14/"
-    vea15P05 = "LSST/PISO5/VEA_15/"
-    vea16P05 = "LSST/PISO5/VEA_16/"
-    vea17P05 = "LSST/PISO5/VEA_17/"
-    vea03P04 = "LSST/PISO4/VEA_03/"
-    vea04P04 = "LSST/PISO4/VEA_04/"
-    vec01P01 = "LSST/PISO1/VEC_01/"
-    vex03P04 = "LSST/PISO4/VEX_03/"
-    vex04P04 = "LSST/PISO4/VEX_04/"
-    vin01P01 = "LSST/PISO1/VIN_01/"
-    zonaCargaP04 = "LSST/PISO4/ZONA_CARGA"
+    bombaAguaFriaP01 = "LSST/PISO01/BOMBA_AGUA_FRIA"
+    chiller01P01 = "LSST/PISO01/CHILLER_01"
+    chiller02P01 = "LSST/PISO01/CHILLER_02"
+    chiller03P01 = "LSST/PISO01/CHILLER_03"
+    crack01P02 = "LSST/PISO02/CRACK01"
+    crack02P02 = "LSST/PISO02/CRACK02"
+    fancoil01P02 = "LSST/PISO02/FANCOIL01"
+    fancoil02P02 = "LSST/PISO02/FANCOIL02"
+    fancoil03P02 = "LSST/PISO02/FANCOIL03"
+    fancoil04P02 = "LSST/PISO02/FANCOIL04"
+    fancoil05P02 = "LSST/PISO02/FANCOIL05"
+    fancoil06P02 = "LSST/PISO02/FANCOIL06"
+    fancoil07P02 = "LSST/PISO02/FANCOIL07"
+    fancoil08P02 = "LSST/PISO02/FANCOIL08"
+    fancoil09P02 = "LSST/PISO02/FANCOIL09"
+    fancoil10P02 = "LSST/PISO02/FANCOIL10"
+    fancoil11P02 = "LSST/PISO02/FANCOIL11"
+    fancoil12P02 = "LSST/PISO02/FANCOIL12"
+    generalP01 = "LSST/PISO01/GENERAL"
+    manejadoraLower01P05 = "LSST/PISO05/MANEJADORA/LOWER_01"
+    manejadoraLower02P05 = "LSST/PISO05/MANEJADORA/LOWER_02"
+    manejadoraLower03P05 = "LSST/PISO05/MANEJADORA/LOWER_03"
+    manejadoraLower04P05 = "LSST/PISO05/MANEJADORA/LOWER_04"
+    manejadoraSblancaP04 = "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA"
+    manejadoraSlimpiaP04 = "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA"
+    valvulaP01 = "LSST/PISO01/VALVULA"
+    vea01P01 = "LSST/PISO01/VEA_01"
+    vea01P05 = "LSST/PISO05/VEA_01"
+    vea08P05 = "LSST/PISO05/VEA_08"
+    vea09P05 = "LSST/PISO05/VEA_09"
+    vea10P05 = "LSST/PISO05/VEA_10"
+    vea11P05 = "LSST/PISO05/VEA_11"
+    vea12P05 = "LSST/PISO05/VEA_12"
+    vea13P05 = "LSST/PISO05/VEA_13"
+    vea14P05 = "LSST/PISO05/VEA_14"
+    vea15P05 = "LSST/PISO05/VEA_15"
+    vea16P05 = "LSST/PISO05/VEA_16"
+    vea17P05 = "LSST/PISO05/VEA_17"
+    vec01P01 = "LSST/PISO01/VEC_01"
+    vin01P01 = "LSST/PISO01/VIN_01"
+    vex03LowerP04 = "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL"
+    vex04CargaP04 = "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL"
 
 
 class TelemetryItem(Enum):
-    ai4 = "AI4"
-    ai5 = "AI5"
     alarmaFiltro = "ALARMA_FILTRO"
     alarmaGeneral = "ALARMA_GENERAL"
-    aperturaValvula = "%APERTURA_VALVULA"
+    aperturaValvula = "%_APERTURA_VALVULA"
     aperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO"
     calefaccionEtapa01 = "CALEFACCION_ETAPA_01"
     calefaccionEtapa02 = "CALEFACCION_ETAPA_02"
@@ -174,22 +183,22 @@ class TelemetryItem(Enum):
     estadoValvula06 = "ESTADO_VALVULA_06"
     estadoValvula12 = "ESTADO_VALVULA_1&2"
     estadoVentilador = "ESTADO_VENTILADOR"
-    estadoDeUnidad = "ESTADO DE UNIDAD"
+    estadoDeUnidad = "ESTADO_DE_UNIDAD"
     fallaTermica = "FALLA_TERMICA"
     horasCompresor01 = "HORAS_COMPRESOR_01"
     horasCompresor02 = "HORAS_COMPRESOR_02"
     horasCompresor03 = "HORAS_COMPRESOR_03"
     horasCompresor04 = "HORAS_COMPRESOR_04"
     horasCompresorPromedio = "HORAS_COMPRESOR_PROMEDIO"
-    humedadSala = "%HUMEDAD_SALA"
+    humedadSala = "%_HUMEDAD_SALA"
     modoOperacion = "MODO_OPERACION"
     modoOperacionUnidad = "MODO_OPERACION_UNIDAD"
     numeroCircuitos = "NUMERO_CIRCUITOS"
     potenciaDisponibleChiller = "POTENCIA_DISPONIBLE_CHILLER"
-    potenciaTrabajo = "%POTENCIA_TRABAJO"
+    potenciaTrabajo = "%_POTENCIA_TRABAJO"
     presionBajaCto1 = "PRESION_BAJA_CTO1"
     presionBajaCto2 = "PRESION_BAJA_CTO2"
-    requerimientoHumificador = "REQUERIMIENTO_HUMIFICADOR"
+    requerimientoHumidificador = "REQUERIMIENTO_HUMIDIFICADOR"
     resetAlarma = "RESET_ALARMA"
     setPointCooling = "SET_POINT_COOLING"
     setPointHeating = "SET_POINT_HEATING"

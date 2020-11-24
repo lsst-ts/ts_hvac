@@ -1,4 +1,4 @@
-"""Sphinx configuration file for an LSST stack package.
+"""Sphinx configuration file for a Vera C. Rubin Observatory stack package.
 
 This configuration only affects single-package Sphinx documentation builds.
 """
@@ -8,4 +8,6 @@ import lsst.ts.hvac
 
 
 _g = globals()
-_g.update(build_package_configs(project_name="ts_hvac", version=lsst.ts.hvac.__version__))
+_g.update(
+    build_package_configs(project_name="ts_hvac", version=lsst.ts.hvac.__version__)
+)

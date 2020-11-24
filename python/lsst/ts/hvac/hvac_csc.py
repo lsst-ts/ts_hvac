@@ -1,8 +1,8 @@
 # This file is part of ts_hvac.
 #
-# Developed for the LSST Telescope and Site Systems.
-# This product includes software developed by the LSST Project
-# (https://www.lsst.org).
+# Developed for the Vera Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the Vera Rubin Observatory
+# Project (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -23,6 +23,7 @@ __all__ = ["HvacCsc"]
 
 import asyncio
 import json
+import numpy as np
 import pathlib
 
 from lsst.ts import salobj
@@ -31,8 +32,8 @@ from lsst.ts.hvac.mqtt_client import MqttClient
 from lsst.ts.hvac.simulator.sim_client import SimClient
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
 
-# The number of seconds to collect the state of the HVAC system for before an
-# average is reported via SAL telemetry.
+# The number of seconds to collect the state of the HVAC system for before the
+# median is reported via SAL telemetry.
 HVAC_STATE_TRACK_PERIOD = 60
 
 
@@ -46,13 +47,13 @@ class InternalItemState:
         # The value as reported by the MQTT server at start up of the CSC. This
         # value is reported in the telemetry if no updated values get reported.
         self.initial_value = None
-        # The most recent average as computed during the last
+        # The most recent median as computed during the last
         # HVAC_STATE_TRACK_PERIOD.
-        self.recent_average = None
-        # A list of float or bool as collected since the last average was
+        self.recent_median = None
+        # A list of float or bool as collected since the last median was
         # computed.
         self.recent_values = []
-        # Keeps track of the data type so no averages are being computed for
+        # Keeps track of the data type so no medians are being computed for
         # bool values.
         self.data_type = None
 
@@ -60,7 +61,7 @@ class InternalItemState:
         return (
             f"InternalItemState["
             f"initial_value={self.initial_value}, "
-            f"recent_average={self.recent_average}, "
+            f"recent_median={self.recent_median}, "
             f"recent_values={self.recent_values}, "
             f"data_type={self.data_type}, "
             f"]"
@@ -119,7 +120,7 @@ class HvacCsc(salobj.ConfigurableCsc):
 
         # Keep track of the internal state of the MQTT topics. This will
         # collect all values for the duration of HVAC_STATE_TRACK_PERIOD before
-        # an average is sent via SAL telemetry. The structure is
+        # the median is sent via SAL telemetry. The structure is
         # "general_topic" : {
         #     "item": InternalItemState
         # }
@@ -192,23 +193,23 @@ class HvacCsc(salobj.ConfigurableCsc):
     async def configure(self, config):
         self.config = config
 
-    def _compute_averages_and_send_telemetry(self):
+    def _compute_statistics_and_send_telemetry(self):
         self.log.info(
             f"{HVAC_STATE_TRACK_PERIOD} seconds have passed since the last "
-            f"computation of the averages, so computing now."
+            f"computation of the medians, so computing now."
         )
         for topic in self.hvac_state:
             data = {}
             for item in self.hvac_state[topic]:
                 if not self.hvac_state[topic][item].recent_values:
-                    self.hvac_state[topic][item].recent_average = self.hvac_state[
-                        topic
-                    ][item].initial_value
+                    self.hvac_state[topic][item].recent_median = self.hvac_state[topic][
+                        item
+                    ].initial_value
                 else:
                     if self.hvac_state[topic][item].data_type == "float":
-                        self.hvac_state[topic][item].recent_average = sum(
+                        self.hvac_state[topic][item].recent_median = np.median(
                             self.hvac_state[topic][item].recent_values
-                        ) / len(self.hvac_state[topic][item].recent_values)
+                        )
 
                 if self.hvac_state[topic][item].initial_value is None:
                     self.log.error(f"{topic}/{item}: {self.hvac_state[topic][item]}")
@@ -217,7 +218,7 @@ class HvacCsc(salobj.ConfigurableCsc):
                 self.hvac_state[topic][item].recent_values = []
                 data[TelemetryItem(item).name] = self.hvac_state[topic][
                     item
-                ].recent_average
+                ].recent_median
 
             if data:
                 telemetry_method = getattr(self, "tel_" + HvacTopic(topic).name)
@@ -251,12 +252,12 @@ class HvacCsc(salobj.ConfigurableCsc):
             if item_state.initial_value is None:
                 item_state.initial_value = value
             else:
-                # Store the new value to be able to compute an average.
+                # Store the new value to be able to compute the median.
                 item_state.recent_values.append(value)
 
     def publish_telemetry(self):
         self._handle_mqtt_messages()
-        self._compute_averages_and_send_telemetry()
+        self._compute_statistics_and_send_telemetry()
 
     async def _publish_telemetry_regularly(self):
         try:

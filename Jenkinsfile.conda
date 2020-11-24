@@ -1,2 +1,2 @@
 @Library('JenkinsShared')_
-CondaPipeline("ts_config_ocs", "ts-hvac", "lsst.ts.hvac")
+CondaPipeline(["ts_config_ocs"], "ts-hvac", "lsst.ts.hvac")

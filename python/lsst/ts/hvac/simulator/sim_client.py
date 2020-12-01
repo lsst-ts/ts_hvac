@@ -123,7 +123,7 @@ class SimClient:
             In case a different command than COMANDO_ENCENDIDO_LSST is
             received.
         """
-        self.log.debug(f"Recevied message on topic {topic} with paylod {payload}")
+        self.log.debug(f"Recevied message on topic {topic} with payload {payload}")
         topic, command = xml.extract_topic_and_item(topic)
         if command != "COMANDO_ENCENDIDO_LSST":
             raise ValueError(f"Command {command} not supported on topic {topic}")
@@ -149,24 +149,30 @@ class SimClient:
         """Publish telmetry once to simulate the behaviour of an MQTT
         server.
         """
-        self.log.debug("Publishing telemetry.")
         for hvac_topic in self.hvac_topics:
             topic, variable = xml.extract_topic_and_item(hvac_topic)
 
             topic_enabled = self.topics_enabled[topic]
+            topic_type = self.hvac_topics[hvac_topic]["topic_type"]
+            idl_type = self.hvac_topics[hvac_topic]["idl_type"]
+            limits = self.hvac_topics[hvac_topic]["limits"]
             if topic_enabled:
-                topic_type = self.hvac_topics[hvac_topic]["topic_type"]
-                idl_type = self.hvac_topics[hvac_topic]["idl_type"]
-                limits = self.hvac_topics[hvac_topic]["limits"]
                 if topic_type == "READ":
                     if idl_type == "boolean":
-                        value = "true"
+                        value = True
 
                         # Making sure that no alarm bells start ringing.
                         if "ALARM" in variable:
-                            value = "false"
+                            value = False
                     else:
                         value = random.randint(10 * limits[0], 10 * limits[1]) / 10.0
                     msg = mqtt.MQTTMessage(topic=hvac_topic.encode())
-                    msg.payload = str(value).encode()
+                    msg.payload = json.dumps(value)
                     self.msgs.append(msg)
+            else:
+                if topic_type == "READ":
+                    if idl_type == "boolean":
+                        value = False
+                        msg = mqtt.MQTTMessage(topic=hvac_topic.encode())
+                        msg.payload = json.dumps(value)
+                        self.msgs.append(msg)

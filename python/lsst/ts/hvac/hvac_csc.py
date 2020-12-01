@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["HvacCsc"]
+__all__ = ["HvacCsc", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
 
 import asyncio
 import json
@@ -36,36 +36,89 @@ from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
 # median is reported via SAL telemetry.
 HVAC_STATE_TRACK_PERIOD = 60
 
+# These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
+TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
+    (
+        "manejadoraLower01P05",
+        "manejadoraLower02P05",
+        "manejadoraLower03P05",
+        "manejadoraLower04P05",
+    )
+)
+
 
 class InternalItemState:
     """Container for the state of the item of a general MQTT topic. A general
     topic represents an MQTT subsystem (chiller, fan, pump, etc) and an item a
     value reported by the subsystem (temperature, pressure, etc).
+
+    Parameters
+    ----------
+    topic: `str`
+        A general MQTT topic, e.g. "LSST/PISO01/CHILLER_01". See `HvacTopic`
+        for possible values.
+    item: `str`
+        A value reported by the subsystem, e.g. "TEMPERATURA_AMBIENTE". See
+        `TelemetryItem` for possible values.
+    data_type: `str`
+        The data type of the item. Can be "float" or "boolean".
     """
 
-    def __init__(self):
-        # The value as reported by the MQTT server at start up of the CSC. This
-        # value is reported in the telemetry if no updated values get reported.
-        self.initial_value = None
-        # The most recent median as computed during the last
-        # HVAC_STATE_TRACK_PERIOD.
-        self.recent_median = None
+    def __init__(self, topic, item, data_type):
+        self.topic = topic
+        self.item = item
         # A list of float or bool as collected since the last median was
         # computed.
         self.recent_values = []
         # Keeps track of the data type so no medians are being computed for
         # bool values.
-        self.data_type = None
+        self.data_type = data_type
 
     def __str__(self):
         return (
             f"InternalItemState["
-            f"initial_value={self.initial_value}, "
-            f"recent_median={self.recent_median}, "
+            f"topic={self.topic}, "
+            f"item={self.item}, "
             f"recent_values={self.recent_values}, "
             f"data_type={self.data_type}, "
             f"]"
         )
+
+    @property
+    def is_float(self):
+        return self.data_type == "float"
+
+    def get_most_recent_value(self):
+        """Get the most recent boolean value.
+        values.
+
+        Returns
+        -------
+        recent_value: `bool`
+            The most recent value.
+        """
+        recent_values = self._get_and_reset_recent()
+        if not recent_values:
+            return None
+        return recent_values[-1]
+
+    def compute_recent_median(self):
+        """Computes the median of the most recently acquired float values.
+
+        Returns
+        -------
+        recent_median: `float`
+            The median of the most recent values.
+        """
+        recent_values = self._get_and_reset_recent()
+        if not recent_values:
+            return None
+        return np.median(recent_values)
+
+    def _get_and_reset_recent(self):
+        recent_values = self.recent_values
+        self.recent_values = []
+        return recent_values
 
 
 class HvacCsc(salobj.ConfigurableCsc):
@@ -121,7 +174,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         # Keep track of the internal state of the MQTT topics. This will
         # collect all values for the duration of HVAC_STATE_TRACK_PERIOD before
         # the median is sent via SAL telemetry. The structure is
-        # "general_topic" : {
+        # "topic" : {
         #     "item": InternalItemState
         # }
         self.hvac_state = None
@@ -175,8 +228,9 @@ class HvacCsc(salobj.ConfigurableCsc):
         for mqtt_topic, items in mqtt_topics_and_items.items():
             topic_state = {}
             for item in items:
-                topic_state[item] = InternalItemState()
-                topic_state[item].data_type = items[item]["idl_type"]
+                topic_state[item] = InternalItemState(
+                    mqtt_topic, item, items[item]["idl_type"]
+                )
             self.hvac_state[mqtt_topic] = topic_state
 
     async def handle_summary_state(self):
@@ -201,41 +255,23 @@ class HvacCsc(salobj.ConfigurableCsc):
         for topic in self.hvac_state:
             data = {}
             for item in self.hvac_state[topic]:
-                if not self.hvac_state[topic][item].recent_values:
-                    self.hvac_state[topic][item].recent_median = self.hvac_state[topic][
-                        item
-                    ].initial_value
+                info = self.hvac_state[topic][item]
+                if info.is_float:
+                    value = info.compute_recent_median()
                 else:
-                    if self.hvac_state[topic][item].data_type == "float":
-                        self.hvac_state[topic][item].recent_median = np.median(
-                            self.hvac_state[topic][item].recent_values
-                        )
-
-                if self.hvac_state[topic][item].initial_value is None:
-                    self.log.error(f"{topic}/{item}: {self.hvac_state[topic][item]}")
-                    continue
-
-                self.hvac_state[topic][item].recent_values = []
-                data[TelemetryItem(item).name] = self.hvac_state[topic][
-                    item
-                ].recent_median
+                    value = info.get_most_recent_value()
+                if value is not None:
+                    data[TelemetryItem(item).name] = value
 
             if data:
                 telemetry_method = getattr(self, "tel_" + HvacTopic(topic).name)
                 telemetry_method.set_put(**data)
-                self.log.info(f"Telemetry sent to {telemetry_method}")
 
     def _handle_mqtt_messages(self):
-        msgs = self.mqtt_client.msgs
-        while not len(msgs) == 0:
-            msg = msgs.popleft()
+        while not len(self.mqtt_client.msgs) == 0:
+            msg = self.mqtt_client.msgs.popleft()
             topic_and_item = msg.topic
-            payload = msg.payload.decode()
-
-            # Safety check to make sure that no new topics get introduced.
-            if topic_and_item not in xml.hvac_topics:
-                self.log.error(f"Encountered unknown topic {topic_and_item}")
-                continue
+            payload = msg.payload
 
             topic, item = xml.extract_topic_and_item(topic_and_item)
             item_state = self.hvac_state[topic][item]
@@ -247,13 +283,7 @@ class HvacCsc(salobj.ConfigurableCsc):
             ]:
                 value = json.loads(payload)
 
-            # Make sure to store the initial value in case the value doesn't
-            # change often or at all.
-            if item_state.initial_value is None:
-                item_state.initial_value = value
-            else:
-                # Store the new value to be able to compute the median.
-                item_state.recent_values.append(value)
+            item_state.recent_values.append(value)
 
     def publish_telemetry(self):
         self._handle_mqtt_messages()
@@ -293,19 +323,24 @@ class HvacCsc(salobj.ConfigurableCsc):
 
         Returns
         -------
-        is_published: `bool`
-            True or False indicating whether the message has been published
+        was_published: `bool`
+            True or False indicating whether the message was published
             correctly or not.
         """
         self.assert_enabled()
         # Publish the data to the MQTT topic and receive confirmation whether
         # the publication was done correctly.
-        is_published = self.mqtt_client.publish_mqtt_message(
+        was_published = self.mqtt_client.publish_mqtt_message(
             topic.value + "/" + CommandItem.comandoEncendido.value,
             json.dumps(data.comandoEncendido),
         )
-        self.log.info(f"{topic.name} enable command sent {is_published}")
-        return is_published
+        if was_published:
+            value = data.comandoEncendido
+            telemetry_item = TelemetryItem.comandoEncendido.value
+            if topic.name in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
+                telemetry_item = TelemetryItem.estadoFuncionamiento.value
+            self.hvac_state[topic.value][telemetry_item].initial_value = value
+        return was_published
 
     async def do_chiller01P01_enable(self, data):
         self._do_enable(HvacTopic.chiller01P01, data)

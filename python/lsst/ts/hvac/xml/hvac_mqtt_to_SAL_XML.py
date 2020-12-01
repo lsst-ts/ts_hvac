@@ -251,7 +251,6 @@ def _parse_limits(limits_string):
     upper_limit = None
     match = re.match(r"^(-?\d+)(/| a |% a )(-?\d+)%?$", limits_string)
     if match:
-        print(f"{limits_string} = {match.groups()}")
         # lower_limit = float(match.group(1))
         # upper_limit = float(match.group(2))
         lower_limit = 0
@@ -474,7 +473,9 @@ def _create_telemetry_xml():
         sub_system = etree.SubElement(st, "Subsystem")
         sub_system.text = "HVAC"
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
-        efdb_topic.text = "HVAC_" + telemetry_topic
+        efdb_topic.text = f"HVAC_{telemetry_topic}"
+        description = etree.SubElement(st, "Description")
+        description.text = f"Telemetry for the {telemetry_topic} device."
         for telemetry_item in telemetry_topics[telemetry_topic]:
             _create_item_element(
                 st,
@@ -520,6 +521,14 @@ def _create_command_xml():
         sub_system.text = "HVAC"
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
         efdb_topic.text = "HVAC_command_" + command_topic
+        description = etree.SubElement(st, "Description")
+        if "_config" in command_topic:
+            description_text = f"Configuration command for the {command_topic.replace('_config', '')} device."
+        else:
+            description_text = (
+                f"Enable command for the {command_topic.replace('_enable', '')} device."
+            )
+        description.text = f"{description_text}"
         for command_item in command_topics[command_topic]:
             _create_item_element(
                 st,

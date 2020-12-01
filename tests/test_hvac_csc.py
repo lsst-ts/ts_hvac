@@ -25,7 +25,7 @@ import logging
 import flake8
 
 from lsst.ts import salobj
-from lsst.ts.hvac import HvacCsc
+from lsst.ts.hvac import HvacCsc, TOPICS_WITHOUT_COMANDO_ENCENDIDO
 from lsst.ts.hvac.hvac_enums import HvacTopic
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
 
@@ -37,14 +37,6 @@ logging.basicConfig(
 
 # Make sure that flake8 log level is set to logging.INFO
 flake8.configure_logging(1)
-
-# These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
-topics_without_comando_encencido = [
-    "manejadoraLower01P05",
-    "manejadoraLower02P05",
-    "manejadoraLower03P05",
-    "manejadoraLower04P05",
-]
 
 
 class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
@@ -131,6 +123,34 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
     async def test_bin_script(self):
         await self.check_bin_script(name="HVAC", index=None, exe_name="run_hvac.py")
 
+    async def _retrieve_all_telemetry(self):
+        all_telemetry = {}
+        for topic in HvacTopic:
+            telemetry_topic = getattr(self.remote, "tel_" + topic.name)
+            all_telemetry[topic.name] = await telemetry_topic.next(flush=False)
+        return all_telemetry
+
+    async def _verify_telemetry(self, subsystem):
+        # Loop over all telemetry topics and verify the status
+        all_telemetry = await self._retrieve_all_telemetry()
+        for name, telemetry in all_telemetry.items():
+            topic = HvacTopic[name]
+            # This topic only publishes a temperature so we skip it here.
+            if name == "generalP01":
+                continue
+            if topic.value in xml.TOPICS_ALWAYS_ENABLED or name == subsystem:
+                # This is the one subsystem we have enabled.
+                status_to_check = True
+            else:
+                # The other systems should be disabled.
+                status_to_check = False
+            if name == "valvulaP01":
+                self.assertEqual(telemetry.estadoValvula12, status_to_check)
+            elif name not in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
+                self.assertEqual(telemetry.comandoEncendido, status_to_check)
+            else:
+                self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
+
     async def _do_enable(self, subsystem):
         await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
         # Retrieve the method to enable or disable a subsystem.
@@ -141,18 +161,8 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
         self.csc.mqtt_client.publish_telemetry()
         # Make sure that the CSC publishes the telemetry.
         self.csc.publish_telemetry()
-        # Retrieve the name of the telemetry topic.
-        telemetry_topic = getattr(self.remote, "tel_" + subsystem)
-        # Retrieve the telemetry from the topic and verify that the subsystem
-        # has been switched on.
-        if subsystem not in topics_without_comando_encencido:
-            await self.assert_next_sample(
-                topic=telemetry_topic, comandoEncendido=True, flush=False,
-            )
-        else:
-            await self.assert_next_sample(
-                topic=telemetry_topic, estadoFuncionamiento=True, flush=False,
-            )
+        # Check all telemetry.
+        await self._verify_telemetry(subsystem)
 
         # Disable the subsystem.
         await enable_method.set_start(comandoEncendido=False, timeout=STD_TIMEOUT)

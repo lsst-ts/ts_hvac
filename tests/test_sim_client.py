@@ -94,9 +94,8 @@ class SimClientTestCase(asynctest.TestCase):
         while not len(msgs) == 0:
             msg = msgs.popleft()
             topic = msg.topic
-            payload = msg.payload
+            data = json.loads(msg.payload)
             topic, variable = xml.extract_topic_and_item(topic)
-            data = json.loads(payload)
             if topic not in mqtt_state:
                 mqtt_state[topic] = {}
             mqtt_state[topic][variable] = data
@@ -112,7 +111,16 @@ class SimClientTestCase(asynctest.TestCase):
             The name of the topic.
         """
         mqtt_state = self.collect_mqtt_state()
-        self.assertFalse(topic in mqtt_state)
+        self.assertTrue(topic in mqtt_state)
+        variables = mqtt_state[topic]
+        for var in variables:
+            data = mqtt_state[topic][var]
+            if isinstance(data, bool):
+                self.assertFalse(data)
+            else:
+                self.fail(
+                    f"Encountered variable {var} with value {data} in topic {topic}"
+                )
 
     def verify_topic_state(self, topic, expected_state):
         """Verifies that the state as reported by the topic is as expected.
@@ -131,13 +139,19 @@ class SimClientTestCase(asynctest.TestCase):
         self.assertTrue(topic in mqtt_state)
         variables = mqtt_state[topic]
         for var in variables:
-            if isinstance(var, bool):
-                self.assertEqual(mqtt_state[topic][var], expected_state[var])
-            elif isinstance(var, dict):
-                self.assertGreaterEqual(
-                    mqtt_state[topic][var], expected_state[var]["min"]
+            data = mqtt_state[topic][var]
+            expected_data = expected_state[var]
+            if isinstance(expected_data, bool):
+                self.assertEqual(
+                    data, expected_data, f"topic = {topic}, var = {var}, data={data}",
                 )
-                self.assertLessEqual(mqtt_state[topic][var], expected_state[var]["max"])
+            elif isinstance(expected_data, dict):
+                self.assertGreaterEqual(data, expected_data["min"])
+                self.assertLessEqual(data, expected_data["max"])
+            else:
+                self.fail(
+                    f"Encountered variable {var} of type {type(data)} with value {data} in topic {topic}"
+                )
 
     def enable_topic(self, topic):
         """Enable the topic by sending True to the enable command.
@@ -157,11 +171,13 @@ class SimClientTestCase(asynctest.TestCase):
         """Determine the expected state of the topic by looping over each
         variable of the topic and setting an expected value.
 
-        The expected values either is set to False (in case of a boolean) or to
-        a dictionary containing a min and a max value (in case of a float). If
-        any other idl_type is encountered the unit test fails.
-        The ranges of the min and max values depend on the unit and the limits
-        of the variable.
+        In case of a boolean, the expected value is set to True unless the item
+        is an ALARM item (the simulator doesn't simulate alarms yet). In case
+        of a float, the expected value is set to a dictionary containing a min
+        and a max value. The ranges of the min and max values depend on the
+        unit and the limits of the variable.
+
+        If any other idl_type is encountered the unit test fails.
 
         Parameters
         ----------
@@ -180,7 +196,9 @@ class SimClientTestCase(asynctest.TestCase):
             var = variables[variable]
             if var["topic_type"] == "READ":
                 if var["idl_type"] == "boolean":
-                    expected_state[variable] = False
+                    expected_state[variable] = True
+                    if "ALARM" in variable:
+                        expected_state[variable] = False
                 elif var["idl_type"] == "float":
                     lower_limit, upper_limit = var["limits"]
                     if var["unit"] in ["deg_C", "unitless", "bar", "%"]:
@@ -212,11 +230,13 @@ class SimClientTestCase(asynctest.TestCase):
         """
         topics = xml.get_topics()
         for topic in topics:
-            expected_state = self.determine_expected_state(topic)
             if topic not in xml.TOPICS_ALWAYS_ENABLED:
                 self.verify_topic_disabled(topic)
                 self.enable_topic(topic)
+
+            expected_state = self.determine_expected_state(topic)
             self.verify_topic_state(topic, expected_state)
+
             if topic not in xml.TOPICS_ALWAYS_ENABLED:
                 self.disable_topic(topic)
                 self.verify_topic_disabled(topic)

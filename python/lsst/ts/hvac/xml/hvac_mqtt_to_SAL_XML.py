@@ -137,11 +137,33 @@ command_root.addprevious(
 
 # These topics are always enabled because there are no MQTT commands to enable
 # or disable them.
-TOPICS_ALWAYS_ENABLED = [
-    "LSST/PISO01/BOMBA_AGUA_FRIA",
-    "LSST/PISO01/GENERAL",
-    "LSST/PISO01/VALVULA",
-]
+TOPICS_ALWAYS_ENABLED = frozenset(
+    ("LSST/PISO01/BOMBA_AGUA_FRIA", "LSST/PISO01/GENERAL", "LSST/PISO01/VALVULA",)
+)
+
+TOPICS_WITHOUT_CONFIGURATION = frozenset(
+    (
+        "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/GENERAL",
+        "LSST/PISO01/VALVULA",
+        "LSST/PISO01/VEA_01",
+        "LSST/PISO05/VEA_01",
+        "LSST/PISO05/VEA_08",
+        "LSST/PISO05/VEA_09",
+        "LSST/PISO05/VEA_10",
+        "LSST/PISO05/VEA_11",
+        "LSST/PISO05/VEA_12",
+        "LSST/PISO05/VEA_13",
+        "LSST/PISO05/VEA_14",
+        "LSST/PISO05/VEA_15",
+        "LSST/PISO05/VEA_16",
+        "LSST/PISO05/VEA_17",
+        "LSST/PISO01/VEC_01",
+        "LSST/PISO01/VIN_01",
+        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
+        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+    )
+)
 
 
 def extract_topic_and_item(topic_and_item):
@@ -225,6 +247,33 @@ def get_telemetry_mqtt_topics_and_items():
     return telemetry_mqtt_topics
 
 
+def get_command_mqtt_topics_and_items():
+    """Convenience method to collect all MQTT topics and their items that
+    accept commands.
+
+    Returns
+    -------
+    command_mqtt_topics: `dict`
+        A dictionary with the MQTT topics as keys and their items as value.
+
+    Notes
+    -----
+    The structure of the returned dictionary is exactly the same as for the
+    hvac_topics dictionary. The only difference is that the telemetry topics
+    (indicated by topic type READ) have been filtered out.
+    """
+    command_mqtt_topics = {}
+    for hvac_topic in get_topics():
+        items = get_items_for_topic(hvac_topic)
+        topic_items = {}
+        for item in items:
+            # Make sure only telemetry topics are used.
+            if items[item]["topic_type"] == "WRITE":
+                topic_items[item] = items[item]
+        command_mqtt_topics[hvac_topic] = topic_items
+    return command_mqtt_topics
+
+
 def _parse_limits(limits_string):
     """Parse the string value of the limits column by comparing it to known
     regular expressions and extracting the minimum and maximum values.
@@ -251,10 +300,8 @@ def _parse_limits(limits_string):
     upper_limit = None
     match = re.match(r"^(-?\d+)(/| a |% a )(-?\d+)%?$", limits_string)
     if match:
-        # lower_limit = float(match.group(1))
-        # upper_limit = float(match.group(2))
-        lower_limit = 0
-        upper_limit = 1
+        lower_limit = float(match.group(1))
+        upper_limit = float(match.group(3))
     elif re.match(r"^\d$", limits_string):
         lower_limit = 0
         upper_limit = 100

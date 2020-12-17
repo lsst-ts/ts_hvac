@@ -97,17 +97,18 @@ class SimClient:
     def publish_mqtt_message(self, topic, payload):
         """Publish the specified payload to the specified topic.
 
-        A topic represents a topic including the command to execute.
-        Several commands exist in the real MQTT server but for now only
-        COMANDO_ENCENDIDO_LSST is supported in this simulator. This command
-        accepts either True or False and enables or disables the topic.
+        A topic represents an MQTT topic including the command to execute.
+        Two types of commands exist in the real MQTT server: enable commands
+        and configuration commands. The enable commands accept a boolean and
+        the configuration commands accept a float.
 
         Parameters
         ----------
         topic: `str`
             The topic to publish to.
         payload: `str`
-            The payload to publish.
+            The payload to publish. This corresponds to a boolean for the
+            enable commands and a float for the configuration commands.
 
         Returns
         -------
@@ -119,17 +120,67 @@ class SimClient:
         ------
         ValueError
             In case a topic doesn't exist.
-        ValueError
-            In case a different command than COMANDO_ENCENDIDO_LSST is
-            received.
         """
         self.log.debug(f"Recevied message on topic {topic} with payload {payload}")
         topic, command = xml.extract_topic_and_item(topic)
-        if command != "COMANDO_ENCENDIDO_LSST":
-            raise ValueError(f"Command {command} not supported on topic {topic}")
-        value = json.loads(payload)
-        self.topics_enabled[topic] = value
+        if command == "COMANDO_ENCENDIDO_LSST":
+            self._handle_enable_command(topic, json.loads(payload))
+        else:
+            self._handle_config_command(topic, command, json.loads(payload))
+        # For now, always return True. It is unclear if the real MQTT server
+        # ever returns False and once that is clear this will be adapted.
         return self.is_published
+
+    def _handle_enable_command(self, topic, payload):
+        """Enable or disable the topic based on the payload.
+
+        Parameters
+        ----------
+        topic: `str`
+            The name of the topic to enable or disable.
+        payload: `bool`
+            Whether the topic should be enabled or disabled.
+        """
+        self.topics_enabled[topic] = payload
+
+    def _handle_config_command(self, topic, command, payload):
+        """Receive the config command for the topic and verify that the
+        corresponding telmetry item exists.
+
+        Parameters
+        ----------
+        topic: `str`
+            The name of the topic to configure.
+        command: `str`
+            The command representing the name of the item to configure.
+        payload: `bool` or `float`
+            The configuration value of the item.
+
+        Raises
+        ------
+        ValueError
+            In case the item doesn't exist in the topic.
+        """
+        self.log.info(
+            f"Received message [topic={topic!r}, command={command!r}, payload={payload!r}]"
+        )
+        command_item = command
+        # TODO: DM-28029 These command items do not have a telemetry counter
+        # point. It needs to be clarified how to verify them so they are
+        # skipped for now.
+        if command_item in [
+            "SETPOINT_VENTILADOR_MIN_LSST",
+            "SETPOINT_VENTILADOR_MAX_LSST",
+        ]:
+            return
+        if command_item.endswith("_LSST"):
+            command_item = command_item[:-5]
+        self.log.info(f"command_item={command_item!r}")
+        mqtt_topics_and_items = xml.get_telemetry_mqtt_topics_and_items()
+        items = mqtt_topics_and_items[topic]
+        topic_item = items[command_item]
+        # TODO: DM-28029 Use the values sent in the command.
+        self.log.info(f"Found topic_item {topic_item!r}")
 
     async def _publish_telemetry_every_second(self):
         """Publish telmetry every second to simulate the behaviour of an MQTT

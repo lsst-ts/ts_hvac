@@ -21,12 +21,13 @@
 
 import asynctest
 import logging
+import random
 
 import flake8
 
 from lsst.ts import salobj
 from lsst.ts.hvac import HvacCsc, TOPICS_WITHOUT_COMANDO_ENCENDIDO
-from lsst.ts.hvac.hvac_enums import HvacTopic
+from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
@@ -174,3 +175,44 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
             for topic in HvacTopic:
                 if topic.value not in xml.TOPICS_ALWAYS_ENABLED:
                     await self._do_enable(topic.name)
+
+    async def test_config_chiller01(self):
+        async with self.make_csc(
+            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1,
+        ):
+            await salobj.set_summary_state(
+                remote=self.remote, state=salobj.State.ENABLED
+            )
+            for topic in HvacTopic:
+                if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
+                    # Retrieve the config items of the topic.
+                    mqtt_topics_and_items = xml.get_command_mqtt_topics_and_items()
+                    items = mqtt_topics_and_items[topic.value]
+                    # Retrieve the config command of the topic.
+                    config_method = getattr(
+                        self.remote, "cmd_" + topic.name + "_config"
+                    )
+                    # Collect random data based on the limits of each item
+                    data = {}
+                    for item in items:
+                        if item not in [
+                            "COMANDO_ENCENDIDO_LSST",
+                        ]:
+                            data_item = CommandItem(item)
+                            idl_type = items[item]["idl_type"]
+                            limits = items[item]["limits"]
+                            if idl_type == "float":
+                                data[data_item.name] = (
+                                    random.randint(10 * limits[0], 10 * limits[1])
+                                    / 10.0
+                                )
+                            elif idl_type == "boolean":
+                                # TODO: DM-28030 These command items should be
+                                # float and not boolean
+                                data[data_item.name] = True
+                            else:
+                                raise Exception(
+                                    f"Encountered IDL type {idl_type!r} for {topic.value}/{item}"
+                                )
+                    # Invoke the config command.
+                    await config_method.set_start(**data)

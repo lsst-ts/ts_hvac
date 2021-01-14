@@ -54,6 +54,9 @@ class SimClient:
         # Holds info on which topics are enabled and which not.
         self.topics_enabled = {}
 
+        # Holds the values received via configuration commands.
+        self.configuration_values = {}
+
         self.start_publish_telemetry_every_second = start_publish_telemetry_every_second
         # Incoming command messages get published or not. Should only be
         # modified by unit tests.
@@ -165,22 +168,18 @@ class SimClient:
             f"Received message [topic={topic!r}, command={command!r}, payload={payload!r}]"
         )
         command_item = command
-        # TODO: DM-28029 These command items do not have a telemetry counter
-        # point. It needs to be clarified how to verify them so they are
-        # skipped for now.
+        # TODO: These command items do not have a telemetry counter point in
+        #  the "Lower" components. It is being clarified how to verify them so
+        #  they are skipped for now.
         if command_item in [
             "SETPOINT_VENTILADOR_MIN_LSST",
             "SETPOINT_VENTILADOR_MAX_LSST",
-        ]:
+        ] and topic.startswith("LSST/PISO05/MANEJADORA/LOWER"):
+            self.log.info(f"topic={topic!r}, command={command!r}, payload={payload!r}")
             return
         if command_item.endswith("_LSST"):
             command_item = command_item[:-5]
-        self.log.info(f"command_item={command_item!r}")
-        mqtt_topics_and_items = xml.get_telemetry_mqtt_topics_and_items()
-        items = mqtt_topics_and_items[topic]
-        topic_item = items[command_item]
-        # TODO: DM-28029 Use the values sent in the command.
-        self.log.info(f"Found topic_item {topic_item!r}")
+        self.configuration_values[f"{topic}/{command_item}"] = payload
 
     async def _publish_telemetry_every_second(self):
         """Publish telmetry every second to simulate the behaviour of an MQTT
@@ -207,8 +206,11 @@ class SimClient:
             topic_type = self.hvac_topics[hvac_topic]["topic_type"]
             idl_type = self.hvac_topics[hvac_topic]["idl_type"]
             limits = self.hvac_topics[hvac_topic]["limits"]
+            value = None
             if topic_enabled:
-                if topic_type == "READ":
+                if hvac_topic in self.configuration_values.keys():
+                    value = self.configuration_values[hvac_topic]
+                elif topic_type == "READ":
                     if idl_type == "boolean":
                         value = True
 
@@ -217,13 +219,12 @@ class SimClient:
                             value = False
                     else:
                         value = random.randint(10 * limits[0], 10 * limits[1]) / 10.0
-                    msg = mqtt.MQTTMessage(topic=hvac_topic.encode())
-                    msg.payload = json.dumps(value)
-                    self.msgs.append(msg)
             else:
                 if topic_type == "READ":
                     if idl_type == "boolean":
                         value = False
-                        msg = mqtt.MQTTMessage(topic=hvac_topic.encode())
-                        msg.payload = json.dumps(value)
-                        self.msgs.append(msg)
+
+            if value is not None:
+                msg = mqtt.MQTTMessage(topic=hvac_topic.encode())
+                msg.payload = json.dumps(value)
+                self.msgs.append(msg)

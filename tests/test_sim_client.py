@@ -26,7 +26,9 @@ import logging
 import flake8
 
 import lsst.ts.hvac.simulator.sim_client as sim_client
+from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+import utils
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
@@ -240,3 +242,37 @@ class SimClientTestCase(asynctest.TestCase):
             if topic not in xml.TOPICS_ALWAYS_ENABLED:
                 self.disable_topic(topic)
                 self.verify_topic_disabled(topic)
+
+    async def test_config(self):
+        for topic in HvacTopic:
+            if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
+                data = utils.get_random_config_data(topic)
+                for key in data.keys():
+                    command_item = CommandItem[key]
+                    self.mqtt_client._handle_config_command(
+                        topic.value, command_item.value, data[key]
+                    )
+
+                # enable the topic otherwise telemetry doesn't get published
+                self.enable_topic(topic.value)
+                mqtt_state = self.collect_mqtt_state()
+                # verify that the corresponding telemetry items have the
+                # values as sent in the configurastion command
+                for key in data.keys():
+                    command_item = CommandItem[key]
+                    self.log.info(f"{topic.value}/{command_item.value[:-5]}")
+                    # TODO: These command items do not have a telemetry counter
+                    #  point in the "Lower" components. It is being clarified
+                    #  how to verify them so they are skipped for now.
+                    if command_item.value in [
+                        "SETPOINT_VENTILADOR_MIN_LSST",
+                        "SETPOINT_VENTILADOR_MAX_LSST",
+                    ] and topic.value.startswith("LSST/PISO05/MANEJADORA/LOWER"):
+                        continue
+                    self.assertEqual(
+                        data[key], mqtt_state[topic.value][command_item.value[:-5]]
+                    )
+
+                self.log.info(mqtt_state)
+                # disable the topic again
+                self.disable_topic(topic.value)

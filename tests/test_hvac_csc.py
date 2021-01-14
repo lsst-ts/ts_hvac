@@ -21,14 +21,14 @@
 
 import asynctest
 import logging
-import random
 
 import flake8
 
 from lsst.ts import salobj
 from lsst.ts.hvac import HvacCsc, TOPICS_WITHOUT_COMANDO_ENCENDIDO
-from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
+from lsst.ts.hvac.hvac_enums import HvacTopic
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+import utils
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
 
@@ -152,31 +152,73 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
             else:
                 self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
 
-    async def _do_enable(self, subsystem):
-        await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
-        # Retrieve the method to enable or disable a subsystem.
-        enable_method = getattr(self.remote, "cmd_" + subsystem + "_enable")
-        # Enable the subsystem.
-        await enable_method.set_start(comandoEncendido=True, timeout=STD_TIMEOUT)
-        # Make sure that the SimClient publishes telemetry.
-        self.csc.mqtt_client.publish_telemetry()
-        # Make sure that the CSC publishes the telemetry.
-        self.csc.publish_telemetry()
-        # Check all telemetry.
-        await self._verify_telemetry(subsystem)
-
-        # Disable the subsystem.
-        await enable_method.set_start(comandoEncendido=False, timeout=STD_TIMEOUT)
-
     async def test_enable_on_all_subsystems_one_by_one(self):
         async with self.make_csc(
             initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1,
         ):
+            await salobj.set_summary_state(
+                remote=self.remote, state=salobj.State.ENABLED
+            )
             for topic in HvacTopic:
                 if topic.value not in xml.TOPICS_ALWAYS_ENABLED:
-                    await self._do_enable(topic.name)
+                    subsystem = topic.name
+                    # Retrieve the method to enable or disable a subsystem.
+                    enable_method = getattr(self.remote, "cmd_" + subsystem + "_enable")
+                    # Enable the subsystem.
+                    await enable_method.set_start(
+                        comandoEncendido=True, timeout=STD_TIMEOUT
+                    )
+                    # Make sure that the SimClient publishes telemetry.
+                    self.csc.mqtt_client.publish_telemetry()
+                    # Make sure that the CSC publishes the telemetry.
+                    self.csc.publish_telemetry()
+                    # Check all telemetry.
+                    await self._verify_telemetry(subsystem)
 
-    async def test_config_chiller01(self):
+                    # Disable the subsystem.
+                    await enable_method.set_start(
+                        comandoEncendido=False, timeout=STD_TIMEOUT
+                    )
+
+    async def _verify_config_telemetry(self, subsystem, data):
+        # Loop over all telemetry topics and verify the status
+        all_telemetry = await self._retrieve_all_telemetry()
+        for name, telemetry in all_telemetry.items():
+            topic = HvacTopic[name]
+            # This topic only publishes a temperature so we skip it here.
+            if name == "generalP01":
+                continue
+            if topic.value in xml.TOPICS_ALWAYS_ENABLED or name == subsystem:
+                # This is the one subsystem we have enabled.
+                status_to_check = True
+            else:
+                # The other systems should be disabled.
+                status_to_check = False
+            if name == "valvulaP01":
+                self.assertEqual(telemetry.estadoValvula12, status_to_check)
+            elif name not in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
+                self.assertEqual(telemetry.comandoEncendido, status_to_check)
+            else:
+                self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
+
+            # Check the configurable items and verify that the value is equal
+            # to the corresponding value of the configure command.
+            if name == subsystem:
+                for key in data.keys():
+                    # TODO: These command items do not have a telemetry counter
+                    #  point in the "Lower" components. It is being clarified
+                    #  how to verify them so they are skipped for now.
+                    if "Lower" in name and "setpointVentilador" in key:
+                        continue
+                    item_name = key
+                    # TODO: handle a mismatch between configuration and
+                    #  telemetry item names. This will be fixed in DM-28030
+                    if key == "percAperturaValvulaFrio":
+                        item_name = "aperturaValvulaFrio"
+                    telemetry_item = getattr(telemetry, item_name)
+                    self.assertAlmostEqual(telemetry_item, data[key], 5)
+
+    async def test_config(self):
         async with self.make_csc(
             initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1,
         ):
@@ -185,34 +227,25 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
             )
             for topic in HvacTopic:
                 if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
-                    # Retrieve the config items of the topic.
-                    mqtt_topics_and_items = xml.get_command_mqtt_topics_and_items()
-                    items = mqtt_topics_and_items[topic.value]
-                    # Retrieve the config command of the topic.
-                    config_method = getattr(
-                        self.remote, "cmd_" + topic.name + "_config"
+                    data = utils.get_random_config_data(topic)
+                    subsystem = topic.name
+                    # Retrieve the method to enable or disable a subsystem.
+                    enable_method = getattr(self.remote, "cmd_" + subsystem + "_enable")
+                    # Enable the subsystem.
+                    await enable_method.set_start(
+                        comandoEncendido=True, timeout=STD_TIMEOUT
                     )
-                    # Collect random data based on the limits of each item
-                    data = {}
-                    for item in items:
-                        if item not in [
-                            "COMANDO_ENCENDIDO_LSST",
-                        ]:
-                            data_item = CommandItem(item)
-                            idl_type = items[item]["idl_type"]
-                            limits = items[item]["limits"]
-                            if idl_type == "float":
-                                data[data_item.name] = (
-                                    random.randint(10 * limits[0], 10 * limits[1])
-                                    / 10.0
-                                )
-                            elif idl_type == "boolean":
-                                # TODO: DM-28030 These command items should be
-                                # float and not boolean
-                                data[data_item.name] = True
-                            else:
-                                raise Exception(
-                                    f"Encountered IDL type {idl_type!r} for {topic.value}/{item}"
-                                )
+                    # Retrieve the config command of the subsystem.
+                    config_method = getattr(self.remote, "cmd_" + subsystem + "_config")
                     # Invoke the config command.
                     await config_method.set_start(**data)
+                    # Make sure that the SimClient publishes telemetry.
+                    self.csc.mqtt_client.publish_telemetry()
+                    # Make sure that the CSC publishes the telemetry.
+                    self.csc.publish_telemetry()
+                    # Check all configuration telemetry.
+                    await self._verify_config_telemetry(subsystem, data)
+                    # Disable the subsystem.
+                    await enable_method.set_start(
+                        comandoEncendido=False, timeout=STD_TIMEOUT
+                    )

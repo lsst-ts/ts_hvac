@@ -55,10 +55,6 @@ def get_random_config_data(topic):
                 data[data_item.name] = (
                     random.randint(10 * limits[0], 10 * limits[1]) / 10.0
                 )
-            elif idl_type == "boolean":
-                # TODO: DM-28030 These command items should be
-                # float and not boolean
-                data[data_item.name] = True
             else:
                 raise Exception(
                     f"Encountered IDL type {idl_type!r} for {topic.value}/{item}"

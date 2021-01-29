@@ -211,10 +211,6 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                     if "Lower" in name and "setpointVentilador" in key:
                         continue
                     item_name = key
-                    # TODO: handle a mismatch between configuration and
-                    #  telemetry item names. This will be fixed in DM-28030
-                    if key == "percAperturaValvulaFrio":
-                        item_name = "aperturaValvulaFrio"
                     telemetry_item = getattr(telemetry, item_name)
                     self.assertAlmostEqual(telemetry_item, data[key], 5)
 

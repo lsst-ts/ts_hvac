@@ -1,8 +1,8 @@
 # This file is part of ts_hvac.
 #
-# Developed for the Vera Rubin Observatory Telescope and Site Systems.
-# This product includes software developed by the Vera Rubin Observatory
-# Project (https://www.lsst.org).
+# Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -28,7 +28,7 @@ import flake8
 import lsst.ts.hvac.simulator.sim_client as sim_client
 from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
-import utils
+import hvac_test_utils
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
@@ -246,7 +246,7 @@ class SimClientTestCase(asynctest.TestCase):
     async def test_config(self):
         for topic in HvacTopic:
             if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
-                data = utils.get_random_config_data(topic)
+                data = hvac_test_utils.get_random_config_data(topic)
                 for key in data.keys():
                     command_item = CommandItem[key]
                     self.mqtt_client._handle_config_command(

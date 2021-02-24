@@ -1,8 +1,8 @@
 # This file is part of ts_hvac.
 #
-# Developed for the Vera Rubin Observatory Telescope and Site Systems.
-# This product includes software developed by the Vera Rubin Observatory
-# Project (https://www.lsst.org).
+# Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -25,8 +25,9 @@ import asyncio
 import functools
 import json
 import numpy as np
-import pathlib
 
+from .config_schema import CONFIG_SCHEMA
+from . import __version__
 from lsst.ts import salobj
 from lsst.ts.hvac.hvac_enums import CommandItem, HvacTopic, TelemetryItem
 from lsst.ts.hvac.mqtt_client import MqttClient
@@ -146,6 +147,7 @@ class HvacCsc(salobj.ConfigurableCsc):
     """
 
     valid_simulation_modes = (0, 1)
+    version = __version__
 
     def __init__(
         self,
@@ -154,16 +156,13 @@ class HvacCsc(salobj.ConfigurableCsc):
         simulation_mode=0,
         start_telemetry_publishing=True,
     ):
-        schema_path = (
-            pathlib.Path(__file__).resolve().parents[4].joinpath("schema", "HVAC.yaml")
-        )
         self.config = None
         self._config_dir = config_dir
         self._add_sal_commands()
         super().__init__(
             name="HVAC",
             index=0,
-            schema_path=schema_path,
+            config_schema=CONFIG_SCHEMA,
             config_dir=config_dir,
             initial_state=initial_state,
             simulation_mode=simulation_mode,

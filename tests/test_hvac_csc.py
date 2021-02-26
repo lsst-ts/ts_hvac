@@ -1,8 +1,8 @@
 # This file is part of ts_hvac.
 #
-# Developed for the Vera Rubin Observatory Telescope and Site Systems.
-# This product includes software developed by the Vera Rubin Observatory
-# Project (https://www.lsst.org).
+# Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -25,10 +25,10 @@ import logging
 import flake8
 
 from lsst.ts import salobj
-from lsst.ts.hvac import HvacCsc, TOPICS_WITHOUT_COMANDO_ENCENDIDO
+from lsst.ts import hvac
 from lsst.ts.hvac.hvac_enums import HvacTopic
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
-import utils
+import hvac_test_utils
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
 
@@ -42,7 +42,7 @@ flake8.configure_logging(1)
 
 class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
     def basic_make_csc(self, initial_state, config_dir, simulation_mode, **kwargs):
-        return HvacCsc(
+        return hvac.HvacCsc(
             initial_state=initial_state,
             config_dir=config_dir,
             simulation_mode=simulation_mode,
@@ -121,6 +121,16 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 ),
             )
 
+    async def test_version(self):
+        async with self.make_csc(
+            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1
+        ):
+            await self.assert_next_sample(
+                self.remote.evt_softwareVersions,
+                cscVersion=hvac.__version__,
+                subsystemVersions="",
+            )
+
     async def test_bin_script(self):
         await self.check_bin_script(name="HVAC", index=None, exe_name="run_hvac.py")
 
@@ -147,7 +157,7 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 status_to_check = False
             if name == "valvulaP01":
                 self.assertEqual(telemetry.estadoValvula12, status_to_check)
-            elif name not in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
+            elif name not in hvac.TOPICS_WITHOUT_COMANDO_ENCENDIDO:
                 self.assertEqual(telemetry.comandoEncendido, status_to_check)
             else:
                 self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
@@ -196,7 +206,7 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
                 status_to_check = False
             if name == "valvulaP01":
                 self.assertEqual(telemetry.estadoValvula12, status_to_check)
-            elif name not in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
+            elif name not in hvac.TOPICS_WITHOUT_COMANDO_ENCENDIDO:
                 self.assertEqual(telemetry.comandoEncendido, status_to_check)
             else:
                 self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
@@ -223,7 +233,7 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
             )
             for topic in HvacTopic:
                 if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
-                    data = utils.get_random_config_data(topic)
+                    data = hvac_test_utils.get_random_config_data(topic)
                     subsystem = topic.name
                     # Retrieve the method to enable or disable a subsystem.
                     enable_method = getattr(self.remote, "cmd_" + subsystem + "_enable")

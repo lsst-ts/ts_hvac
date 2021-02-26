@@ -1,8 +1,8 @@
 # This file is part of ts_hvac.
 #
-# Developed for the Vera Rubin Observatory Telescope and Site Systems.
-# This product includes software developed by the Vera Rubin Observatory
-# Project (https://www.lsst.org).
+# Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -400,6 +400,7 @@ def _generic_collect_topics_and_items(row, topics, items):
                         unit = "%"
                     else:
                         raise ValueError(f"Unknown unit {row['unit']}")
+                        unit = ""
                     topics[hvac_topic.name][hvac_item.name] = {
                         "idl_type": idl_type,
                         "unit": unit,

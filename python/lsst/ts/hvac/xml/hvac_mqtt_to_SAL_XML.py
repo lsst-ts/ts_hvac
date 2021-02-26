@@ -400,7 +400,6 @@ def _generic_collect_topics_and_items(row, topics, items):
                         unit = "%"
                     else:
                         raise ValueError(f"Unknown unit {row['unit']}")
-                        unit = ""
                     topics[hvac_topic.name][hvac_item.name] = {
                         "idl_type": idl_type,
                         "unit": unit,

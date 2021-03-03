@@ -14,7 +14,7 @@ Added documentation to the project.
 
 Requires:
 
-* ts_salobj 6.1
+* ts_salobj 6.3
 * ts_idl
 * IDL files for HVAC from ts_xml 7.0
 

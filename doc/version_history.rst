@@ -1,10 +1,22 @@
-.. py:currentmodule:: lsst.ts.MTDome
+.. py:currentmodule:: lsst.ts.hvac
 
-.. _lsst.ts.MTDome.version_history:
+.. _lsst.ts.hvac.version_history:
 
 ###############
 Version History
 ###############
+
+v0.2.0
+======
+
+Added documentation to the project.
+
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl
+* IDL files for HVAC from ts_xml 7.0
 
 v0.1.0
 ======
@@ -22,4 +34,4 @@ Requires:
 
 * ts_salobj 6.1
 * ts_idl
-* IDL file for ESS from ts_xml 7.0
+* IDL files for HVAC from ts_xml 7.0

@@ -1,8 +1,8 @@
 # This file is part of ts_hvac.
 #
-# Developed for the Vera Rubin Observatory Telescope and Site Systems.
-# This product includes software developed by the Vera Rubin Observatory
-# Project (https://www.lsst.org).
+# Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -76,6 +76,7 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "NIGHT": "Night",
     "NUMERO": "Number",
     "OPERACION": "Operation",
+    "PERC": "Percentage",
     "PISO": "Floor",
     "POTENCIA": "Power",
     "PRESENCIA": "Presense",
@@ -151,8 +152,6 @@ class HvacTopic(Enum):
 class TelemetryItem(Enum):
     alarmaFiltro = "ALARMA_FILTRO"
     alarmaGeneral = "ALARMA_GENERAL"
-    aperturaValvula = "%_APERTURA_VALVULA"
-    aperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO"
     calefaccionEtapa01 = "CALEFACCION_ETAPA_01"
     calefaccionEtapa02 = "CALEFACCION_ETAPA_02"
     caudalVentiladorImpulsion = "CAUDAL_VENTILADOR_IMPULSION"
@@ -190,12 +189,14 @@ class TelemetryItem(Enum):
     horasCompresor03 = "HORAS_COMPRESOR_03"
     horasCompresor04 = "HORAS_COMPRESOR_04"
     horasCompresorPromedio = "HORAS_COMPRESOR_PROMEDIO"
-    humedadSala = "%_HUMEDAD_SALA"
     modoOperacion = "MODO_OPERACION"
     modoOperacionUnidad = "MODO_OPERACION_UNIDAD"
     numeroCircuitos = "NUMERO_CIRCUITOS"
+    percAperturaValvula = "%_APERTURA_VALVULA"
+    percAperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO"
+    percHumedadSala = "%_HUMEDAD_SALA"
+    percPotenciaTrabajo = "%_POTENCIA_TRABAJO"
     potenciaDisponibleChiller = "POTENCIA_DISPONIBLE_CHILLER"
-    potenciaTrabajo = "%_POTENCIA_TRABAJO"
     presionBajaCto1 = "PRESION_BAJA_CTO1"
     presionBajaCto2 = "PRESION_BAJA_CTO2"
     requerimientoHumidificador = "REQUERIMIENTO_HUMIDIFICADOR"

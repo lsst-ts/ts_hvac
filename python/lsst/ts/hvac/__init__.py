@@ -1,8 +1,8 @@
 # This file is part of ts_hvac.
 #
-# Developed for the Vera Rubin Observatory Telescope and Site Systems.
-# This product includes software developed by the Vera Rubin Observatory
-# Project (https://www.lsst.org).
+# Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -19,11 +19,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .hvac_csc import *
-from .hvac_enums import *
-from .mqtt_client import *
-
 try:
     from .version import *
 except ModuleNotFoundError:
     __version__ = "?"
+
+from .config_schema import CONFIG_SCHEMA
+from .hvac_csc import *
+from .hvac_enums import *
+from .mqtt_client import *

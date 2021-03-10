@@ -25,7 +25,7 @@ setuptools.setup(
     install_requires=install_requires,
     package_dir={"": "python"},
     packages=setuptools.find_namespace_packages(where="python"),
-    package_data={"": ["*.rst", "*.yaml", "*.xml", "*.csv"]},
+    package_data={"": ["*.rst", "*.yaml", "*.xml", "*.csv", "*.json"]},
     scripts=["bin/run_hvac.py"],
     tests_require=tests_require,
     extras_require={"dev": dev_requires},

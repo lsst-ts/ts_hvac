@@ -28,6 +28,7 @@ __all__ = [
     "create_xml",
 ]
 
+import json
 import pandas
 import pathlib
 import re
@@ -40,6 +41,13 @@ from lsst.ts.hvac.hvac_enums import (
     HvacTopic,
     TelemetryItem,
 )
+
+# TODO DM-28997: Temporary boolean to make sure that the CSV file is used as
+#  input and not the JSON file. As soon as the JSON file has the correct
+#  content as verified against the HVAC server, the Excel file will be removed
+#  along with this boolean and the code that uses it will be updated
+#  accordingly.
+use_csv = True
 
 # This dict contains the general MQTT topics (one for each sub-system) as keys
 # and a dictionary representing the items as value. The structure is
@@ -97,7 +105,14 @@ names = [
 data_dir = pathlib.Path(__file__).resolve().parents[4].joinpath("data")
 
 input_dir = data_dir.joinpath("input/")
-dat_control_filename = input_dir.joinpath("Direccionamiento_Lsst_Final_rev0.csv")
+# TODO DM-28997: Remove this filename variable as soon as the content of the
+#  JSON file is verified against the HVAC server.
+dat_control_csv_filename = input_dir.joinpath(
+    "Direccionamiento_Lsst_Final_JSON_rev2021_rev4.csv"
+)
+dat_control_json_filename = input_dir.joinpath(
+    "JSON_V7_PUBLICACIONES_SUSCRIPCIONES.json"
+)
 
 output_dir = data_dir.joinpath("output/")
 telemetry_filename = output_dir.joinpath("HVAC_Telemetry.xml")
@@ -298,13 +313,26 @@ def _parse_limits(limits_string):
     """
     lower_limit = None
     upper_limit = None
-    match = re.match(r"^(-?\d+)(/| a |% a )(-?\d+)%?$", limits_string)
+
+    match = re.match(
+        r"^(-?\d+)(/| a |% a |°C a | bar a |%RH a )(-?\d+)(%|°C| bar| hr|%RH)?$",
+        limits_string,
+    )
     if match:
         lower_limit = float(match.group(1))
         upper_limit = float(match.group(3))
     elif re.match(r"^\d$", limits_string):
         lower_limit = 0
         upper_limit = 100
+    elif limits_string == "1,2,3,4,5,6,7,8":
+        lower_limit = 1
+        upper_limit = 8
+    elif limits_string == "1,2,3,4,5,6":
+        lower_limit = 1
+        upper_limit = 6
+    elif limits_string in ["true o false", "-", ""]:
+        # ignore because there really are no lower and upper limits
+        pass
     else:
         raise ValueError(f"Couldn't match limits_string {limits_string}")
 
@@ -341,10 +369,36 @@ def get_items_for_topic(topic):
     return items
 
 
-def _generic_collect_topics_and_items(row, topics, items):
+def _determine_unit(unit_string):
+    """Convert the provided unit string to a string representing the unit.
+
+    Parameters
+    ----------
+    unit_string: `str`
+        The unit as read from the input file.
+
+    Returns
+    -------
+    unit: `str`
+        A string representing the unit.
+    """
+    return {
+        "-": "unitless",
+        "": "unitless",
+        "°C": "deg_C",
+        "bar": "bar",
+        "%": "%",
+        "hr": "h",
+        "%RH": "%",
+    }[unit_string]
+
+
+def _generic_collect_topics_and_items(
+    topic_and_item, topic_type, idl_type, unit, limits, topics, items
+):
     """Collect XML topics and items from a row read from the CSV file produced
     from the Excel file with the Rubin Observatory HVAC system information
-    sent by DATControl.
+    sent by DatControl.
 
     The input CSV file can be found in the python/data/input directory and was
     produced by collecting the data in all tabs in the Excel file into one tab
@@ -352,10 +406,24 @@ def _generic_collect_topics_and_items(row, topics, items):
 
     Parameters
     ----------
-    row: `list`
-        A row read from the CSV file.
+    topic_and_item: `str`
+        The topic and item to parse, for instance
+
+            "LSST/PISO02/CRACK01/ESTADO_FUNCIONAMIENTO"
+
+        would be the topic "LSST/PISO02/CRACK01" and the item
+        "ESTADO_FUNCIONAMIENTO"
+    topic_type: `str`
+        Indicates whether the topic is a telemetry topic (READ) or a command
+        topic (WRITE).
+    idl_type: `str`
+        The IDL type.
+    unit: `str`
+        A string representing an astropy unit.
+    limits: tuple
+        A tuple containing the lower and upper limits.
     topics: `dict`
-        The dictionary to add the XML topic and item, found in the row, to.
+        The dictionary to which to add the XML topic and item.
     items: enum.Enum
         The Enum that is used to translate the HVAC topics and items to XML
         topics and items.
@@ -376,7 +444,6 @@ def _generic_collect_topics_and_items(row, topics, items):
     """
     global hvac_topics
     topic_found = False
-    topic_and_item = row["topic_and_item"]
     topic, item = extract_topic_and_item(topic_and_item)
 
     for hvac_topic in HvacTopic:
@@ -384,37 +451,23 @@ def _generic_collect_topics_and_items(row, topics, items):
             if hvac_topic.name not in topics:
                 topics[hvac_topic.name] = {}
 
-            item_found = False
             for hvac_item in items:
                 if hvac_item.value == item:
-                    idl_type = (
-                        "boolean" if row["range"] == "TRUE (O) FALSE" else "float"
-                    )
-                    if row["unit"] == "-":
-                        unit = "unitless"
-                    elif row["unit"] == "°C":
-                        unit = "deg_C"
-                    elif row["unit"] == "bar":
-                        unit = "bar"
-                    elif row["unit"] == "%":
-                        unit = "%"
-                    else:
-                        raise ValueError(f"Unknown unit {row['unit']}")
                     topics[hvac_topic.name][hvac_item.name] = {
                         "idl_type": idl_type,
                         "unit": unit,
                     }
                     hvac_topics[topic_and_item] = {
                         "idl_type": idl_type,
-                        "unit": unit.strip(),
-                        "topic_type": row["rw"].strip(),
-                        "limits": _parse_limits(row["limits"].strip()),
+                        "unit": unit,
+                        "topic_type": topic_type,
+                        "limits": limits,
                     }
-
-                    item_found = True
                     break
-            if not item_found:
-                raise ValueError(f"TelemetryItem '{item}' for {topic} not found.")
+            else:
+                raise ValueError(
+                    f"TelemetryItem '{item}' for {topic} not found in {topic_and_item}"
+                )
 
             topic_found = True
             break
@@ -427,20 +480,77 @@ def collect_topics_and_items():
     data or command topic data depending on the contents of the 8th column in
     the CSV row.
     """
-    with open(dat_control_filename) as csv_file:
-        csv_reader = pandas.read_csv(
-            csv_file,
-            delimiter=";",
-            index_col=False,
-            dtype=str,
-            names=names,
-            keep_default_na=False,
-        )
-        for index, row in csv_reader.iterrows():
-            if row["rw"].strip() == "READ":
-                _generic_collect_topics_and_items(row, telemetry_topics, TelemetryItem)
-            if row["rw"].strip() == "WRITE":
-                _generic_collect_topics_and_items(row, command_topics, CommandItem)
+    topics = {}
+    # TODO DM-28997: Remove this if statement as soon as the content of the
+    #  JSON file is verified against the HVAC server.
+    if use_csv:
+        print(f"Loading CSV file {dat_control_csv_filename}")
+        with open(dat_control_csv_filename) as csv_file:
+            csv_reader = pandas.read_csv(
+                csv_file,
+                delimiter=";",
+                index_col=False,
+                dtype=str,
+                names=names,
+                keep_default_na=False,
+            )
+            for index, row in csv_reader.iterrows():
+                topic_and_item = row["topic_and_item"]
+                idl_type = "float" if "ANALOG" in row["signal"] else "boolean"
+                topic_type = row["rw"].strip()
+                if topic_type in ["READ", "WRITE"]:
+                    unit = _determine_unit(row["unit"])
+                    limits = _parse_limits(row["limits"].strip())
+                    topics[topic_and_item] = {
+                        "idl_type": idl_type,
+                        "topic_type": topic_type,
+                        "unit": unit,
+                        "limits": limits,
+                    }
+    else:
+        print(f"Loading JSON file {dat_control_json_filename}")
+        with open(dat_control_json_filename) as f:
+            all_topics = json.loads(f.read())
+            for topic in all_topics["BOUNDQUERYRESULT"]:
+                topic_and_item = topic["POINT"]
+                # Command topics always end in "_LSST" and telemetry topics
+                # never do so that's how the distinction is made in this code.
+                topic_type = "WRITE" if "_LSST" in topic_and_item else "READ"
+                idl_type = "float" if "Numeric" in topic["TYPE"] else "boolean"
+                unit = _determine_unit(topic["UNIT"])
+                limits = _parse_limits(topic["LIMIT"])
+                topics[topic_and_item] = {
+                    "idl_type": idl_type,
+                    "topic_type": topic_type,
+                    "unit": unit,
+                    "limits": limits,
+                }
+
+    for topic_and_item in sorted(topics.keys()):
+        idl_type = topics[topic_and_item]["idl_type"]
+        topic_type = topics[topic_and_item]["topic_type"]
+        unit = topics[topic_and_item]["unit"]
+        limits = topics[topic_and_item]["limits"]
+        if topic_type == "READ":
+            _generic_collect_topics_and_items(
+                topic_and_item,
+                topic_type,
+                idl_type,
+                unit,
+                limits,
+                telemetry_topics,
+                TelemetryItem,
+            )
+        if topic_type == "WRITE":
+            _generic_collect_topics_and_items(
+                topic_and_item,
+                topic_type,
+                idl_type,
+                unit,
+                limits,
+                command_topics,
+                CommandItem,
+            )
 
 
 def _translate_item(item):

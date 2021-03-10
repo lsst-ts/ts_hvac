@@ -23,8 +23,6 @@ import asynctest
 import json
 import logging
 
-import flake8
-
 import lsst.ts.hvac.simulator.sim_client as sim_client
 from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
@@ -34,8 +32,7 @@ logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
 )
 
-# Make sure that flake8 log level is set to logging.INFO
-flake8.configure_logging(1)
+expected_units = frozenset(("deg_C", "unitless", "bar", "%", "h"))
 
 
 class SimClientTestCase(asynctest.TestCase):
@@ -203,7 +200,7 @@ class SimClientTestCase(asynctest.TestCase):
                         expected_state[variable] = False
                 elif var["idl_type"] == "float":
                     lower_limit, upper_limit = var["limits"]
-                    if var["unit"] in ["deg_C", "unitless", "bar", "%"]:
+                    if var["unit"] in expected_units:
                         expected_state[variable] = {
                             "min": lower_limit,
                             "max": upper_limit,

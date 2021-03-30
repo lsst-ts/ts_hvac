@@ -47,23 +47,24 @@ class MqttClient:
         self.port = port
         self.client = None
         self.msgs = deque()
+        self.connected = False
         self.log.info("MqttClient constructed")
 
     async def connect(self):
-        """Connect the client to the MQTT server.
-        """
+        """Connect the client to the MQTT server."""
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
         self.client.connect(self.host, self.port)
         self.client.loop_start()
         self.client.subscribe(LSST_GENERAL_TOPIC)
+        self.connected = True
         self.log.info("Connected")
 
     async def disconnect(self):
-        """Disconnect the client from the MQTT server.
-        """
+        """Disconnect the client from the MQTT server."""
         self.client.loop_stop()
         self.client.disconnect()
+        self.connected = False
         self.log.info("Disconnected")
 
     def on_message(self, client, userdata, msg):
@@ -80,6 +81,7 @@ class MqttClient:
         msg: `mqtt.MQTTMessage`
             The MQTT message that holds the topic and payload.
         """
+        self.log.debug(f"Received msg {msg.topic}:{msg.payload}")
         self.msgs.append(msg)
 
     def publish_mqtt_message(self, topic, payload):

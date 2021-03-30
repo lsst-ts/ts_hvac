@@ -19,8 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asynctest
 import logging
+import unittest
+
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
 
 logging.basicConfig(
@@ -28,14 +29,7 @@ logging.basicConfig(
 )
 
 
-class JsonExcelCompareTestCase(asynctest.TestCase):
-    async def setUp(self):
-        """Setup the unit test.
-        """
-        self.log = logging.getLogger("JsonExcelCompareTestCase")
-        self.csv_topics = {}
-        self.json_topics = {}
-
+class JsonExcelCompareTestCase(unittest.IsolatedAsyncioTestCase):
     def load_csv(self):
         xml.use_csv = True
         xml.collect_topics_and_items()
@@ -47,6 +41,10 @@ class JsonExcelCompareTestCase(asynctest.TestCase):
         self.json_topics = xml.hvac_topics.copy()
 
     async def test_compare_csv_and_json(self):
+        self.log = logging.getLogger("JsonExcelCompareTestCase")
+        self.csv_topics = {}
+        self.json_topics = {}
+
         self.load_csv()
         self.load_json()
         topic_types_differing = []

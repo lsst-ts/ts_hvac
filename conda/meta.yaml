@@ -26,7 +26,6 @@ test:
     - pandas
     - paho-mqtt
     - lxml
-    - black
   source_files:
     - python
     - bin

@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asynctest
 import logging
+import unittest
 
 import flake8
 
@@ -40,7 +40,7 @@ logging.basicConfig(
 flake8.configure_logging(1)
 
 
-class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
+class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
     def basic_make_csc(self, initial_state, config_dir, simulation_mode, **kwargs):
         return hvac.HvacCsc(
             initial_state=initial_state,
@@ -51,7 +51,9 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
 
     async def test_standard_state_transitions(self):
         async with self.make_csc(
-            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1,
+            initial_state=salobj.State.STANDBY,
+            config_dir=None,
+            simulation_mode=1,
         ):
             await self.check_standard_state_transitions(
                 enabled_commands=(),
@@ -164,7 +166,9 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
 
     async def test_enable_on_all_subsystems_one_by_one(self):
         async with self.make_csc(
-            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1,
+            initial_state=salobj.State.STANDBY,
+            config_dir=None,
+            simulation_mode=1,
         ):
             await salobj.set_summary_state(
                 remote=self.remote, state=salobj.State.ENABLED
@@ -226,7 +230,9 @@ class CscTestCase(salobj.BaseCscTestCase, asynctest.TestCase):
 
     async def test_config(self):
         async with self.make_csc(
-            initial_state=salobj.State.STANDBY, config_dir=None, simulation_mode=1,
+            initial_state=salobj.State.STANDBY,
+            config_dir=None,
+            simulation_mode=1,
         ):
             await salobj.set_summary_state(
                 remote=self.remote, state=salobj.State.ENABLED

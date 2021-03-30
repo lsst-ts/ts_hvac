@@ -24,6 +24,8 @@ __all__ = ["HvacCsc", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
 import asyncio
 import functools
 import json
+import re
+
 import numpy as np
 
 from .config_schema import CONFIG_SCHEMA
@@ -36,7 +38,7 @@ from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
 
 # The number of seconds to collect the state of the HVAC system for before the
 # median is reported via SAL telemetry.
-HVAC_STATE_TRACK_PERIOD = 60
+HVAC_STATE_TRACK_PERIOD = 5
 
 # These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
 TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
@@ -215,16 +217,14 @@ class HvacCsc(salobj.ConfigurableCsc):
         self.log.info("Connected.")
 
     async def disconnect(self):
-        """Disconnect the HVAQ client, if connected.
-        """
+        """Disconnect the HVAQ client, if connected."""
         if self.connected:
             self.log.info("Disconnecting")
             self.telemetry_task.cancel()
             await self.mqtt_client.disconnect()
 
     def _setup_hvac_state(self):
-        """Set up internal tracking of the MQTT state.
-        """
+        """Set up internal tracking of the MQTT state."""
         self.hvac_state = {}
         mqtt_topics_and_items = xml.get_telemetry_mqtt_topics_and_items()
         for mqtt_topic, items in mqtt_topics_and_items.items():
@@ -265,6 +265,7 @@ class HvacCsc(salobj.ConfigurableCsc):
                 if value is not None:
                     data[TelemetryItem(item).name] = value
 
+            self.log.info(f"{topic}:{data}")
             if data:
                 telemetry_method = getattr(self, "tel_" + HvacTopic(topic).name)
                 telemetry_method.set_put(**data)
@@ -276,12 +277,21 @@ class HvacCsc(salobj.ConfigurableCsc):
             payload = msg.payload
 
             topic, item = xml.extract_topic_and_item(topic_and_item)
+            topic = re.sub(r"PISO([1-9])", r"PISO0\1", topic)
+            if topic == "LSST/PISO04/MANEJADORA/SBLANCA":
+                topic = "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA"
+            if topic == "LSST/PISO04/MANEJADORA/SLIMPIA":
+                topic = "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA"
+            if item == "SET_POINT_COOLING":
+                item = "SETPOINT_COOLING"
+            if item == "SET_POINT_HEATING":
+                item = "SETPOINT_HEATING"
             item_state = self.hvac_state[topic][item]
             value = payload
             if payload not in [
-                "Automatico",
-                "Encendido$20Manual",
-                "Apagado$20Manual",
+                b"Automatico",
+                b"Encendido$20Manual",
+                b"Apagado$20Manual",
             ]:
                 value = json.loads(payload)
 

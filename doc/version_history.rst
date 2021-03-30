@@ -6,6 +6,34 @@
 Version History
 ###############
 
+v0.4.0
+======
+
+Removed asynctest.
+Upgraded Black to version 20.8b1.
+Upgraded ts-conda-build to version 0.3.
+
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL files for HVAC from ts_xml 8.0
+
+
+v0.3.0
+======
+
+Added support for reading the HVAC configuration items from a JSON file.
+
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL files for HVAC from ts_xml 8.0
+
+
 v0.2.0
 ======
 
@@ -17,6 +45,7 @@ Requires:
 * ts_salobj 6.3
 * ts_idl
 * IDL files for HVAC from ts_xml 7.0
+
 
 v0.1.0
 ======

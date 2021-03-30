@@ -153,7 +153,11 @@ command_root.addprevious(
 # These topics are always enabled because there are no MQTT commands to enable
 # or disable them.
 TOPICS_ALWAYS_ENABLED = frozenset(
-    ("LSST/PISO01/BOMBA_AGUA_FRIA", "LSST/PISO01/GENERAL", "LSST/PISO01/VALVULA",)
+    (
+        "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/GENERAL",
+        "LSST/PISO01/VALVULA",
+    )
 )
 
 TOPICS_WITHOUT_CONFIGURATION = frozenset(
@@ -613,7 +617,12 @@ def _write_tree_to_file(tree, filename):
         output_dir.mkdir()
     t = etree.ElementTree(tree)
     t_contents = (
-        etree.tostring(t, pretty_print=True, xml_declaration=True, encoding="utf-8",)
+        etree.tostring(
+            t,
+            pretty_print=True,
+            xml_declaration=True,
+            encoding="utf-8",
+        )
         .decode()
         .replace("'", '"')
     )
@@ -623,8 +632,7 @@ def _write_tree_to_file(tree, filename):
 
 
 def _create_telemetry_xml():
-    """Create the Telemetry XML file.
-    """
+    """Create the Telemetry XML file."""
     for telemetry_topic in telemetry_topics:
         st = etree.SubElement(telemetry_root, "SALTelemetry")
         sub_system = etree.SubElement(st, "Subsystem")
@@ -668,8 +676,7 @@ def _separate_enable_and_configuration_commands():
 
 
 def _create_command_xml():
-    """Create the Command XML file.
-    """
+    """Create the Command XML file."""
     _separate_enable_and_configuration_commands()
 
     for command_topic in command_topics:

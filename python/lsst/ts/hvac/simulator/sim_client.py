@@ -65,8 +65,7 @@ class SimClient:
         self.log.info("SimClient constructed")
 
     async def connect(self):
-        """Start publishing telemetry.
-        """
+        """Start publishing telemetry."""
         # Make sure that all topics and their items are loaded.
         xml.collect_topics_and_items()
         self.hvac_topics = xml.hvac_topics
@@ -81,16 +80,14 @@ class SimClient:
         self.log.info("Connected.")
 
     async def disconnect(self):
-        """Stop publishing telemetry.
-        """
+        """Stop publishing telemetry."""
         if self.telemetry_task:
             self.telemetry_task.cancel()
         self.connected = False
         self.log.info("Disconnected.")
 
     def _collect_topics(self):
-        """Loop over all topics and initialize them.
-        """
+        """Loop over all topics and initialize them."""
         topics = xml.get_topics()
         for topic in topics:
             self.topics_enabled[topic] = False
@@ -171,10 +168,14 @@ class SimClient:
         # TODO: These command items do not have a telemetry counter point in
         #  the "Lower" components. It is being clarified how to verify them so
         #  they are skipped for now.
-        if command_item in [
-            "SETPOINT_VENTILADOR_MIN_LSST",
-            "SETPOINT_VENTILADOR_MAX_LSST",
-        ] and topic.startswith("LSST/PISO05/MANEJADORA/LOWER"):
+        if (
+            command_item
+            in [
+                "SETPOINT_VENTILADOR_MIN_LSST",
+                "SETPOINT_VENTILADOR_MAX_LSST",
+            ]
+            and topic.startswith("LSST/PISO05/MANEJADORA/LOWER")
+        ):
             self.log.info(f"topic={topic!r}, command={command!r}, payload={payload!r}")
             return
         if command_item.endswith("_LSST"):

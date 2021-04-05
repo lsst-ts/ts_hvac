@@ -6,6 +6,20 @@
 Version History
 ###############
 
+v0.5.0
+======
+
+Rewrote the generation of the ts_xml XML files consolidating the commands and adding events.
+Rewrote the CSC and unit tests to take into account the changes in the commands and the added events.
+
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL files for HVAC from ts_xml 8.0
+
+
 v0.4.0
 ======
 

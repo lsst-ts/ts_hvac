@@ -21,8 +21,8 @@
 
 import random
 
-from lsst.ts.hvac.hvac_enums import CommandItem
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.enums import CommandItem
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
 def get_random_config_data(topic):
@@ -41,6 +41,7 @@ def get_random_config_data(topic):
     """
     data = {}
     # Retrieve the config items of the topic.
+    xml = MqttInfoReader()
     mqtt_topics_and_items = xml.get_command_mqtt_topics_and_items()
     items = mqtt_topics_and_items[topic.value]
     # Collect random data based on the limits of each item

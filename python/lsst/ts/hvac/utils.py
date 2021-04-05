@@ -19,14 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-try:
-    from .version import *
-except ModuleNotFoundError:
-    __version__ = "?"
 
-from .config_schema import CONFIG_SCHEMA
-from .csc import *
-from .enums import *
-from .utils import *
-from .mqtt_client import *
-from .mqtt_info_reader import *
+__all__ = ["to_camel_case"]
+
+
+def to_camel_case(string, first_lower=False):
+    """Return a CamelCase or camelCase version of a snake_case str."""
+    if first_lower:
+        first, _, rest = string.partition("_")
+    else:
+        first, rest = ("", string)
+    return first.lower() + "".join(part.capitalize() for part in rest.split("_"))

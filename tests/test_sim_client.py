@@ -25,7 +25,11 @@ import unittest
 
 import lsst.ts.hvac.simulator.sim_client as sim_client
 from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.xml.mqtt_info_reader import (
+    MqttInfoReader,
+    TOPICS_ALWAYS_ENABLED,
+    TOPICS_WITHOUT_CONFIGURATION,
+)
 import hvac_test_utils
 
 logging.basicConfig(
@@ -40,8 +44,9 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         """Setup the unit test."""
         self.log = logging.getLogger("SimClientTestCase")
         # Make sure that all topics and their variables are loaded.
-        xml.collect_topics_and_items()
-        self.hvac_topics = xml.hvac_topics
+        self.xml = MqttInfoReader()
+        self.xml.collect_hvac_topics_and_items_from_json()
+        self.hvac_topics = self.xml.hvac_topics
 
         # Set up the simulator client.
         self.mqtt_client = sim_client.SimClient(
@@ -92,7 +97,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
             msg = msgs.popleft()
             topic = msg.topic
             data = json.loads(msg.payload)
-            topic, variable = xml.extract_topic_and_item(topic)
+            topic, variable = self.xml.extract_topic_and_item(topic)
             if topic not in mqtt_state:
                 mqtt_state[topic] = {}
             mqtt_state[topic][variable] = data
@@ -187,7 +192,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
             The expected state.
 
         """
-        variables = xml.get_items_for_topic(topic)
+        variables = self.xml.get_items_for_hvac_topic(topic)
         expected_state = {}
         for variable in variables:
             var = variables[variable]
@@ -225,22 +230,22 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
             * Verify that the topic is disabled if not always enabled.
 
         """
-        topics = xml.get_topics()
+        topics = self.xml.get_generic_hvac_topics()
         for topic in topics:
-            if topic not in xml.TOPICS_ALWAYS_ENABLED:
+            if topic not in TOPICS_ALWAYS_ENABLED:
                 self.verify_topic_disabled(topic)
                 self.enable_topic(topic)
 
             expected_state = self.determine_expected_state(topic)
             self.verify_topic_state(topic, expected_state)
 
-            if topic not in xml.TOPICS_ALWAYS_ENABLED:
+            if topic not in TOPICS_ALWAYS_ENABLED:
                 self.disable_topic(topic)
                 self.verify_topic_disabled(topic)
 
     async def test_config(self):
         for topic in HvacTopic:
-            if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
+            if topic.value not in TOPICS_WITHOUT_CONFIGURATION:
                 data = hvac_test_utils.get_random_config_data(topic)
                 for key in data.keys():
                     command_item = CommandItem[key]

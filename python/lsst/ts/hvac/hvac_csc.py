@@ -34,7 +34,11 @@ from lsst.ts import salobj
 from lsst.ts.hvac.hvac_enums import CommandItem, HvacTopic, TelemetryItem
 from lsst.ts.hvac.mqtt_client import MqttClient
 from lsst.ts.hvac.simulator.sim_client import SimClient
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.xml.mqtt_info_reader import (
+    MqttInfoReader,
+    TOPICS_ALWAYS_ENABLED,
+    TOPICS_WITHOUT_CONFIGURATION,
+)
 
 # The number of seconds to collect the state of the HVAC system for before the
 # median is reported via SAL telemetry.
@@ -183,6 +187,9 @@ class HvacCsc(salobj.ConfigurableCsc):
         # and this gets initialized in the connect method.
         self.hvac_state = None
 
+        # Helper for reading the HVAC data
+        self.xml = MqttInfoReader()
+
         self.log.info("HvacCsc constructed")
 
     async def connect(self):
@@ -226,7 +233,8 @@ class HvacCsc(salobj.ConfigurableCsc):
     def _setup_hvac_state(self):
         """Set up internal tracking of the MQTT state."""
         self.hvac_state = {}
-        mqtt_topics_and_items = xml.get_telemetry_mqtt_topics_and_items()
+        self.xml.collect_hvac_topics_and_items_from_json()
+        mqtt_topics_and_items = self.xml.get_telemetry_mqtt_topics_and_items()
         for mqtt_topic, items in mqtt_topics_and_items.items():
             topic_state = {}
             for item in items:
@@ -276,7 +284,7 @@ class HvacCsc(salobj.ConfigurableCsc):
             topic_and_item = msg.topic
             payload = msg.payload
 
-            topic, item = xml.extract_topic_and_item(topic_and_item)
+            topic, item = self.xml.extract_topic_and_item(topic_and_item)
             topic = re.sub(r"PISO([1-9])", r"PISO0\1", topic)
             if topic == "LSST/PISO04/MANEJADORA/SBLANCA":
                 topic = "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA"
@@ -325,14 +333,14 @@ class HvacCsc(salobj.ConfigurableCsc):
     def _add_sal_commands(self):
         # This adds the do_foo_enable commands.
         for topic in HvacTopic:
-            if topic.value not in xml.TOPICS_ALWAYS_ENABLED:
+            if topic.value not in TOPICS_ALWAYS_ENABLED:
                 method_name = f"do_{topic.name}_enable"
                 method = functools.partial(self._do_enable, topic=topic)
                 setattr(self, method_name, method)
 
         # This adds the do_foo_config commands.
         for topic in HvacTopic:
-            if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
+            if topic.value not in TOPICS_WITHOUT_CONFIGURATION:
                 method_name = f"do_{topic.name}_config"
                 method = functools.partial(self._do_config, topic=topic)
                 setattr(self, method_name, method)
@@ -380,7 +388,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         self.assert_enabled()
         # Publish the data to the MQTT topics and receive confirmation whether
         # the publications were done correctly.
-        mqtt_topics_and_items = xml.get_command_mqtt_topics_and_items()
+        mqtt_topics_and_items = self.xml.get_command_mqtt_topics_and_items()
         items = mqtt_topics_and_items[topic.value]
         was_published = {}
         for item in items:

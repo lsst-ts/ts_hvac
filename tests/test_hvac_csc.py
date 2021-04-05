@@ -27,7 +27,10 @@ import flake8
 from lsst.ts import salobj
 from lsst.ts import hvac
 from lsst.ts.hvac.hvac_enums import HvacTopic
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.xml.mqtt_info_reader import (
+    TOPICS_ALWAYS_ENABLED,
+    TOPICS_WITHOUT_CONFIGURATION,
+)
 import hvac_test_utils
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
@@ -151,7 +154,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             # This topic only publishes a temperature so we skip it here.
             if name == "generalP01":
                 continue
-            if topic.value in xml.TOPICS_ALWAYS_ENABLED or name == subsystem:
+            if topic.value in TOPICS_ALWAYS_ENABLED or name == subsystem:
                 # This is the one subsystem we have enabled.
                 status_to_check = True
             else:
@@ -174,7 +177,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 remote=self.remote, state=salobj.State.ENABLED
             )
             for topic in HvacTopic:
-                if topic.value not in xml.TOPICS_ALWAYS_ENABLED:
+                if topic.value not in TOPICS_ALWAYS_ENABLED:
                     subsystem = topic.name
                     # Retrieve the method to enable or disable a subsystem.
                     enable_method = getattr(self.remote, "cmd_" + subsystem + "_enable")
@@ -202,7 +205,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             # This topic only publishes a temperature so we skip it here.
             if name == "generalP01":
                 continue
-            if topic.value in xml.TOPICS_ALWAYS_ENABLED or name == subsystem:
+            if topic.value in TOPICS_ALWAYS_ENABLED or name == subsystem:
                 # This is the one subsystem we have enabled.
                 status_to_check = True
             else:
@@ -238,7 +241,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 remote=self.remote, state=salobj.State.ENABLED
             )
             for topic in HvacTopic:
-                if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
+                if topic.value not in TOPICS_WITHOUT_CONFIGURATION:
                     data = hvac_test_utils.get_random_config_data(topic)
                     subsystem = topic.name
                     # Retrieve the method to enable or disable a subsystem.

@@ -19,7 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["SPANISH_TO_ENGLISH_DICTIONARY", "HvacTopic", "TelemetryItem", "CommandItem"]
+__all__ = [
+    "SPANISH_TO_ENGLISH_DICTIONARY",
+    "TOPICS_ALWAYS_ENABLED",
+    "TOPICS_WITHOUT_CONFIGURATION",
+    "HvacTopic",
+    "TelemetryItem",
+    "CommandItem",
+]
 
 from enum import Enum
 
@@ -102,6 +109,42 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "Vent ILADOR": "Fan",  # typo should be fixed by DATControl
     "ZONA": "Zone",
 }
+
+
+# These topics are always enabled because there are no MQTT commands to enable
+# or disable them.
+TOPICS_ALWAYS_ENABLED = frozenset(
+    (
+        "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/GENERAL",
+        "LSST/PISO01/VALVULA",
+    )
+)
+
+# These topics don't have configuration items.
+TOPICS_WITHOUT_CONFIGURATION = frozenset(
+    (
+        "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/GENERAL",
+        "LSST/PISO01/VALVULA",
+        "LSST/PISO01/VEA_01",
+        "LSST/PISO05/VEA_01",
+        "LSST/PISO05/VEA_08",
+        "LSST/PISO05/VEA_09",
+        "LSST/PISO05/VEA_10",
+        "LSST/PISO05/VEA_11",
+        "LSST/PISO05/VEA_12",
+        "LSST/PISO05/VEA_13",
+        "LSST/PISO05/VEA_14",
+        "LSST/PISO05/VEA_15",
+        "LSST/PISO05/VEA_16",
+        "LSST/PISO05/VEA_17",
+        "LSST/PISO01/VEC_01",
+        "LSST/PISO01/VIN_01",
+        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
+        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+    )
+)
 
 
 class HvacTopic(Enum):

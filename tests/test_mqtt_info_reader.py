@@ -21,7 +21,7 @@
 
 import logging
 import unittest
-from lsst.ts.hvac.xml.mqtt_info_reader import MqttInfoReader
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG

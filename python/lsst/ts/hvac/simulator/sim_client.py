@@ -29,10 +29,8 @@ import random
 
 import paho.mqtt.client as mqtt
 
-from lsst.ts.hvac.xml.mqtt_info_reader import (
-    MqttInfoReader,
-    TOPICS_ALWAYS_ENABLED,
-)
+from lsst.ts.hvac.hvac_enums import TOPICS_ALWAYS_ENABLED
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
 class SimClient:

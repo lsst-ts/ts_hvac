@@ -19,20 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import pathlib
 import re
 
 from lxml import etree
 
-from lsst.ts.hvac.hvac_enums import SPANISH_TO_ENGLISH_DICTIONARY
-from lsst.ts.hvac.xml.mqtt_info_reader import MqttInfoReader
-
-# Find the data directory relative to the location of this file.
-data_dir = pathlib.Path(__file__).resolve().parents[4].joinpath("data")
+from lsst.ts.hvac.hvac_enums import SPANISH_TO_ENGLISH_DICTIONARY, HvacTopic
+from lsst.ts.hvac.hvac_utils import to_camel_case
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader, data_dir
+from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
 
 output_dir = data_dir.joinpath("output/")
 telemetry_filename = output_dir.joinpath("HVAC_Telemetry.xml")
 command_filename = output_dir.joinpath("HVAC_Commands.xml")
+events_filename = output_dir.joinpath("HVAC_Events.xml")
 
 XML_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 NSMAP = {"xsi": XML_NAMESPACE}
@@ -63,6 +62,18 @@ command_root.addprevious(
         + "href='http://lsst-sal.tuc.noao.edu/schema/SALCommandSet.xsl'",
     )
 )
+events_root = etree.Element(
+    "SALEventSet",
+    {attr_qname: "http://lsst-sal.tuc.noao.edu/schema/SALEventSet.xsd"},
+    nsmap=NSMAP,
+)
+events_root.addprevious(
+    etree.ProcessingInstruction(
+        "xml-stylesheet",
+        "type='text/xsl' "
+        + "href='http://lsst-sal.tuc.noao.edu/schema/SALEventSet.xsl'",
+    )
+)
 
 xml = MqttInfoReader()
 
@@ -90,7 +101,9 @@ def _translate_item(item):
     return translated_item
 
 
-def _create_item_element(parent, topic, item, idl_type, unit):
+def _create_item_element(
+    parent, topic, item, idl_type, unit, description_text, element_count
+):
     """Create an XML element representing an item.
 
     XML items for telemetry and commands have the same structure so it is easy
@@ -108,18 +121,22 @@ def _create_item_element(parent, topic, item, idl_type, unit):
         The IDL type
     unit: `str`
         The unit
+    description_text: `str`
+        The description of the item
+    element_count: `int`
+        The number of elements expected.
     """
     it = etree.SubElement(parent, "item")
     efdb_name = etree.SubElement(it, "EFDB_Name")
     efdb_name.text = item
     description = etree.SubElement(it, "Description")
-    description.text = _translate_item(item)
+    description.text = description_text
     idl_type_elt = etree.SubElement(it, "IDL_Type")
     idl_type_elt.text = idl_type
     units = etree.SubElement(it, "Units")
     units.text = unit
     count = etree.SubElement(it, "Count")
-    count.text = "1"
+    count.text = str(element_count)
 
 
 def _write_tree_to_file(tree, filename):
@@ -141,6 +158,38 @@ def _write_tree_to_file(tree, filename):
     f.close()
 
 
+def collect_unique_command_items_per_group(command_topics):
+    command_items_per_group = {}
+    for command_topic in command_topics:
+        hvac_topic = HvacTopic[command_topic].value
+        command_group = next(
+            (group for group, topic in DEVICE_GROUPS.items() if hvac_topic in topic),
+            None,
+        )
+        if not command_group:
+            raise ValueError(f"Unknown command topic {command_topic}")
+        if command_group not in command_items_per_group:
+            command_items_per_group[command_group] = []
+        command_items_per_group[command_group].append(command_topics[command_topic])
+    # Filter out the duplicates
+    unique_command_items_per_group = {}
+    for command_group in command_items_per_group:
+        unique_command_items_per_group[command_group] = [
+            i
+            for n, i in enumerate(command_items_per_group[command_group])
+            if i not in command_items_per_group[command_group][n + 1 :]
+        ][0]
+    # Remove "comandoEncendido" command item
+    for command_group in unique_command_items_per_group:
+        command_items = unique_command_items_per_group[command_group]
+        del command_items["comandoEncendido"]
+    # Remove empty command_groups
+    unique_command_items_per_group = {
+        group: items for group, items in unique_command_items_per_group.items() if items
+    }
+    return unique_command_items_per_group
+
+
 def _create_telemetry_xml():
     """Create the Telemetry XML file."""
     for telemetry_topic in xml.telemetry_topics:
@@ -158,64 +207,147 @@ def _create_telemetry_xml():
                 telemetry_item,
                 xml.telemetry_topics[telemetry_topic][telemetry_item]["idl_type"],
                 xml.telemetry_topics[telemetry_topic][telemetry_item]["unit"],
+                _translate_item(telemetry_item),
+                1,
             )
     _write_tree_to_file(telemetry_root, telemetry_filename)
 
 
-def _separate_enable_and_configuration_commands():
-    """Separates the Enable and Configuration commands so that switching
-    sub-systems on and off doesn't require providing the configuration as well.
-    """
-    separated_command_topics = {}
-    for command_topic in xml.command_topics:
-        items = xml.command_topics[command_topic]
-        for item in items:
-            if item in ["comandoEncendido"]:
-                enable_topc = f"{command_topic}_enable"
-                if enable_topc not in separated_command_topics:
-                    separated_command_topics[enable_topc] = {}
-                separated_command_topics[enable_topc][item] = items[item]
-            else:
-                config_topc = f"{command_topic}_config"
-                if config_topc not in separated_command_topics:
-                    separated_command_topics[config_topc] = {}
-                separated_command_topics[config_topc][item] = items[item]
-    return separated_command_topics
+def _create_command_sub_element(command_name, description_text):
+    st = etree.SubElement(command_root, "SALCommand")
+    sub_system = etree.SubElement(st, "Subsystem")
+    sub_system.text = "HVAC"
+    efdb_topic = etree.SubElement(st, "EFDB_Topic")
+    efdb_topic.text = f"HVAC_command_{command_name}"
+    description = etree.SubElement(st, "Description")
+    description.text = f"{description_text}"
+    return st
 
 
-def _create_command_xml():
+def _create_command_xml(command_items_per_group):
     """Create the Command XML file."""
-    command_topics = _separate_enable_and_configuration_commands()
 
-    for command_topic in command_topics:
-        st = etree.SubElement(command_root, "SALCommand")
-        sub_system = etree.SubElement(st, "Subsystem")
-        sub_system.text = "HVAC"
-        efdb_topic = etree.SubElement(st, "EFDB_Topic")
-        efdb_topic.text = "HVAC_command_" + command_topic
-        description = etree.SubElement(st, "Description")
-        if "_config" in command_topic:
-            description_text = f"Configuration command for the {command_topic.replace('_config', '')} device."
-        else:
-            description_text = (
-                f"Enable command for the {command_topic.replace('_enable', '')} device."
-            )
-        description.text = f"{description_text}"
-        for command_item in command_topics[command_topic]:
+    # Add general enable and disable commands for a single device.
+    for command in ["enable", "disable"]:
+        description_text = f"{to_camel_case(command)} an HVAC device."
+        st = _create_command_sub_element(f"{command}Device", description_text)
+        description_text = (
+            f"The ID indicating which device needs to be {command}d. The IDs "
+            "can be found in the DeviceId enumeration."
+        )
+        _create_item_element(
+            st, f"{command}", "device_id", "long", "unitless", description_text, 1
+        )
+
+    # Create configuration commands for the devices grouped by similar
+    # functionality
+    for command_group in command_items_per_group:
+        description_text = f"Configure a {command_group} device."
+        st = _create_command_sub_element(
+            f"config{to_camel_case(command_group)}s", description_text
+        )
+
+        command_items = command_items_per_group[command_group]
+        description_text = f"Device ID; one of the DeviceId_{to_camel_case(command_group, True)} enums."
+        _create_item_element(
+            st, command_group, "device_id", "int", "unitless", description_text, 1
+        )
+        for command_item in command_items:
             _create_item_element(
                 st,
-                command_topic,
+                command_group,
                 command_item,
-                command_topics[command_topic][command_item]["idl_type"],
-                command_topics[command_topic][command_item]["unit"],
+                command_items[command_item]["idl_type"],
+                command_items[command_item]["unit"],
+                _translate_item(command_item),
+                1,
             )
     _write_tree_to_file(command_root, command_filename)
 
 
+def _create_enumeration_element_from_dict(my_dict):
+    string = ",\n    ".join(
+        f"{my_dict.__name__}_{item.name}={item.value}" for item in my_dict
+    )
+    st = etree.SubElement(events_root, "Enumeration")
+    st.text = f"\n    {string}\n  "
+
+
+def _create_events_xml(command_items_per_group):
+    """Create the Events XML file."""
+    # Create the Enumerations.
+    _create_enumeration_element_from_dict(DeviceId)
+
+    # Create the events. In order to add events, simply add dictionary
+    # elements as follows:
+    events_topics = {
+        "deviceEnabled": {
+            "device_ids": {
+                "idl_type": "long long",
+                "unit": "unitless",
+                "description": "Bitmask indicating which devices currently are "
+                "enabled (1) or disabled (0). The order of the bits is determined "
+                "by the order of the devices in the DeviceId enumeration",
+                "count": str(len(DeviceId)),
+            }
+        },
+    }
+
+    for events_topic in events_topics:
+        st = etree.SubElement(events_root, "SALEvent")
+        sub_system = etree.SubElement(st, "Subsystem")
+        sub_system.text = "HVAC"
+        efdb_topic = etree.SubElement(st, "EFDB_Topic")
+        efdb_topic.text = f"HVAC_logevent_{events_topic}"
+        description = etree.SubElement(st, "Description")
+        description.text = "Report which devices are enabled."
+        for events_item in events_topics[events_topic]:
+            _create_item_element(
+                st,
+                events_topic,
+                events_item,
+                events_topics[events_topic][events_item]["idl_type"],
+                events_topics[events_topic][events_item]["unit"],
+                events_topics[events_topic][events_item]["description"],
+                1,
+            )
+
+    for command_group in command_items_per_group:
+        st = etree.SubElement(events_root, "SALEvent")
+        sub_system = etree.SubElement(st, "Subsystem")
+        sub_system.text = "HVAC"
+        efdb_topic = etree.SubElement(st, "EFDB_Topic")
+        efdb_topic.text = (
+            f"HVAC_logevent_{to_camel_case(command_group, True)}Configuration"
+        )
+        description = etree.SubElement(st, "Description")
+        description.text = f"Configuration of a {command_group} device."
+
+        command_items = command_items_per_group[command_group]
+        description_text = f"Device ID; one of the DeviceId_{to_camel_case(command_group, True)} enums."
+        _create_item_element(
+            st, command_group, "device_id", "int", "unitless", description_text, 1
+        )
+        for command_item in command_items:
+            _create_item_element(
+                st,
+                command_group,
+                command_item,
+                command_items[command_item]["idl_type"],
+                command_items[command_item]["unit"],
+                _translate_item(command_item),
+                1,
+            )
+
+    _write_tree_to_file(events_root, events_filename)
+
+
 def create_xml():
     xml.collect_hvac_topics_and_items_from_json()
+    command_items_per_group = collect_unique_command_items_per_group(xml.command_topics)
     _create_telemetry_xml()
-    _create_command_xml()
+    _create_command_xml(command_items_per_group)
+    _create_events_xml(command_items_per_group)
 
 
 if __name__ == "__main__":

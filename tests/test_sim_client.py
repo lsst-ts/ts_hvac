@@ -24,12 +24,14 @@ import logging
 import unittest
 
 import lsst.ts.hvac.simulator.sim_client as sim_client
-from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
-from lsst.ts.hvac.xml.mqtt_info_reader import (
-    MqttInfoReader,
+from lsst.ts.hvac.hvac_enums import (
+    HvacTopic,
+    CommandItem,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
 )
+
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 import hvac_test_utils
 
 logging.basicConfig(

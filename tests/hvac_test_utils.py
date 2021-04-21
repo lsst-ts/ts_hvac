@@ -22,7 +22,7 @@
 import random
 
 from lsst.ts.hvac.hvac_enums import CommandItem
-from lsst.ts.hvac.xml.mqtt_info_reader import MqttInfoReader
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
 def get_random_config_data(topic):

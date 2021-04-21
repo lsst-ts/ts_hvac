@@ -19,7 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["MqttInfoReader", "TOPICS_ALWAYS_ENABLED", "TOPICS_WITHOUT_CONFIGURATION"]
+__all__ = [
+    "MqttInfoReader",
+    "data_dir",
+]
 
 import json
 import pandas
@@ -30,6 +33,7 @@ from lsst.ts.hvac.hvac_enums import (
     CommandItem,
     HvacTopic,
     TelemetryItem,
+    TOPICS_ALWAYS_ENABLED,
 )
 
 # The names of the columns in the CSV file in the correct order.
@@ -51,7 +55,7 @@ names = [
 ]
 
 # Find the data directory relative to the location of this file.
-data_dir = pathlib.Path(__file__).resolve().parents[4].joinpath("data")
+data_dir = pathlib.Path(__file__).resolve().parents[3].joinpath("data")
 
 input_dir = data_dir.joinpath("input/")
 dat_control_csv_filename = input_dir.joinpath(
@@ -59,40 +63,6 @@ dat_control_csv_filename = input_dir.joinpath(
 )
 dat_control_json_filename = input_dir.joinpath(
     "JSON_V7_PUBLICACIONES_SUSCRIPCIONES.json"
-)
-
-# These topics are always enabled because there are no MQTT commands to enable
-# or disable them.
-TOPICS_ALWAYS_ENABLED = frozenset(
-    (
-        "LSST/PISO01/BOMBA_AGUA_FRIA",
-        "LSST/PISO01/GENERAL",
-        "LSST/PISO01/VALVULA",
-    )
-)
-
-TOPICS_WITHOUT_CONFIGURATION = frozenset(
-    (
-        "LSST/PISO01/BOMBA_AGUA_FRIA",
-        "LSST/PISO01/GENERAL",
-        "LSST/PISO01/VALVULA",
-        "LSST/PISO01/VEA_01",
-        "LSST/PISO05/VEA_01",
-        "LSST/PISO05/VEA_08",
-        "LSST/PISO05/VEA_09",
-        "LSST/PISO05/VEA_10",
-        "LSST/PISO05/VEA_11",
-        "LSST/PISO05/VEA_12",
-        "LSST/PISO05/VEA_13",
-        "LSST/PISO05/VEA_14",
-        "LSST/PISO05/VEA_15",
-        "LSST/PISO05/VEA_16",
-        "LSST/PISO05/VEA_17",
-        "LSST/PISO01/VEC_01",
-        "LSST/PISO01/VIN_01",
-        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
-        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
-    )
 )
 
 

@@ -26,6 +26,7 @@ __all__ = [
     "HvacTopic",
     "TelemetryItem",
     "CommandItem",
+    "TopicType",
 ]
 
 from enum import Enum
@@ -285,3 +286,8 @@ class CommandItem(Enum):
     setpointVentiladorMin = "SETPOINT_VENTILADOR_MIN_LSST"
     temperaturaAnticongelante = "TEMPERATURA_ANTICONGELANTE_LSST"
     valorConsigna = "VALOR_CONSIGNA_LSST"
+
+
+class TopicType(str, Enum):
+    READ = "READ"
+    WRITE = "WRITE"

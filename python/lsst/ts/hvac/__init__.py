@@ -25,8 +25,8 @@ except ModuleNotFoundError:
     __version__ = "?"
 
 from .config_schema import CONFIG_SCHEMA
-from .hvac_csc import *
-from .hvac_enums import *
-from .hvac_utils import *
+from .csc import *
+from .enums import *
+from .utils import *
 from .mqtt_client import *
 from .mqtt_info_reader import *

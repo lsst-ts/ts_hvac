@@ -24,10 +24,9 @@ __all__ = ["to_camel_case"]
 
 
 def to_camel_case(string, first_lower=False):
-    cc = ""
-    parts = string.split("_")
-    for part in parts:
-        cc += part[0].upper() + part[1:].lower()
+    """Return a CamelCase or camelCase version of a snake_case str."""
     if first_lower:
-        cc = cc[0].lower() + cc[1:]
-    return cc
+        first, _, rest = string.partition("_")
+    else:
+        first, rest = ("", string)
+    return first.lower() + "".join(part.capitalize() for part in rest.split("_"))

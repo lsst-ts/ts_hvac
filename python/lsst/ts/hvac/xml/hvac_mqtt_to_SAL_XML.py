@@ -23,15 +23,15 @@ import re
 
 from lxml import etree
 
-from lsst.ts.hvac.hvac_enums import SPANISH_TO_ENGLISH_DICTIONARY, HvacTopic
-from lsst.ts.hvac.hvac_utils import to_camel_case
-from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader, data_dir
+from lsst.ts.hvac.enums import SPANISH_TO_ENGLISH_DICTIONARY, HvacTopic
+from lsst.ts.hvac.utils import to_camel_case
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader, DATA_DIR
 from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
 
-output_dir = data_dir.joinpath("output/")
-telemetry_filename = output_dir.joinpath("HVAC_Telemetry.xml")
-command_filename = output_dir.joinpath("HVAC_Commands.xml")
-events_filename = output_dir.joinpath("HVAC_Events.xml")
+OUTPUT_DIR = DATA_DIR / "output"
+telemetry_filename = OUTPUT_DIR / "HVAC_Telemetry.xml"
+command_filename = OUTPUT_DIR / "HVAC_Commands.xml"
+events_filename = OUTPUT_DIR / "HVAC_Events.xml"
 
 XML_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 NSMAP = {"xsi": XML_NAMESPACE}
@@ -140,8 +140,8 @@ def _create_item_element(
 
 
 def _write_tree_to_file(tree, filename):
-    if not output_dir.exists():
-        output_dir.mkdir()
+    if not OUTPUT_DIR.exists():
+        OUTPUT_DIR.mkdir()
     t = etree.ElementTree(tree)
     t_contents = (
         etree.tostring(
@@ -343,7 +343,6 @@ def _create_events_xml(command_items_per_group):
 
 
 def create_xml():
-    xml.collect_hvac_topics_and_items_from_json()
     command_items_per_group = collect_unique_command_items_per_group(xml.command_topics)
     _create_telemetry_xml()
     _create_command_xml(command_items_per_group)

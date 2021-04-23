@@ -31,7 +31,6 @@ logging.basicConfig(
 class MqttInfoReaderTestCase(unittest.TestCase):
     def test_compare_json_and_csv_hvac_topics_and_items(self):
         mir = MqttInfoReader()
-        mir.collect_hvac_topics_and_items_from_json()
         json_hvac_topics = mir.hvac_topics.copy()
 
         mir.hvac_topics = {}

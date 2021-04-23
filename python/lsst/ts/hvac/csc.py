@@ -22,7 +22,6 @@
 __all__ = ["HvacCsc", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
 
 import asyncio
-import functools
 import json
 import re
 
@@ -30,18 +29,18 @@ import numpy as np
 
 from .config_schema import CONFIG_SCHEMA
 from . import __version__
-from lsst.ts import salobj
-from lsst.ts.hvac.hvac_enums import (
+from .enums import (
     CommandItem,
     HvacTopic,
     TelemetryItem,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
 )
-from lsst.ts.hvac.hvac_utils import to_camel_case
-from lsst.ts.hvac.mqtt_client import MqttClient
-from lsst.ts.hvac.simulator.sim_client import SimClient
-from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
+from .utils import to_camel_case
+from .mqtt_client import MqttClient
+from .simulator.sim_client import SimClient
+from .mqtt_info_reader import MqttInfoReader
+from lsst.ts import salobj
 from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
 
 # The number of seconds to collect the state of the HVAC system for before the
@@ -191,16 +190,11 @@ class HvacCsc(salobj.ConfigurableCsc):
         # and this gets initialized in the connect method.
         self.hvac_state = None
 
-        # Keep track of whether a deviceEnabled log event needs to be sent
-        self.send_deviceEnabled_event = True
-
-        # Keep track of for which devices a config log event needs to be sent
-        self.send_config_event = set(
-            [hvac_topic.name for hvac_topic in list(HvacTopic)]
-        )
-
         # Helper for reading the HVAC data
         self.xml = MqttInfoReader()
+
+        # Keep track of the device indices for the device mask
+        self.device_id_index = {dev_id: i for i, dev_id in enumerate(DeviceId)}
 
         self.log.info("HvacCsc constructed")
 
@@ -245,7 +239,6 @@ class HvacCsc(salobj.ConfigurableCsc):
     def _setup_hvac_state(self):
         """Set up internal tracking of the MQTT state."""
         self.hvac_state = {}
-        self.xml.collect_hvac_topics_and_items_from_json()
         mqtt_topics_and_items = self.xml.get_telemetry_mqtt_topics_and_items()
         for mqtt_topic, items in mqtt_topics_and_items.items():
             topic_state = {}
@@ -270,11 +263,27 @@ class HvacCsc(salobj.ConfigurableCsc):
         self.config = config
 
     def _get_topic_enabled_state(self, topic):
+        """Determine whether a device represented by the MQTT topic is enabled
+        or not.
+
+        Parameters
+        ----------
+        topic: `str`
+            An MQTT topic representing a device.
+
+        Returns
+        -------
+        deviceId_index: `int`
+            The index of the device in the `lsst.ts.idl.enums.HVAC.DeviceId`
+            enum.
+        enabled: `bool`
+            Whether the device is enabled or not.
+        """
         enabled = False
         deviceId_index = 0
         hvac_topic = HvacTopic(topic)
         device_id = DeviceId[hvac_topic.name]
-        deviceId_index = list(DeviceId).index(device_id)
+        deviceId_index = self.device_id_index[device_id]
 
         if topic in TOPICS_ALWAYS_ENABLED:
             enabled = True
@@ -294,7 +303,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         for topic in self.hvac_state:
             deviceId_index, enabled = self._get_topic_enabled_state(topic)
             if enabled:
-                enabled_mask += 2 ** deviceId_index
+                enabled_mask += 1 << deviceId_index
             data = {}
             for item in self.hvac_state[topic]:
                 info = self.hvac_state[topic][item]
@@ -311,18 +320,14 @@ class HvacCsc(salobj.ConfigurableCsc):
                 telemetry_method.set_put(**data)
             hvac_topic = HvacTopic(topic)
             device_id = DeviceId[hvac_topic.name]
-            if (
-                topic not in TOPICS_WITHOUT_CONFIGURATION
-                and enabled
-                and hvac_topic.name in self.send_config_event
-            ):
+            if topic not in TOPICS_WITHOUT_CONFIGURATION and enabled:
                 command_group = [
                     k for k, v in DEVICE_GROUPS.items() if hvac_topic.value in v
                 ][0]
                 command_group_coro = getattr(
                     self, f"evt_{to_camel_case(command_group, True)}Configuration"
                 )
-                event_data = {"device_id": device_id.value}
+                event_data = {"device_id": device_id}
                 command_topics = self.xml.command_topics[hvac_topic.name]
                 for command_topic in command_topics:
                     # skip topics that are not reported
@@ -333,13 +338,8 @@ class HvacCsc(salobj.ConfigurableCsc):
                     ]:
                         event_data[command_topic] = data[command_topic]
                 command_group_coro.set_put(**event_data)
-            # Always discard the device from the list since it gets added again
-            # when it gets enabled or reconfigured
-            self.send_config_event.discard(hvac_topic.name)
 
-        if self.send_deviceEnabled_event:
-            self.evt_deviceEnabled.set_put(device_ids=enabled_mask)
-            self.send_deviceEnabled_event = False
+        self.evt_deviceEnabled.set_put(device_ids=enabled_mask)
 
     def _handle_mqtt_messages(self):
         while not len(self.mqtt_client.msgs) == 0:
@@ -404,8 +404,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         # This adds the do_configFoos functions.
         for command_group in command_groups:
             function_name = f"do_config{to_camel_case(command_group)}s"
-            function = functools.partial(self._do_config)
-            setattr(self, function_name, function)
+            setattr(self, function_name, self._do_config)
 
     def do_disableDevice(self, data):
         """Disable the specified device.
@@ -452,10 +451,9 @@ class HvacCsc(salobj.ConfigurableCsc):
             if hvac_topic.name in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
                 telemetry_item = TelemetryItem.estadoFuncionamiento.value
             self.hvac_state[hvac_topic.value][telemetry_item].initial_value = enabled
-            self.send_deviceEnabled_event = True
         else:
-            # TODO: DM-28028: Handling of was_published will come at a later
-            #  point.
+            # TODO: DM-28028: Handling of was_published == False will come at
+            #  a later point.
             pass
         if enabled:
             self.send_config_event.add(hvac_topic.name)
@@ -463,7 +461,7 @@ class HvacCsc(salobj.ConfigurableCsc):
             self.send_config_event.discard(hvac_topic.name)
 
     def _do_config(self, data):
-        """Send a MQTT message to configure a system.
+        """Send an MQTT message to configure a system.
 
         Parameters
         ----------
@@ -490,8 +488,7 @@ class HvacCsc(salobj.ConfigurableCsc):
                     topic.value + "/" + command_item.value,
                     json.dumps(getattr(data, command_item.name)),
                 )
-                self.send_config_event.add(topic.name)
         else:
-            # TODO: DM-28028: Handling of was_published will come at a later
-            #  point.
+            # TODO: DM-28028: Handling of was_published == False will come at
+            #  a later point.
             pass

@@ -22,14 +22,10 @@
 import logging
 import unittest
 
-from lsst.ts.hvac.hvac_enums import (
-    HvacTopic,
-    TOPICS_ALWAYS_ENABLED,
-    TOPICS_WITHOUT_CONFIGURATION,
-)
+from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS, DEVICE_GROUP_IDS
+from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
@@ -38,23 +34,19 @@ logging.basicConfig(
 
 class MqttToSalTestCase(unittest.TestCase):
     def test_mask(self):
-        xml = MqttInfoReader()
-        xml.collect_hvac_topics_and_items_from_json()
-
         mask = 0b10000000110001
         topics_enabled = [
             flag for (index, flag) in enumerate(DeviceId) if (mask & 2 ** index)
         ]
         print(topics_enabled)
         mask_check = 0
-        device_id_list = list(DeviceId)
+        device_id_index = {dev_id: i for i, dev_id in enumerate(DeviceId)}
         for topic_enabled in topics_enabled:
-            mask_check += 2 ** device_id_list.index(topic_enabled)
+            mask_check += 1 << device_id_index[topic_enabled]
         self.assertEqual(mask_check, mask)
 
     def test_hvac_command_groups(self):
         xml = MqttInfoReader()
-        xml.collect_hvac_topics_and_items_from_json()
         command_topic_counts = {}
         for hvac_topic in xml.get_generic_hvac_topics():
             topic_found = False
@@ -93,7 +85,6 @@ class MqttToSalTestCase(unittest.TestCase):
 
     def test_collect_command_topics(self):
         xml = MqttInfoReader()
-        xml.collect_hvac_topics_and_items_from_json()
         unique_command_items_per_group = (
             hvac_mqtt_to_SAL_XML.collect_unique_command_items_per_group(
                 xml.command_topics
@@ -106,28 +97,3 @@ class MqttToSalTestCase(unittest.TestCase):
             self.assertTrue(item_list)
             # Make sure that "comandoEncendido" is not present in the dict
             self.assertTrue("comandoEncendido" not in item_list)
-
-    def test_find_device_group(self):
-        device_id_num = 101
-        device_id = DeviceId(device_id_num)
-        topic = HvacTopic[device_id.name]
-        print(topic.value)
-        command_group = [k for k, v in DEVICE_GROUPS.items() if topic.value in v][0]
-        command_group_id = [
-            DEVICE_GROUP_IDS[k] for k, v in DEVICE_GROUPS.items() if topic.value in v
-        ][0]
-        print(command_group)
-        print(command_group_id)
-        command_groups = set(
-            k
-            for k, v in DEVICE_GROUPS.items()
-            for i in v
-            if i not in TOPICS_WITHOUT_CONFIGURATION
-        )
-        print(command_groups)
-
-    def test_enum(self):
-        hvac_topic = HvacTopic.chiller03P01
-        device_id = DeviceId[hvac_topic.name]
-        deviceId_index = list(DeviceId).index(device_id)
-        print(f"{hvac_topic.name} : {hvac_topic.value}, {deviceId_index}")

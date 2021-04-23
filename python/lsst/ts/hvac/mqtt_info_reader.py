@@ -21,7 +21,7 @@
 
 __all__ = [
     "MqttInfoReader",
-    "data_dir",
+    "DATA_DIR",
 ]
 
 import json
@@ -29,12 +29,14 @@ import pandas
 import pathlib
 import re
 
-from lsst.ts.hvac.hvac_enums import (
+from .enums import (
     CommandItem,
     HvacTopic,
     TelemetryItem,
     TOPICS_ALWAYS_ENABLED,
+    TopicType,
 )
+
 
 # The names of the columns in the CSV file in the correct order.
 names = [
@@ -55,15 +57,13 @@ names = [
 ]
 
 # Find the data directory relative to the location of this file.
-data_dir = pathlib.Path(__file__).resolve().parents[3].joinpath("data")
+DATA_DIR = pathlib.Path(__file__).resolve().parents[3] / "data"
 
-input_dir = data_dir.joinpath("input/")
-dat_control_csv_filename = input_dir.joinpath(
-    "Direccionamiento_Lsst_Final_JSON_rev2021_rev4.csv"
+INPUT_DIR = DATA_DIR / "input"
+dat_control_csv_filename = (
+    INPUT_DIR / "Direccionamiento_Lsst_Final_JSON_rev2021_rev4.csv"
 )
-dat_control_json_filename = input_dir.joinpath(
-    "JSON_V7_PUBLICACIONES_SUSCRIPCIONES.json"
-)
+dat_control_json_filename = INPUT_DIR / "JSON_V7_PUBLICACIONES_SUSCRIPCIONES.json"
 
 
 class MqttInfoReader:
@@ -102,6 +102,8 @@ class MqttInfoReader:
         #     }
         # }
         self.command_topics = {}
+
+        self._collect_hvac_topics_and_items_from_json()
 
     def _determine_unit(self, unit_string):
         """Convert the provided unit string to a string representing the unit.
@@ -288,7 +290,7 @@ class MqttInfoReader:
             topic_type = topics[topic_and_item]["topic_type"]
             unit = topics[topic_and_item]["unit"]
             limits = topics[topic_and_item]["limits"]
-            if topic_type == "READ":
+            if topic_type == TopicType.READ:
                 self._generic_collect_topics_and_items(
                     topic_and_item,
                     topic_type,
@@ -298,7 +300,7 @@ class MqttInfoReader:
                     self.telemetry_topics,
                     TelemetryItem,
                 )
-            if topic_type == "WRITE":
+            if topic_type == TopicType.WRITE:
                 self._generic_collect_topics_and_items(
                     topic_and_item,
                     topic_type,
@@ -333,7 +335,7 @@ class MqttInfoReader:
                 csv_hvac_topic_and_item = row["topic_and_item"]
                 idl_type = "float" if "ANALOG" in row["signal"] else "boolean"
                 topic_type = row["rw"].strip()
-                if topic_type in ["READ", "WRITE"]:
+                if topic_type in [TopicType.READ, TopicType.WRITE]:
                     unit = self._determine_unit(row["unit"])
                     limits = self._parse_limits(row["limits"].strip())
                     csv_hvac_topics[csv_hvac_topic_and_item] = {
@@ -344,7 +346,7 @@ class MqttInfoReader:
                     }
         self._collect_topics_and_items(csv_hvac_topics)
 
-    def collect_hvac_topics_and_items_from_json(self):
+    def _collect_hvac_topics_and_items_from_json(self):
         """Loop over all rows in the JSON file and extracts either telemetry
         topic data or command topic data depending on whether the JSON topic
         name ends in "_WRITE" or not.
@@ -357,7 +359,11 @@ class MqttInfoReader:
                 json_hvac_topic_and_item = json_hvac_topic["POINT"]
                 # Command topics always end in "_LSST" and telemetry topics
                 # never do so that's how the distinction is made in this code.
-                topic_type = "WRITE" if "_LSST" in json_hvac_topic_and_item else "READ"
+                topic_type = (
+                    TopicType.WRITE
+                    if json_hvac_topic_and_item.endswith("_LSST")
+                    else TopicType.READ
+                )
                 idl_type = (
                     "float" if "Numeric" in json_hvac_topic["TYPE"] else "boolean"
                 )
@@ -384,7 +390,7 @@ class MqttInfoReader:
         hvac_topics = set()
         for hvac_topic_and_item in self.hvac_topics:
             topic_type = self.hvac_topics[hvac_topic_and_item]["topic_type"]
-            if topic_type == "WRITE" and hvac_topic_and_item.endswith(
+            if topic_type == TopicType.WRITE and hvac_topic_and_item.endswith(
                 "COMANDO_ENCENDIDO_LSST"
             ):
                 topic, item = self.extract_topic_and_item(hvac_topic_and_item)
@@ -447,7 +453,7 @@ class MqttInfoReader:
         hvac_topics dictionary. The only difference is that the command topics
         (indicated by topic type WRITE) have been filtered out.
         """
-        return self._get_mqtt_topics_and_items_for_type("READ")
+        return self._get_mqtt_topics_and_items_for_type(TopicType.READ)
 
     def get_command_mqtt_topics_and_items(self):
         """Convenience method to collect all MQTT topics and their items that
@@ -464,4 +470,4 @@ class MqttInfoReader:
         hvac_topics dictionary. The only difference is that the telemetry
         topics (indicated by topic type READ) have been filtered out.
         """
-        return self._get_mqtt_topics_and_items_for_type("WRITE")
+        return self._get_mqtt_topics_and_items_for_type(TopicType.WRITE)

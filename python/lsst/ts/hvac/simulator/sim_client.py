@@ -29,7 +29,7 @@ import random
 
 import paho.mqtt.client as mqtt
 
-from lsst.ts.hvac.hvac_enums import TOPICS_ALWAYS_ENABLED
+from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
@@ -70,8 +70,6 @@ class SimClient:
 
     async def connect(self):
         """Start publishing telemetry."""
-        # Make sure that all topics and their items are loaded.
-        self.xml.collect_hvac_topics_and_items_from_json()
         self.hvac_topics = self.xml.hvac_topics
         self._collect_topics()
 

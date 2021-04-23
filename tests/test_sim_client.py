@@ -24,7 +24,7 @@ import logging
 import unittest
 
 import lsst.ts.hvac.simulator.sim_client as sim_client
-from lsst.ts.hvac.hvac_enums import (
+from lsst.ts.hvac.enums import (
     HvacTopic,
     CommandItem,
     TOPICS_ALWAYS_ENABLED,
@@ -47,7 +47,6 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         self.log = logging.getLogger("SimClientTestCase")
         # Make sure that all topics and their variables are loaded.
         self.xml = MqttInfoReader()
-        self.xml.collect_hvac_topics_and_items_from_json()
         self.hvac_topics = self.xml.hvac_topics
 
         # Set up the simulator client.

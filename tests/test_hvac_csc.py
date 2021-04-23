@@ -27,12 +27,12 @@ import flake8
 
 from lsst.ts import salobj
 from lsst.ts import hvac
-from lsst.ts.hvac.hvac_enums import (
+from lsst.ts.hvac.enums import (
     HvacTopic,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
 )
-from lsst.ts.hvac.hvac_utils import to_camel_case
+from lsst.ts.hvac.utils import to_camel_case
 import hvac_test_utils
 from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
 
@@ -88,11 +88,11 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         await self.check_bin_script(name="HVAC", index=None, exe_name="run_hvac.py")
 
     async def _verify_evt_deviceEnabled(self, subsystem):
-        # Default mask indicating that the devices, that always are enabled,
-        # are enabled.
+        # Default mask indicating that the three devices that always are
+        # enabled, are enabled.
         device_mask = 0b111
         device_id = DeviceId[subsystem]
-        deviceId_index = list(DeviceId).index(device_id)
+        deviceId_index = self.csc.device_id_index[device_id]
         device_mask += 2 ** deviceId_index
         await self.assert_next_sample(
             topic=self.remote.evt_deviceEnabled, device_ids=device_mask
@@ -139,7 +139,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 if topic.value not in TOPICS_ALWAYS_ENABLED:
                     subsystem = topic.name
                     # Retrieve the DeviceId.
-                    device_id = DeviceId[subsystem].value
+                    device_id = DeviceId[subsystem]
                     data = {"device_id": device_id}
                     # Enable the subsystem.
                     await self.remote.cmd_enableDevice.set_start(
@@ -204,7 +204,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         )
         device_id = DeviceId[hvac_topic.name]
         data = await self.assert_next_sample(
-            topic=command_group_coro, device_id=device_id.value
+            topic=command_group_coro, device_id=device_id
         )
         command_topics = self.csc.xml.command_topics[hvac_topic.name]
         for command_topic in command_topics:
@@ -232,7 +232,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     subsystem = hvac_topic.name
                     # Retrieve the DeviceId.
                     device_id = DeviceId[subsystem]
-                    enable_data = {"device_id": device_id.value}
+                    enable_data = {"device_id": device_id}
                     # Enable the subsystem.
                     await self.remote.cmd_enableDevice.set_start(
                         **enable_data, timeout=STD_TIMEOUT
@@ -245,7 +245,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     config_method = getattr(self.remote, f"cmd_config{command_group}s")
                     # Invoke the config command.
                     config_data = hvac_test_utils.get_random_config_data(hvac_topic)
-                    config_data["device_id"] = device_id.value
+                    config_data["device_id"] = device_id
                     await config_method.set_start(**config_data)
                     # Make sure that the SimClient publishes telemetry.
                     self.csc.mqtt_client.publish_telemetry()

@@ -29,7 +29,8 @@ import random
 
 import paho.mqtt.client as mqtt
 
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.hvac_enums import TOPICS_ALWAYS_ENABLED
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
 class SimClient:
@@ -57,6 +58,9 @@ class SimClient:
         # Holds the values received via configuration commands.
         self.configuration_values = {}
 
+        # Helper for reading the HVAC data
+        self.xml = MqttInfoReader()
+
         self.start_publish_telemetry_every_second = start_publish_telemetry_every_second
         # Incoming command messages get published or not. Should only be
         # modified by unit tests.
@@ -67,8 +71,8 @@ class SimClient:
     async def connect(self):
         """Start publishing telemetry."""
         # Make sure that all topics and their items are loaded.
-        xml.collect_topics_and_items()
-        self.hvac_topics = xml.hvac_topics
+        self.xml.collect_hvac_topics_and_items_from_json()
+        self.hvac_topics = self.xml.hvac_topics
         self._collect_topics()
 
         if self.start_publish_telemetry_every_second:
@@ -88,10 +92,10 @@ class SimClient:
 
     def _collect_topics(self):
         """Loop over all topics and initialize them."""
-        topics = xml.get_topics()
+        topics = self.xml.get_generic_hvac_topics()
         for topic in topics:
             self.topics_enabled[topic] = False
-        for topic in xml.TOPICS_ALWAYS_ENABLED:
+        for topic in TOPICS_ALWAYS_ENABLED:
             self.topics_enabled[topic] = True
 
     def publish_mqtt_message(self, topic, payload):
@@ -122,7 +126,7 @@ class SimClient:
             In case a topic doesn't exist.
         """
         self.log.debug(f"Recevied message on topic {topic} with payload {payload}")
-        topic, command = xml.extract_topic_and_item(topic)
+        topic, command = self.xml.extract_topic_and_item(topic)
         if command == "COMANDO_ENCENDIDO_LSST":
             self._handle_enable_command(topic, json.loads(payload))
         else:
@@ -201,7 +205,7 @@ class SimClient:
         server.
         """
         for hvac_topic in self.hvac_topics:
-            topic, variable = xml.extract_topic_and_item(hvac_topic)
+            topic, variable = self.xml.extract_topic_and_item(hvac_topic)
 
             topic_enabled = self.topics_enabled[topic]
             topic_type = self.hvac_topics[hvac_topic]["topic_type"]

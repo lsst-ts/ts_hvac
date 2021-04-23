@@ -21,86 +21,74 @@
 
 import logging
 import unittest
-
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
 )
 
 
-class JsonExcelCompareTestCase(unittest.IsolatedAsyncioTestCase):
-    def load_csv(self):
-        xml.use_csv = True
-        xml.collect_topics_and_items()
-        self.csv_topics = xml.hvac_topics.copy()
+class MqttInfoReaderTestCase(unittest.TestCase):
+    def test_compare_json_and_csv_hvac_topics_and_items(self):
+        mir = MqttInfoReader()
+        mir.collect_hvac_topics_and_items_from_json()
+        json_hvac_topics = mir.hvac_topics.copy()
 
-    def load_json(self):
-        xml.use_csv = False
-        xml.collect_topics_and_items()
-        self.json_topics = xml.hvac_topics.copy()
+        mir.hvac_topics = {}
 
-    async def test_compare_csv_and_json(self):
-        self.log = logging.getLogger("JsonExcelCompareTestCase")
-        self.csv_topics = {}
-        self.json_topics = {}
+        mir.collect_hvac_topics_and_items_from_csv()
+        csv_hvac_topics = mir.hvac_topics.copy()
 
-        self.load_csv()
-        self.load_json()
+        json_topics_missing_in_csv = json_hvac_topics.keys() - csv_hvac_topics.keys()
+        csv_topics_missing_in_json = csv_hvac_topics.keys() - json_hvac_topics.keys()
         topic_types_differing = []
         idl_types_differing = []
         units_differing = []
         limits_differing = []
-
-        json_topic_names = self.json_topics.keys()
-        csv_topic_names = self.csv_topics.keys()
-        json_topics_missing_in_csv = json_topic_names - csv_topic_names
-        csv_topics_missing_in_json = csv_topic_names - json_topic_names
-
-        for json_topic in self.json_topics.keys():
-            if json_topic in self.csv_topics:
+        for json_hvac_topic in json_hvac_topics.keys():
+            if json_hvac_topic in csv_hvac_topics:
                 if (
-                    self.json_topics[json_topic]["topic_type"]
-                    != self.csv_topics[json_topic]["topic_type"]
+                    json_hvac_topics[json_hvac_topic]["topic_type"]
+                    != csv_hvac_topics[json_hvac_topic]["topic_type"]
                 ):
                     topic_types_differing.append(
                         (
-                            json_topic,
-                            self.json_topics[json_topic]["topic_type"],
-                            self.csv_topics[json_topic]["topic_type"],
+                            json_hvac_topic,
+                            json_hvac_topics[json_hvac_topic]["topic_type"],
+                            csv_hvac_topics[json_hvac_topic]["topic_type"],
                         )
                     )
                 if (
-                    self.json_topics[json_topic]["idl_type"]
-                    != self.csv_topics[json_topic]["idl_type"]
+                    json_hvac_topics[json_hvac_topic]["idl_type"]
+                    != csv_hvac_topics[json_hvac_topic]["idl_type"]
                 ):
                     idl_types_differing.append(
                         (
-                            json_topic,
-                            self.json_topics[json_topic]["idl_type"],
-                            self.csv_topics[json_topic]["idl_type"],
+                            json_hvac_topic,
+                            self.json_topics[json_hvac_topic]["idl_type"],
+                            self.csv_topics[json_hvac_topic]["idl_type"],
                         )
                     )
                 if (
-                    self.json_topics[json_topic]["unit"]
-                    != self.csv_topics[json_topic]["unit"]
+                    json_hvac_topics[json_hvac_topic]["unit"]
+                    != csv_hvac_topics[json_hvac_topic]["unit"]
                 ):
                     units_differing.append(
                         (
-                            json_topic,
-                            self.json_topics[json_topic]["unit"],
-                            self.csv_topics[json_topic]["unit"],
+                            json_hvac_topic,
+                            json_hvac_topics[json_hvac_topic]["unit"],
+                            csv_hvac_topics[json_hvac_topic]["unit"],
                         )
                     )
                 if (
-                    self.json_topics[json_topic]["limits"]
-                    != self.csv_topics[json_topic]["limits"]
+                    json_hvac_topics[json_hvac_topic]["limits"]
+                    != csv_hvac_topics[json_hvac_topic]["limits"]
                 ):
                     limits_differing.append(
                         (
-                            json_topic,
-                            self.json_topics[json_topic]["limits"],
-                            self.csv_topics[json_topic]["limits"],
+                            json_hvac_topic,
+                            json_hvac_topics[json_hvac_topic]["limits"],
+                            csv_hvac_topics[json_hvac_topic]["limits"],
                         )
                     )
 
@@ -125,3 +113,17 @@ class JsonExcelCompareTestCase(unittest.IsolatedAsyncioTestCase):
             )
         if err_msgs:
             self.fail("Differences found:\n" + "\n".join(err_msgs))
+
+    def test_extract_topic_and_item(self):
+        mir = MqttInfoReader()
+        topic_and_item = "LSST/PISO01/CHILLER_01/TEMPERATURA_AGUA_RETORNO_EVAPORADOR"
+        topic, item = mir.extract_topic_and_item(topic_and_item)
+        self.assertEqual("LSST/PISO01/CHILLER_01", topic)
+        self.assertEqual("TEMPERATURA_AGUA_RETORNO_EVAPORADOR", item)
+
+        topic_and_item = "STRING_WITHOUT_FORWARD_SLASH"
+        try:
+            topic, item = mir.extract_topic_and_item(topic_and_item)
+            self.fail("A ValueError was expected here.")
+        except ValueError as e:
+            self.assertTrue(e is not None)

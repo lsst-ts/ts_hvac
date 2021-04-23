@@ -455,6 +455,10 @@ class HvacCsc(salobj.ConfigurableCsc):
             # TODO: DM-28028: Handling of was_published == False will come at
             #  a later point.
             pass
+        if enabled:
+            self.send_config_event.add(hvac_topic.name)
+        else:
+            self.send_config_event.discard(hvac_topic.name)
 
     def _do_config(self, data):
         """Send an MQTT message to configure a system.

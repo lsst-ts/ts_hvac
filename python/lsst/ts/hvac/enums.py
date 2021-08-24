@@ -72,11 +72,9 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "HORAS": "Hours",
     "HUMEDAD": "Humidity",
     "HUMIDIFICADOR": "Humidifier",
-    "HUMIFICADOR": "Humidifier",  # typo should be fixed by DATControl
     "IMPULSION": "Impulse",
     "INYECCION": "Injection",
     "LOWER": "Lower",
-    "MANEJADRA": "Manager",  # typo should be fixed by DATControl
     "MANEJADORA": "Manager",
     "MAX": "Max",
     "MODO": "Mode",
@@ -94,7 +92,7 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "RETORNO": "Return",
     "REQUERIMIENTO": "Requirement",
     "SALA": "Room",
-    "SBLANCA": "White Room",  # Not sure if this is an abbreviation of SALA BLANCA
+    "SBLANCA": "White Room",
     "SELECTOR": "Switch",
     "SETPOINT": "Setpoint",
     "SET POINT": "Setpoint",
@@ -104,10 +102,8 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "UNIDAD": "Unit",
     "VALOR": "Value",
     "VALVULA": "Valve",
-    "VENT": "Vent",
     "VENTILADOR": "Fan",
-    "VENT ILADOR": "Fan",  # typo should be fixed by DATControl
-    "Vent ILADOR": "Fan",  # typo should be fixed by DATControl
+    "VENT": "Vent",
     "ZONA": "Zone",
 }
 
@@ -235,6 +231,7 @@ class TelemetryItem(Enum):
     horasCompresor03 = "HORAS_COMPRESOR_03"
     horasCompresor04 = "HORAS_COMPRESOR_04"
     horasCompresorPromedio = "HORAS_COMPRESOR_PROMEDIO"
+    horometro = "HOROMETRO"
     humedadSala = "%_HUMEDAD_SALA"
     modoOperacion = "MODO_OPERACION"
     modoOperacionUnidad = "MODO_OPERACION_UNIDAD"

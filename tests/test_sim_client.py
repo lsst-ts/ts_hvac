@@ -38,7 +38,7 @@ logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
 )
 
-expected_units = frozenset(("deg_C", "unitless", "bar", "%", "h"))
+expected_units = frozenset(("deg_C", "unitless", "bar", "%", "h", "m3/h"))
 
 
 class SimClientTestCase(unittest.IsolatedAsyncioTestCase):

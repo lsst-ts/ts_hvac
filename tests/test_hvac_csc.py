@@ -192,7 +192,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     if key == "device_id":
                         continue
                     telemetry_item = getattr(telemetry, key)
-                    self.assertAlmostEqual(telemetry_item, config_data[key], 5)
+                    self.assertAlmostEqual(telemetry_item, config_data[key], 3)
 
     async def _verify_config_event(self, hvac_topic, config_data):
         command_group = [k for k, v in DEVICE_GROUPS.items() if hvac_topic.value in v][
@@ -215,7 +215,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 "setpointVentiladorMin",
             ]:
                 command_item = getattr(data, command_topic)
-                self.assertAlmostEqual(command_item, config_data[command_topic], 5)
+                self.assertAlmostEqual(command_item, config_data[command_topic], 3)
 
     async def test_config(self):
         async with self.make_csc(

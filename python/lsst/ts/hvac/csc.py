@@ -285,12 +285,15 @@ class HvacCsc(salobj.ConfigurableCsc):
         device_id = DeviceId[hvac_topic.name]
         deviceId_index = self.device_id_index[device_id]
 
+        item = "COMANDO_ENCENDIDO"
+        if hvac_topic.name in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
+            item = "ESTADO_FUNCIONAMIENTO"
         if topic in TOPICS_ALWAYS_ENABLED:
             enabled = True
-        elif hvac_topic.name in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
-            enabled = self.hvac_state[topic]["ESTADO_FUNCIONAMIENTO"].recent_values[-1]
         else:
-            enabled = self.hvac_state[topic]["COMANDO_ENCENDIDO"].recent_values[-1]
+            enabled = False
+            if len(self.hvac_state[topic][item].recent_values) > 0:
+                enabled = self.hvac_state[topic][item].recent_values[-1]
 
         return deviceId_index, enabled
 
@@ -365,6 +368,8 @@ class HvacCsc(salobj.ConfigurableCsc):
                 b"Apagado$20Manual",
             ]:
                 value = json.loads(payload)
+            else:
+                value = True
 
             item_state.recent_values.append(value)
 

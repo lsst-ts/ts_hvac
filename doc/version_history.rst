@@ -12,13 +12,14 @@ v0.5.0
 Rewrote the generation of the ts_xml XML files consolidating the commands and adding events.
 Rewrote the CSC and unit tests to take into account the changes in the commands and the added events.
 Removed the 'perc' prefix from command and telemetry enum items with a 'percentage' unit to accomodate better ts_xml item names.
-
+Removed support for reading the HVAC configuration items from a JSON file.
+Adopted the code to the l;atest version of the CSV file.
 
 Requires:
 
 * ts_salobj 6.3
 * ts_idl 3.1
-* IDL files for HVAC from ts_xml 9.1
+* IDL files for HVAC from ts_xml 9.2
 
 
 v0.4.0

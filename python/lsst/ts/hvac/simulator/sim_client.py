@@ -167,19 +167,6 @@ class SimClient:
             f"Received message [topic={topic!r}, command={command!r}, payload={payload!r}]"
         )
         command_item = command
-        # TODO: These command items do not have a telemetry counter point in
-        #  the "Lower" components. It is being clarified how to verify them so
-        #  they are skipped for now.
-        if (
-            command_item
-            in [
-                "SETPOINT_VENTILADOR_MIN_LSST",
-                "SETPOINT_VENTILADOR_MAX_LSST",
-            ]
-            and topic.startswith("LSST/PISO05/MANEJADORA/LOWER")
-        ):
-            self.log.info(f"topic={topic!r}, command={command!r}, payload={payload!r}")
-            return
         if command_item.endswith("_LSST"):
             command_item = command_item[:-5]
         self.configuration_values[f"{topic}/{command_item}"] = payload
@@ -220,6 +207,10 @@ class SimClient:
                         # Making sure that no alarm bells start ringing.
                         if "ALARM" in variable:
                             value = False
+                    elif (
+                        idl_type == "float" and limits[0] is None and limits[1] is None
+                    ):
+                        value = 0.0
                     else:
                         value = random.randint(10 * limits[0], 10 * limits[1]) / 10.0
             else:

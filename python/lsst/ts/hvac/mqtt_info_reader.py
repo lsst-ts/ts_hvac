@@ -24,7 +24,6 @@ __all__ = [
     "DATA_DIR",
 ]
 
-import json
 import pandas
 import pathlib
 import re
@@ -37,6 +36,11 @@ from .enums import (
     TopicType,
 )
 
+# The default lower limit
+DEFAULT_LOWER_LIMIT = -9999
+
+# The default upper limit
+DEFAULT_UPPER_LIMIT = 9999
 
 # The names of the columns in the CSV file in the correct order.
 names = [
@@ -61,9 +65,8 @@ DATA_DIR = pathlib.Path(__file__).resolve().parents[3] / "data"
 
 INPUT_DIR = DATA_DIR / "input"
 dat_control_csv_filename = (
-    INPUT_DIR / "Direccionamiento_Lsst_Final_JSON_rev2021_rev4.csv"
+    INPUT_DIR / "Direccionamiento_Lsst_Final_JSON_one_sheet_rev2021_rev8.csv"
 )
-dat_control_json_filename = INPUT_DIR / "JSON_V7_PUBLICACIONES_SUSCRIPCIONES.json"
 
 
 class MqttInfoReader:
@@ -103,7 +106,7 @@ class MqttInfoReader:
         # }
         self.command_topics = {}
 
-        self._collect_hvac_topics_and_items_from_json()
+        self._collect_hvac_topics_and_items_from_csv()
 
     def _determine_unit(self, unit_string):
         """Convert the provided unit string to a string representing the unit.
@@ -126,6 +129,7 @@ class MqttInfoReader:
             "%": "%",
             "hr": "h",
             "%RH": "%",
+            "m3/h": "m3/h",
         }[unit_string]
 
     def _parse_limits(self, limits_string):
@@ -150,8 +154,8 @@ class MqttInfoReader:
             In case an unknown string pattern is found in the limits column.
 
         """
-        lower_limit = None
-        upper_limit = None
+        lower_limit = DEFAULT_LOWER_LIMIT
+        upper_limit = DEFAULT_UPPER_LIMIT
 
         match = re.match(
             r"^(-?\d+)(/| a |% a |°C a | bar a |%RH a )(-?\d+)(%|°C| bar| hr|%RH)?$",
@@ -169,7 +173,7 @@ class MqttInfoReader:
         elif limits_string == "1,2,3,4,5,6":
             lower_limit = 1
             upper_limit = 6
-        elif limits_string in ["true o false", "-", ""]:
+        elif limits_string in ["true o false", "-", "-1", ""]:
             # ignore because there really are no lower and upper limits
             pass
         else:
@@ -311,14 +315,10 @@ class MqttInfoReader:
                     CommandItem,
                 )
 
-    def collect_hvac_topics_and_items_from_csv(self):
+    def _collect_hvac_topics_and_items_from_csv(self):
         """Loop over all rows in the CSV file and extracts either telemetry
         topic data or command topic data depending on the contents of the "rw"
         column in the CSV row.
-
-        TODO: DM-29135: This method and all references to CSV will be removed
-         once the contents of the CSV and JSON files have been verified against
-         the HVAC server.
         """
         csv_hvac_topics = {}
         print(f"Loading CSV file {dat_control_csv_filename}")
@@ -345,37 +345,6 @@ class MqttInfoReader:
                         "limits": limits,
                     }
         self._collect_topics_and_items(csv_hvac_topics)
-
-    def _collect_hvac_topics_and_items_from_json(self):
-        """Loop over all rows in the JSON file and extracts either telemetry
-        topic data or command topic data depending on whether the JSON topic
-        name ends in "_WRITE" or not.
-        """
-        json_hvac_topics = {}
-        print(f"Loading JSON file {dat_control_json_filename}")
-        with open(dat_control_json_filename) as f:
-            all_json_hvac_topics = json.loads(f.read())
-            for json_hvac_topic in all_json_hvac_topics["BOUNDQUERYRESULT"]:
-                json_hvac_topic_and_item = json_hvac_topic["POINT"]
-                # Command topics always end in "_LSST" and telemetry topics
-                # never do so that's how the distinction is made in this code.
-                topic_type = (
-                    TopicType.WRITE
-                    if json_hvac_topic_and_item.endswith("_LSST")
-                    else TopicType.READ
-                )
-                idl_type = (
-                    "float" if "Numeric" in json_hvac_topic["TYPE"] else "boolean"
-                )
-                unit = self._determine_unit(json_hvac_topic["UNIT"])
-                limits = self._parse_limits(json_hvac_topic["LIMIT"])
-                json_hvac_topics[json_hvac_topic_and_item] = {
-                    "idl_type": idl_type,
-                    "topic_type": topic_type,
-                    "unit": unit,
-                    "limits": limits,
-                }
-        self._collect_topics_and_items(json_hvac_topics)
 
     def get_generic_hvac_topics(self):
         """Convenience method to collect all generic topics, representing the

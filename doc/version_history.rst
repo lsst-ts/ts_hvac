@@ -13,7 +13,8 @@ Rewrote the generation of the ts_xml XML files consolidating the commands and ad
 Rewrote the CSC and unit tests to take into account the changes in the commands and the added events.
 Removed the 'perc' prefix from command and telemetry enum items with a 'percentage' unit to accomodate better ts_xml item names.
 Removed support for reading the HVAC configuration items from a JSON file.
-Adopted the code to the l;atest version of the CSV file.
+Adopted the code to the latest version of the CSV file.
+Improved the way the status transitions to and from DISABLED and ENABLED are handled.
 
 Requires:
 

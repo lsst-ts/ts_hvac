@@ -111,7 +111,9 @@ class InternalItemState:
         recent_values = self._get_and_reset_recent()
         if not recent_values:
             return None
-        return recent_values[-1]
+        most_recent_value = recent_values[-1]
+        self.recent_values.append(most_recent_value)
+        return most_recent_value
 
     def compute_recent_median(self):
         """Computes the median of the most recently acquired float values.
@@ -124,7 +126,9 @@ class InternalItemState:
         recent_values = self._get_and_reset_recent()
         if not recent_values:
             return None
-        return np.median(recent_values)
+        median = np.median(recent_values)
+        self.recent_values.append(median)
+        return median
 
     def _get_and_reset_recent(self):
         recent_values = self.recent_values
@@ -207,19 +211,19 @@ class HvacCsc(salobj.ConfigurableCsc):
         self.log.info(f"self.simulation_mode = {self.simulation_mode}")
         if self.config is None:
             raise RuntimeError("Not yet configured")
-        if self.connected:
-            raise RuntimeError("Already connected")
+        # if self.connected:
+        #     raise RuntimeError("Already connected")
 
         # Initialize interal state track keeping
         self._setup_hvac_state()
 
         if self.simulation_mode == 1:
             # Use the Simulator Client.
-            self.log.info("Connecting to SimClient.")
+            self.log.info("Connecting SimClient.")
             self.mqtt_client = SimClient(self.start_telemetry_publishing)
         else:
             # Use the MQTT Client.
-            self.log.info("Connecting to MqttClient.")
+            self.log.info(f"Connecting MqttClient to {self.config.host}.")
             self.mqtt_client = MqttClient(host=self.config.host, port=self.config.port)
 
         await self.mqtt_client.connect()
@@ -248,16 +252,61 @@ class HvacCsc(salobj.ConfigurableCsc):
                 )
             self.hvac_state[mqtt_topic] = topic_state
 
-    async def handle_summary_state(self):
-        """Override of the handle_summary_state function to connect or
-        disconnect to the HVAC server (or the mock server) when needed.
+    async def begin_enable(self, id_data: salobj.BaseDdsDataType) -> None:
+        """Begin do_enable; called before state changes.
+
+        This method sends a CMD_INPROGRESS signal.
+
+        Parameters
+        ----------
+        id_data: `CommandIdData`
+            Command ID and data
         """
-        self.log.info(f"handle_summary_state {self.summary_state}")
-        if self.disabled_or_enabled:
-            if not self.connected:
-                await self.connect()
-        else:
+        await super().begin_enable(id_data)
+        self.cmd_enable.ack_in_progress(id_data, timeout=60)
+
+    async def end_enable(self, id_data: salobj.BaseDdsDataType) -> None:
+        """End do_enable; called after state changes but before command
+        acknowledged.
+
+        This method connects to the HVAC server.
+
+        Parameters
+        ----------
+        id_data: `CommandIdData`
+            Command ID and data
+        """
+        if not self.connected:
+            await self.connect()
+        await super().end_enable(id_data)
+
+    async def begin_disable(self, id_data: salobj.BaseDdsDataType) -> None:
+        """Begin do_disable; called before state changes.
+
+        This method disconnects from the HVAC server.
+
+        Parameters
+        ----------
+        id_data: `CommandIdData`
+            Command ID and data
+        """
+        self.cmd_disable.ack_in_progress(id_data, timeout=60)
+        await super().begin_disable(id_data)
+
+    async def end_disable(self, id_data: salobj.BaseDdsDataType) -> None:
+        """End do_disable; called after state changes but before command
+        acknowledged.
+
+        This method disconnects from the HVAC server.
+
+        Parameters
+        ----------
+        id_data: `CommandIdData`
+            Command ID and data
+        """
+        if self.connected:
             await self.disconnect()
+        await super().end_disable(id_data)
 
     async def configure(self, config):
         self.config = config

@@ -19,33 +19,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asynctest
 import json
 import logging
-
-import flake8
+import unittest
 
 import lsst.ts.hvac.simulator.sim_client as sim_client
-from lsst.ts.hvac.hvac_enums import HvacTopic, CommandItem
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.enums import (
+    HvacTopic,
+    CommandItem,
+    TOPICS_ALWAYS_ENABLED,
+    TOPICS_WITHOUT_CONFIGURATION,
+)
+
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 import hvac_test_utils
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
 )
 
-# Make sure that flake8 log level is set to logging.INFO
-flake8.configure_logging(1)
+expected_units = frozenset(("deg_C", "unitless", "bar", "%", "h", "m3/h"))
 
 
-class SimClientTestCase(asynctest.TestCase):
-    async def setUp(self):
-        """Setup the unit test.
-        """
+class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        """Setup the unit test."""
         self.log = logging.getLogger("SimClientTestCase")
         # Make sure that all topics and their variables are loaded.
-        xml.collect_topics_and_items()
-        self.hvac_topics = xml.hvac_topics
+        self.xml = MqttInfoReader()
+        self.hvac_topics = self.xml.hvac_topics
 
         # Set up the simulator client.
         self.mqtt_client = sim_client.SimClient(
@@ -55,9 +57,8 @@ class SimClientTestCase(asynctest.TestCase):
         # state for the test.
         await self.mqtt_client.connect()
 
-    async def tearDown(self):
-        """Cleanup after the unit test.
-        """
+    async def asyncTearDown(self):
+        """Cleanup after the unit test."""
         if self.mqtt_client:
             await self.mqtt_client.disconnect()
 
@@ -97,7 +98,7 @@ class SimClientTestCase(asynctest.TestCase):
             msg = msgs.popleft()
             topic = msg.topic
             data = json.loads(msg.payload)
-            topic, variable = xml.extract_topic_and_item(topic)
+            topic, variable = self.xml.extract_topic_and_item(topic)
             if topic not in mqtt_state:
                 mqtt_state[topic] = {}
             mqtt_state[topic][variable] = data
@@ -145,7 +146,9 @@ class SimClientTestCase(asynctest.TestCase):
             expected_data = expected_state[var]
             if isinstance(expected_data, bool):
                 self.assertEqual(
-                    data, expected_data, f"topic = {topic}, var = {var}, data={data}",
+                    data,
+                    expected_data,
+                    f"topic = {topic}, var = {var}, data={data}",
                 )
             elif isinstance(expected_data, dict):
                 self.assertGreaterEqual(data, expected_data["min"])
@@ -156,15 +159,13 @@ class SimClientTestCase(asynctest.TestCase):
                 )
 
     def enable_topic(self, topic):
-        """Enable the topic by sending True to the enable command.
-        """
+        """Enable the topic by sending True to the enable command."""
         command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
         value = "true"
         self.mqtt_client.publish_mqtt_message(command, value)
 
     def disable_topic(self, topic):
-        """Disable the topic by sending False to the enable command.
-        """
+        """Disable the topic by sending False to the enable command."""
         command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
         value = "false"
         self.mqtt_client.publish_mqtt_message(command, value)
@@ -192,7 +193,7 @@ class SimClientTestCase(asynctest.TestCase):
             The expected state.
 
         """
-        variables = xml.get_items_for_topic(topic)
+        variables = self.xml.get_items_for_hvac_topic(topic)
         expected_state = {}
         for variable in variables:
             var = variables[variable]
@@ -203,7 +204,7 @@ class SimClientTestCase(asynctest.TestCase):
                         expected_state[variable] = False
                 elif var["idl_type"] == "float":
                     lower_limit, upper_limit = var["limits"]
-                    if var["unit"] in ["deg_C", "unitless", "bar", "%"]:
+                    if var["unit"] in expected_units:
                         expected_state[variable] = {
                             "min": lower_limit,
                             "max": upper_limit,
@@ -230,22 +231,22 @@ class SimClientTestCase(asynctest.TestCase):
             * Verify that the topic is disabled if not always enabled.
 
         """
-        topics = xml.get_topics()
+        topics = self.xml.get_generic_hvac_topics()
         for topic in topics:
-            if topic not in xml.TOPICS_ALWAYS_ENABLED:
+            if topic not in TOPICS_ALWAYS_ENABLED:
                 self.verify_topic_disabled(topic)
                 self.enable_topic(topic)
 
             expected_state = self.determine_expected_state(topic)
             self.verify_topic_state(topic, expected_state)
 
-            if topic not in xml.TOPICS_ALWAYS_ENABLED:
+            if topic not in TOPICS_ALWAYS_ENABLED:
                 self.disable_topic(topic)
                 self.verify_topic_disabled(topic)
 
     async def test_config(self):
         for topic in HvacTopic:
-            if topic.value not in xml.TOPICS_WITHOUT_CONFIGURATION:
+            if topic.value not in TOPICS_WITHOUT_CONFIGURATION:
                 data = hvac_test_utils.get_random_config_data(topic)
                 for key in data.keys():
                     command_item = CommandItem[key]
@@ -264,10 +265,14 @@ class SimClientTestCase(asynctest.TestCase):
                     # TODO: These command items do not have a telemetry counter
                     #  point in the "Lower" components. It is being clarified
                     #  how to verify them so they are skipped for now.
-                    if command_item.value in [
-                        "SETPOINT_VENTILADOR_MIN_LSST",
-                        "SETPOINT_VENTILADOR_MAX_LSST",
-                    ] and topic.value.startswith("LSST/PISO05/MANEJADORA/LOWER"):
+                    if (
+                        command_item.value
+                        in [
+                            "SETPOINT_VENTILADOR_MIN_LSST",
+                            "SETPOINT_VENTILADOR_MAX_LSST",
+                        ]
+                        and topic.value.startswith("LSST/PISO05/MANEJADORA/LOWER")
+                    ):
                         continue
                     self.assertEqual(
                         data[key], mqtt_state[topic.value][command_item.value[:-5]]

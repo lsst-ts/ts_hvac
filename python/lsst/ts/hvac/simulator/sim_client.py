@@ -29,7 +29,8 @@ import random
 
 import paho.mqtt.client as mqtt
 
-from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML as xml
+from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
 class SimClient:
@@ -57,6 +58,9 @@ class SimClient:
         # Holds the values received via configuration commands.
         self.configuration_values = {}
 
+        # Helper for reading the HVAC data
+        self.xml = MqttInfoReader()
+
         self.start_publish_telemetry_every_second = start_publish_telemetry_every_second
         # Incoming command messages get published or not. Should only be
         # modified by unit tests.
@@ -65,11 +69,8 @@ class SimClient:
         self.log.info("SimClient constructed")
 
     async def connect(self):
-        """Start publishing telemetry.
-        """
-        # Make sure that all topics and their items are loaded.
-        xml.collect_topics_and_items()
-        self.hvac_topics = xml.hvac_topics
+        """Start publishing telemetry."""
+        self.hvac_topics = self.xml.hvac_topics
         self._collect_topics()
 
         if self.start_publish_telemetry_every_second:
@@ -81,20 +82,18 @@ class SimClient:
         self.log.info("Connected.")
 
     async def disconnect(self):
-        """Stop publishing telemetry.
-        """
+        """Stop publishing telemetry."""
         if self.telemetry_task:
             self.telemetry_task.cancel()
         self.connected = False
         self.log.info("Disconnected.")
 
     def _collect_topics(self):
-        """Loop over all topics and initialize them.
-        """
-        topics = xml.get_topics()
+        """Loop over all topics and initialize them."""
+        topics = self.xml.get_generic_hvac_topics()
         for topic in topics:
             self.topics_enabled[topic] = False
-        for topic in xml.TOPICS_ALWAYS_ENABLED:
+        for topic in TOPICS_ALWAYS_ENABLED:
             self.topics_enabled[topic] = True
 
     def publish_mqtt_message(self, topic, payload):
@@ -125,7 +124,7 @@ class SimClient:
             In case a topic doesn't exist.
         """
         self.log.debug(f"Recevied message on topic {topic} with payload {payload}")
-        topic, command = xml.extract_topic_and_item(topic)
+        topic, command = self.xml.extract_topic_and_item(topic)
         if command == "COMANDO_ENCENDIDO_LSST":
             self._handle_enable_command(topic, json.loads(payload))
         else:
@@ -168,15 +167,6 @@ class SimClient:
             f"Received message [topic={topic!r}, command={command!r}, payload={payload!r}]"
         )
         command_item = command
-        # TODO: These command items do not have a telemetry counter point in
-        #  the "Lower" components. It is being clarified how to verify them so
-        #  they are skipped for now.
-        if command_item in [
-            "SETPOINT_VENTILADOR_MIN_LSST",
-            "SETPOINT_VENTILADOR_MAX_LSST",
-        ] and topic.startswith("LSST/PISO05/MANEJADORA/LOWER"):
-            self.log.info(f"topic={topic!r}, command={command!r}, payload={payload!r}")
-            return
         if command_item.endswith("_LSST"):
             command_item = command_item[:-5]
         self.configuration_values[f"{topic}/{command_item}"] = payload
@@ -200,7 +190,7 @@ class SimClient:
         server.
         """
         for hvac_topic in self.hvac_topics:
-            topic, variable = xml.extract_topic_and_item(hvac_topic)
+            topic, variable = self.xml.extract_topic_and_item(hvac_topic)
 
             topic_enabled = self.topics_enabled[topic]
             topic_type = self.hvac_topics[hvac_topic]["topic_type"]
@@ -217,6 +207,10 @@ class SimClient:
                         # Making sure that no alarm bells start ringing.
                         if "ALARM" in variable:
                             value = False
+                    elif (
+                        idl_type == "float" and limits[0] is None and limits[1] is None
+                    ):
+                        value = 0.0
                     else:
                         value = random.randint(10 * limits[0], 10 * limits[1]) / 10.0
             else:

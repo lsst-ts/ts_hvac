@@ -19,14 +19,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-try:
-    from .version import *
-except ModuleNotFoundError:
-    __version__ = "?"
+import logging
+import unittest
+from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
-from .config_schema import CONFIG_SCHEMA
-from .csc import *
-from .enums import *
-from .utils import *
-from .mqtt_client import *
-from .mqtt_info_reader import *
+logging.basicConfig(
+    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
+)
+
+
+class MqttInfoReaderTestCase(unittest.TestCase):
+    def test_extract_topic_and_item(self):
+        mir = MqttInfoReader()
+        topic_and_item = "LSST/PISO01/CHILLER_01/TEMPERATURA_AGUA_RETORNO_EVAPORADOR"
+        topic, item = mir.extract_topic_and_item(topic_and_item)
+        self.assertEqual("LSST/PISO01/CHILLER_01", topic)
+        self.assertEqual("TEMPERATURA_AGUA_RETORNO_EVAPORADOR", item)
+
+        topic_and_item = "STRING_WITHOUT_FORWARD_SLASH"
+        try:
+            topic, item = mir.extract_topic_and_item(topic_and_item)
+            self.fail("A ValueError was expected here.")
+        except ValueError as e:
+            self.assertTrue(e is not None)

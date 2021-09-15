@@ -6,6 +6,51 @@
 Version History
 ###############
 
+v0.5.0
+======
+
+Rewrote the generation of the ts_xml XML files consolidating the commands and adding events.
+Rewrote the CSC and unit tests to take into account the changes in the commands and the added events.
+Removed the 'perc' prefix from command and telemetry enum items with a 'percentage' unit to accomodate better ts_xml item names.
+Removed support for reading the HVAC configuration items from a JSON file.
+Adopted the code to the latest version of the CSV file.
+Improved the way the status transitions to and from DISABLED and ENABLED are handled.
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL files for HVAC from ts_xml 9.2
+
+
+v0.4.0
+======
+
+Removed asynctest.
+Upgraded Black to version 20.8b1.
+Upgraded ts-conda-build to version 0.3.
+
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL files for HVAC from ts_xml 8.0
+
+
+v0.3.0
+======
+
+Added support for reading the HVAC configuration items from a JSON file.
+
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* IDL files for HVAC from ts_xml 8.0
+
+
 v0.2.0
 ======
 
@@ -17,6 +62,7 @@ Requires:
 * ts_salobj 6.3
 * ts_idl
 * IDL files for HVAC from ts_xml 7.0
+
 
 v0.1.0
 ======

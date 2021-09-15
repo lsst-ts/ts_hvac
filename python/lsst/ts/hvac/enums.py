@@ -19,7 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["SPANISH_TO_ENGLISH_DICTIONARY", "HvacTopic", "TelemetryItem", "CommandItem"]
+__all__ = [
+    "SPANISH_TO_ENGLISH_DICTIONARY",
+    "TOPICS_ALWAYS_ENABLED",
+    "TOPICS_WITHOUT_CONFIGURATION",
+    "HvacTopic",
+    "TelemetryItem",
+    "CommandItem",
+    "TopicType",
+]
 
 from enum import Enum
 
@@ -64,11 +72,9 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "HORAS": "Hours",
     "HUMEDAD": "Humidity",
     "HUMIDIFICADOR": "Humidifier",
-    "HUMIFICADOR": "Humidifier",  # typo should be fixed by DATControl
     "IMPULSION": "Impulse",
     "INYECCION": "Injection",
     "LOWER": "Lower",
-    "MANEJADRA": "Manager",  # typo should be fixed by DATControl
     "MANEJADORA": "Manager",
     "MAX": "Max",
     "MODO": "Mode",
@@ -86,7 +92,7 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "RETORNO": "Return",
     "REQUERIMIENTO": "Requirement",
     "SALA": "Room",
-    "SBLANCA": "White Room",  # Not sure if this is an abbreviation of SALA BLANCA
+    "SBLANCA": "White Room",
     "SELECTOR": "Switch",
     "SETPOINT": "Setpoint",
     "SET POINT": "Setpoint",
@@ -96,12 +102,46 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "UNIDAD": "Unit",
     "VALOR": "Value",
     "VALVULA": "Valve",
-    "VENT": "Vent",
     "VENTILADOR": "Fan",
-    "VENT ILADOR": "Fan",  # typo should be fixed by DATControl
-    "Vent ILADOR": "Fan",  # typo should be fixed by DATControl
+    "VENT": "Vent",
     "ZONA": "Zone",
 }
+
+
+# These topics are always enabled because there are no MQTT commands to enable
+# or disable them.
+TOPICS_ALWAYS_ENABLED = frozenset(
+    (
+        "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/GENERAL",
+        "LSST/PISO01/VALVULA",
+    )
+)
+
+# These topics don't have configuration items.
+TOPICS_WITHOUT_CONFIGURATION = frozenset(
+    (
+        "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/GENERAL",
+        "LSST/PISO01/VALVULA",
+        "LSST/PISO01/VEA_01",
+        "LSST/PISO05/VEA_01",
+        "LSST/PISO05/VEA_08",
+        "LSST/PISO05/VEA_09",
+        "LSST/PISO05/VEA_10",
+        "LSST/PISO05/VEA_11",
+        "LSST/PISO05/VEA_12",
+        "LSST/PISO05/VEA_13",
+        "LSST/PISO05/VEA_14",
+        "LSST/PISO05/VEA_15",
+        "LSST/PISO05/VEA_16",
+        "LSST/PISO05/VEA_17",
+        "LSST/PISO01/VEC_01",
+        "LSST/PISO01/VIN_01",
+        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
+        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+    )
+)
 
 
 class HvacTopic(Enum):
@@ -152,6 +192,8 @@ class HvacTopic(Enum):
 class TelemetryItem(Enum):
     alarmaFiltro = "ALARMA_FILTRO"
     alarmaGeneral = "ALARMA_GENERAL"
+    aperturaValvula = "%_APERTURA_VALVULA"
+    aperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO"
     calefaccionEtapa01 = "CALEFACCION_ETAPA_01"
     calefaccionEtapa02 = "CALEFACCION_ETAPA_02"
     caudalVentiladorImpulsion = "CAUDAL_VENTILADOR_IMPULSION"
@@ -189,29 +231,28 @@ class TelemetryItem(Enum):
     horasCompresor03 = "HORAS_COMPRESOR_03"
     horasCompresor04 = "HORAS_COMPRESOR_04"
     horasCompresorPromedio = "HORAS_COMPRESOR_PROMEDIO"
+    horometro = "HOROMETRO"
+    humedadSala = "%_HUMEDAD_SALA"
     modoOperacion = "MODO_OPERACION"
     modoOperacionUnidad = "MODO_OPERACION_UNIDAD"
     numeroCircuitos = "NUMERO_CIRCUITOS"
-    percAperturaValvula = "%_APERTURA_VALVULA"
-    percAperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO"
-    percHumedadSala = "%_HUMEDAD_SALA"
-    percPotenciaTrabajo = "%_POTENCIA_TRABAJO"
     potenciaDisponibleChiller = "POTENCIA_DISPONIBLE_CHILLER"
+    potenciaTrabajo = "%_POTENCIA_TRABAJO"
     presionBajaCto1 = "PRESION_BAJA_CTO1"
     presionBajaCto2 = "PRESION_BAJA_CTO2"
     requerimientoHumidificador = "REQUERIMIENTO_HUMIDIFICADOR"
     resetAlarma = "RESET_ALARMA"
-    setPointCooling = "SET_POINT_COOLING"
-    setPointHeating = "SET_POINT_HEATING"
-    setPointVentImpulsion = "SET_POINT_VENT_IMPULSION"
     setpointActivo = "SETPOINT_ACTIVO"
+    setpointCooling = "SETPOINT_COOLING"
     setpointCoolingDay = "SETPOINT_COOLING_DAY"
     setpointCoolingNight = "SETPOINT_COOLING_NIGHT"
     setpointDeshumidificador = "SETPOINT_DESHUMIDIFICADOR"
+    setpointHeating = "SETPOINT_HEATING"
     setpointHeatingDay = "SETPOINT_HEATING_DAY"
     setpointHeatingNight = "SETPOINT_HEATING_NIGHT"
     setpointHumidificador = "SETPOINT_HUMIDIFICADOR"
     setpointTrabajo = "SETPOINT_TRABAJO"
+    setpointVentImpulsion = "SETPOINT_VENT_IMPULSION"
     setpointVentiladorMax = "SETPOINT_VENTILADOR_MAX"
     setpointVentiladorMin = "SETPOINT_VENTILADOR_MIN"
     temperaturaAguaImpulsionEvaporador = "TEMPERATURA_AGUA_IMPULSION_EVAPORADOR"
@@ -227,13 +268,13 @@ class TelemetryItem(Enum):
 
 class CommandItem(Enum):
     comandoEncendido = "COMANDO_ENCENDIDO_LSST"
-    percAperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO_LSST"
-    setPointCooling = "SET_POINT_COOLING_LSST"
-    setPointHeating = "SET_POINT_HEATING_LSST"
+    aperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO_LSST"
     setpointActivo = "SETPOINT_ACTIVO_LSST"
+    setpointCooling = "SETPOINT_COOLING_LSST"
     setpointCoolingDay = "SETPOINT_COOLING_DAY_LSST"
     setpointCoolingNight = "SETPOINT_COOLING_NIGHT_LSST"
     setpointDeshumidificador = "SETPOINT_DESHUMIDIFICADOR_LSST"
+    setpointHeating = "SETPOINT_HEATING_LSST"
     setpointHeatingDay = "SETPOINT_HEATING_DAY_LSST"
     setpointHeatingNight = "SETPOINT_HEATING_NIGHT_LSST"
     setpointHumidificador = "SETPOINT_HUMIDIFICADOR_LSST"
@@ -242,3 +283,8 @@ class CommandItem(Enum):
     setpointVentiladorMin = "SETPOINT_VENTILADOR_MIN_LSST"
     temperaturaAnticongelante = "TEMPERATURA_ANTICONGELANTE_LSST"
     valorConsigna = "VALOR_CONSIGNA_LSST"
+
+
+class TopicType(str, Enum):
+    READ = "READ"
+    WRITE = "WRITE"

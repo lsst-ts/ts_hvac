@@ -36,7 +36,7 @@ CONFIG_SCHEMA = yaml.safe_load(
         description: IP address of the TCP/IP interface
         type: string
         format: hostname
-        default: "eas-hvac01.cp.lsst.org"
+        default: "hvac01.cp.lsst.org"
       port:
         description: Port number of the TCP/IP interface
         type: integer

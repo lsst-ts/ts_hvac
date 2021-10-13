@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.6.0
+======
+
+* Replaced the use of ts_salobj functions with ts_utils functions.
+
+Requires:
+
+* ts_salobj 6.3
+* ts_idl 3.1
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 9.2
+
 v0.5.0
 ======
 

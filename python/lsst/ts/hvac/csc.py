@@ -40,7 +40,7 @@ from .utils import to_camel_case
 from .mqtt_client import MqttClient
 from .simulator.sim_client import SimClient
 from .mqtt_info_reader import MqttInfoReader
-from lsst.ts import salobj
+from lsst.ts import salobj, utils
 from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
 
 # The number of seconds to collect the state of the HVAC system for before the
@@ -183,7 +183,7 @@ class HvacCsc(salobj.ConfigurableCsc):
 
         self.mqtt_client = None
         self.start_telemetry_publishing = start_telemetry_publishing
-        self.telemetry_task = salobj.make_done_future()
+        self.telemetry_task = utils.make_done_future()
 
         # Keep track of the internal state of the MQTT topics. This will
         # collect all values for the duration of HVAC_STATE_TRACK_PERIOD before

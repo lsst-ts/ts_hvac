@@ -10,6 +10,7 @@ v0.6.0
 ======
 
 * Replaced the use of ts_salobj functions with ts_utils functions.
+* Added auto-enable capability.
 
 Requires:
 

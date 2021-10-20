@@ -152,6 +152,9 @@ class HvacCsc(salobj.ConfigurableCsc):
         * 0: regular operation.
         * 1: simulation: use a mock low level HVAC controller.
 
+    settings_to_apply : `str`, optional
+        Settings to apply if ``initial_state`` is `State.DISABLED`
+        or `State.ENABLED`.
     start_telemetry_publishing: `bool`
         Indicate if the simulator should start publishing telemetry or not and
         if the CSC should start a task for publishing telemetry on a regular
@@ -159,6 +162,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         other situations.
     """
 
+    enable_cmdline_state = True
     valid_simulation_modes = (0, 1)
     version = __version__
 
@@ -167,6 +171,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         config_dir=None,
         initial_state=salobj.State.STANDBY,
         simulation_mode=0,
+        settings_to_apply="",
         start_telemetry_publishing=True,
     ):
         self.config = None
@@ -179,6 +184,7 @@ class HvacCsc(salobj.ConfigurableCsc):
             config_dir=config_dir,
             initial_state=initial_state,
             simulation_mode=simulation_mode,
+            settings_to_apply=settings_to_apply,
         )
 
         self.mqtt_client = None

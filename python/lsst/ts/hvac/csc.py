@@ -188,8 +188,8 @@ class HvacCsc(salobj.BaseCsc):
         self.hvac_state = None
 
         # The host and port to connect to.
-        self.host = ""
-        self.port = 0
+        self.host = "hvac01.cp.lsst.org"
+        self.port = 1883
 
         # Helper for reading the HVAC data
         self.xml = MqttInfoReader()
@@ -218,7 +218,7 @@ class HvacCsc(salobj.BaseCsc):
         else:
             # Use the MQTT Client.
             self.log.info(
-                f"Connecting MqttClient  to host {self.host} and port {self.port}."
+                f"Connecting MqttClient to host {self.host} and port {self.port}."
             )
             self.mqtt_client = MqttClient(host=self.host, port=self.port)
 

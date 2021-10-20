@@ -149,9 +149,6 @@ class HvacCsc(salobj.BaseCsc):
         * 0: regular operation.
         * 1: simulation: use a mock low level HVAC controller.
 
-    settings_to_apply : `str`, optional
-        Settings to apply if ``initial_state`` is `State.DISABLED`
-        or `State.ENABLED`.
     start_telemetry_publishing: `bool`
         Indicate if the simulator should start publishing telemetry or not and
         if the CSC should start a task for publishing telemetry on a regular
@@ -167,7 +164,6 @@ class HvacCsc(salobj.BaseCsc):
         self,
         initial_state=salobj.State.STANDBY,
         simulation_mode=0,
-        settings_to_apply="",
         start_telemetry_publishing=True,
     ):
         self._add_config_commands()
@@ -175,7 +171,6 @@ class HvacCsc(salobj.BaseCsc):
             name="HVAC",
             index=0,
             initial_state=initial_state,
-            settings_to_apply=settings_to_apply,
             simulation_mode=simulation_mode,
         )
 
@@ -440,10 +435,6 @@ class HvacCsc(salobj.BaseCsc):
         if self.mqtt_client is None:
             return False
         return self.mqtt_client.connected
-
-    @staticmethod
-    def get_config_pkg():
-        return "ts_config_ocs"
 
     def _add_config_commands(self):
         # Find all device groups that can be commanded.

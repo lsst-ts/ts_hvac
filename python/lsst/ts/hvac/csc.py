@@ -27,7 +27,6 @@ import re
 
 import numpy as np
 
-from .config_schema import CONFIG_SCHEMA
 from . import __version__
 from .enums import (
     CommandItem,
@@ -136,14 +135,12 @@ class InternalItemState:
         return recent_values
 
 
-class HvacCsc(salobj.ConfigurableCsc):
+class HvacCsc(salobj.BaseCsc):
     """Commandable SAL Component for the HVAC (Heating, Ventilation and Air
     Conditioning).
 
     Parameters
     ----------
-    config_dir : `string`
-        The configuration directory
     initial_state : `salobj.State`
         The initial state of the CSC
     simulation_mode : `int`
@@ -152,9 +149,6 @@ class HvacCsc(salobj.ConfigurableCsc):
         * 0: regular operation.
         * 1: simulation: use a mock low level HVAC controller.
 
-    settings_to_apply : `str`, optional
-        Settings to apply if ``initial_state`` is `State.DISABLED`
-        or `State.ENABLED`.
     start_telemetry_publishing: `bool`
         Indicate if the simulator should start publishing telemetry or not and
         if the CSC should start a task for publishing telemetry on a regular
@@ -168,23 +162,16 @@ class HvacCsc(salobj.ConfigurableCsc):
 
     def __init__(
         self,
-        config_dir=None,
         initial_state=salobj.State.STANDBY,
         simulation_mode=0,
-        settings_to_apply="",
         start_telemetry_publishing=True,
     ):
-        self.config = None
-        self._config_dir = config_dir
         self._add_config_commands()
         super().__init__(
             name="HVAC",
             index=0,
-            config_schema=CONFIG_SCHEMA,
-            config_dir=config_dir,
             initial_state=initial_state,
             simulation_mode=simulation_mode,
-            settings_to_apply=settings_to_apply,
         )
 
         self.mqtt_client = None
@@ -200,6 +187,10 @@ class HvacCsc(salobj.ConfigurableCsc):
         # and this gets initialized in the connect method.
         self.hvac_state = None
 
+        # The host and port to connect to.
+        self.host = "hvac01.cp.lsst.org"
+        self.port = 1883
+
         # Helper for reading the HVAC data
         self.xml = MqttInfoReader()
 
@@ -213,10 +204,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         simulation mode.
         """
         self.log.info("Connecting.")
-        self.log.info(self.config)
         self.log.info(f"self.simulation_mode = {self.simulation_mode}")
-        if self.config is None:
-            raise RuntimeError("Not yet configured")
         # if self.connected:
         #     raise RuntimeError("Already connected")
 
@@ -229,8 +217,10 @@ class HvacCsc(salobj.ConfigurableCsc):
             self.mqtt_client = SimClient(self.start_telemetry_publishing)
         else:
             # Use the MQTT Client.
-            self.log.info(f"Connecting MqttClient to {self.config.host}.")
-            self.mqtt_client = MqttClient(host=self.config.host, port=self.config.port)
+            self.log.info(
+                f"Connecting MqttClient to host {self.host} and port {self.port}."
+            )
+            self.mqtt_client = MqttClient(host=self.host, port=self.port)
 
         await self.mqtt_client.connect()
         if self.start_telemetry_publishing:
@@ -313,9 +303,6 @@ class HvacCsc(salobj.ConfigurableCsc):
         if self.connected:
             await self.disconnect()
         await super().end_disable(id_data)
-
-    async def configure(self, config):
-        self.config = config
 
     def _get_topic_enabled_state(self, topic):
         """Determine whether a device represented by the MQTT topic is enabled
@@ -448,10 +435,6 @@ class HvacCsc(salobj.ConfigurableCsc):
         if self.mqtt_client is None:
             return False
         return self.mqtt_client.connected
-
-    @staticmethod
-    def get_config_pkg():
-        return "ts_config_ocs"
 
     def _add_config_commands(self):
         # Find all device groups that can be commanded.

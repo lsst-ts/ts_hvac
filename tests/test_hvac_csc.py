@@ -47,23 +47,17 @@ flake8.configure_logging(1)
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
-    def basic_make_csc(
-        self, initial_state, config_dir, simulation_mode, settings_to_apply, **kwargs
-    ):
+    def basic_make_csc(self, initial_state, simulation_mode, **kwargs):
         return hvac.HvacCsc(
             initial_state=initial_state,
-            config_dir=config_dir,
             simulation_mode=simulation_mode,
-            settings_to_apply=settings_to_apply,
             start_telemetry_publishing=False,
         )
 
     async def test_standard_state_transitions(self):
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
-            config_dir=None,
             simulation_mode=1,
-            settings_to_apply="",
         ):
             await self.check_standard_state_transitions(
                 enabled_commands=(),
@@ -81,9 +75,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
     async def test_version(self):
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
-            config_dir=None,
             simulation_mode=1,
-            settings_to_apply="",
         ):
             await self.assert_next_sample(
                 self.remote.evt_softwareVersions,
@@ -136,9 +128,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
     async def test_enable_on_all_subsystems_one_by_one(self):
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
-            config_dir=None,
             simulation_mode=1,
-            settings_to_apply="",
         ):
             await salobj.set_summary_state(
                 remote=self.remote, state=salobj.State.ENABLED
@@ -228,9 +218,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
     async def test_config(self):
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
-            config_dir=None,
             simulation_mode=1,
-            settings_to_apply="",
         ):
             await salobj.set_summary_state(
                 remote=self.remote, state=salobj.State.ENABLED

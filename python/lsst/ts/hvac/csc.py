@@ -27,7 +27,6 @@ import re
 
 import numpy as np
 
-from .config_schema import CONFIG_SCHEMA
 from . import __version__
 from .enums import (
     CommandItem,
@@ -40,7 +39,7 @@ from .utils import to_camel_case
 from .mqtt_client import MqttClient
 from .simulator.sim_client import SimClient
 from .mqtt_info_reader import MqttInfoReader
-from lsst.ts import salobj
+from lsst.ts import salobj, utils
 from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
 
 # The number of seconds to collect the state of the HVAC system for before the
@@ -136,14 +135,12 @@ class InternalItemState:
         return recent_values
 
 
-class HvacCsc(salobj.ConfigurableCsc):
+class HvacCsc(salobj.BaseCsc):
     """Commandable SAL Component for the HVAC (Heating, Ventilation and Air
     Conditioning).
 
     Parameters
     ----------
-    config_dir : `string`
-        The configuration directory
     initial_state : `salobj.State`
         The initial state of the CSC
     simulation_mode : `int`
@@ -159,31 +156,27 @@ class HvacCsc(salobj.ConfigurableCsc):
         other situations.
     """
 
+    enable_cmdline_state = True
     valid_simulation_modes = (0, 1)
     version = __version__
 
     def __init__(
         self,
-        config_dir=None,
         initial_state=salobj.State.STANDBY,
         simulation_mode=0,
         start_telemetry_publishing=True,
     ):
-        self.config = None
-        self._config_dir = config_dir
         self._add_config_commands()
         super().__init__(
             name="HVAC",
             index=0,
-            config_schema=CONFIG_SCHEMA,
-            config_dir=config_dir,
             initial_state=initial_state,
             simulation_mode=simulation_mode,
         )
 
         self.mqtt_client = None
         self.start_telemetry_publishing = start_telemetry_publishing
-        self.telemetry_task = salobj.make_done_future()
+        self.telemetry_task = utils.make_done_future()
 
         # Keep track of the internal state of the MQTT topics. This will
         # collect all values for the duration of HVAC_STATE_TRACK_PERIOD before
@@ -193,6 +186,10 @@ class HvacCsc(salobj.ConfigurableCsc):
         # }
         # and this gets initialized in the connect method.
         self.hvac_state = None
+
+        # The host and port to connect to.
+        self.host = "hvac01.cp.lsst.org"
+        self.port = 1883
 
         # Helper for reading the HVAC data
         self.xml = MqttInfoReader()
@@ -207,10 +204,7 @@ class HvacCsc(salobj.ConfigurableCsc):
         simulation mode.
         """
         self.log.info("Connecting.")
-        self.log.info(self.config)
         self.log.info(f"self.simulation_mode = {self.simulation_mode}")
-        if self.config is None:
-            raise RuntimeError("Not yet configured")
         # if self.connected:
         #     raise RuntimeError("Already connected")
 
@@ -223,8 +217,10 @@ class HvacCsc(salobj.ConfigurableCsc):
             self.mqtt_client = SimClient(self.start_telemetry_publishing)
         else:
             # Use the MQTT Client.
-            self.log.info(f"Connecting MqttClient to {self.config.host}.")
-            self.mqtt_client = MqttClient(host=self.config.host, port=self.config.port)
+            self.log.info(
+                f"Connecting MqttClient to host {self.host} and port {self.port}."
+            )
+            self.mqtt_client = MqttClient(host=self.host, port=self.port)
 
         await self.mqtt_client.connect()
         if self.start_telemetry_publishing:
@@ -307,9 +303,6 @@ class HvacCsc(salobj.ConfigurableCsc):
         if self.connected:
             await self.disconnect()
         await super().end_disable(id_data)
-
-    async def configure(self, config):
-        self.config = config
 
     def _get_topic_enabled_state(self, topic):
         """Determine whether a device represented by the MQTT topic is enabled
@@ -442,10 +435,6 @@ class HvacCsc(salobj.ConfigurableCsc):
         if self.mqtt_client is None:
             return False
         return self.mqtt_client.connected
-
-    @staticmethod
-    def get_config_pkg():
-        return "ts_config_ocs"
 
     def _add_config_commands(self):
         # Find all device groups that can be commanded.

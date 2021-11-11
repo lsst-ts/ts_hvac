@@ -24,7 +24,6 @@ try:
 except ModuleNotFoundError:
     __version__ = "?"
 
-from .config_schema import CONFIG_SCHEMA
 from .csc import *
 from .enums import *
 from .utils import *

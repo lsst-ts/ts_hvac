@@ -259,7 +259,7 @@ class HvacCsc(salobj.BaseCsc):
             Command ID and data
         """
         await super().begin_enable(id_data)
-        self.cmd_enable.ack_in_progress(id_data, timeout=60)
+        await self.cmd_enable.ack_in_progress(id_data, timeout=60)
 
     async def end_enable(self, id_data: salobj.BaseDdsDataType) -> None:
         """End do_enable; called after state changes but before command
@@ -286,7 +286,7 @@ class HvacCsc(salobj.BaseCsc):
         id_data: `CommandIdData`
             Command ID and data
         """
-        self.cmd_disable.ack_in_progress(id_data, timeout=60)
+        await self.cmd_disable.ack_in_progress(id_data, timeout=60)
         await super().begin_disable(id_data)
 
     async def end_disable(self, id_data: salobj.BaseDdsDataType) -> None:
@@ -339,7 +339,7 @@ class HvacCsc(salobj.BaseCsc):
 
         return deviceId_index, enabled
 
-    def _compute_statistics_and_send_telemetry(self):
+    async def _compute_statistics_and_send_telemetry(self):
         self.log.info(
             f"{HVAC_STATE_TRACK_PERIOD} seconds have passed since the last "
             f"computation of the medians, so computing now."
@@ -362,7 +362,7 @@ class HvacCsc(salobj.BaseCsc):
             self.log.info(f"{topic}:{data}")
             if data:
                 telemetry_method = getattr(self, "tel_" + HvacTopic(topic).name)
-                telemetry_method.set_put(**data)
+                await telemetry_method.set_write(**data)
             hvac_topic = HvacTopic(topic)
             device_id = DeviceId[hvac_topic.name]
             if topic not in TOPICS_WITHOUT_CONFIGURATION and enabled:
@@ -382,9 +382,9 @@ class HvacCsc(salobj.BaseCsc):
                         "setpointVentiladorMin",
                     ]:
                         event_data[command_topic] = data[command_topic]
-                command_group_coro.set_put(**event_data)
+                await command_group_coro.set_write(**event_data)
 
-        self.evt_deviceEnabled.set_put(device_ids=enabled_mask)
+        await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
 
     def _handle_mqtt_messages(self):
         while not len(self.mqtt_client.msgs) == 0:
@@ -415,14 +415,14 @@ class HvacCsc(salobj.BaseCsc):
 
             item_state.recent_values.append(value)
 
-    def publish_telemetry(self):
+    async def publish_telemetry(self):
         self._handle_mqtt_messages()
-        self._compute_statistics_and_send_telemetry()
+        await self._compute_statistics_and_send_telemetry()
 
     async def _publish_telemetry_regularly(self):
         try:
             while True:
-                self.publish_telemetry()
+                await self.publish_telemetry()
                 await asyncio.sleep(HVAC_STATE_TRACK_PERIOD)
         except asyncio.CancelledError:
             # Normal exit

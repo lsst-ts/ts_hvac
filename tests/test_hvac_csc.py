@@ -146,7 +146,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     # Make sure that the SimClient publishes telemetry.
                     self.csc.mqtt_client.publish_telemetry()
                     # Make sure that the CSC publishes the telemetry.
-                    self.csc.publish_telemetry()
+                    await self.csc.publish_telemetry()
                     # Check deviceEnabled event.
                     await self._verify_evt_deviceEnabled(subsystem)
                     # Check all telemetry.
@@ -247,7 +247,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     # Make sure that the SimClient publishes telemetry.
                     self.csc.mqtt_client.publish_telemetry()
                     # Make sure that the CSC publishes the telemetry.
-                    self.csc.publish_telemetry()
+                    await self.csc.publish_telemetry()
                     # Check deviceEnabled event.
                     await self._verify_evt_deviceEnabled(subsystem)
                     # Check all configuration telemetry.

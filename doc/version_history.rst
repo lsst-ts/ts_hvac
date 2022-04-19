@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.7.1
+======
+
+* Reduce excessive logging.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 3.1
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 11.0
+
 v0.7.0
 ======
 
@@ -16,7 +28,7 @@ Requires:
 * ts_salobj 7.0
 * ts_idl 3.1
 * ts_utils 1.0
-* IDL files for HVAC from ts_xml 9.2
+* IDL files for HVAC from ts_xml 11.0
 
 v0.6.0
 ======

@@ -197,16 +197,10 @@ class HvacCsc(salobj.BaseCsc):
         # Keep track of the device indices for the device mask
         self.device_id_index = {dev_id: i for i, dev_id in enumerate(DeviceId)}
 
-        self.log.info("HvacCsc constructed")
-
     async def connect(self):
         """Start the HVAC MQTT client or start the mock client, if in
         simulation mode.
         """
-        self.log.info("Connecting.")
-        self.log.info(f"self.simulation_mode = {self.simulation_mode}")
-        # if self.connected:
-        #     raise RuntimeError("Already connected")
 
         # Initialize interal state track keeping
         self._setup_hvac_state()
@@ -340,7 +334,7 @@ class HvacCsc(salobj.BaseCsc):
         return deviceId_index, enabled
 
     async def _compute_statistics_and_send_telemetry(self):
-        self.log.info(
+        self.log.debug(
             f"{HVAC_STATE_TRACK_PERIOD} seconds have passed since the last "
             f"computation of the medians, so computing now."
         )
@@ -359,7 +353,6 @@ class HvacCsc(salobj.BaseCsc):
                 if value is not None:
                     data[TelemetryItem(item).name] = value
 
-            self.log.info(f"{topic}:{data}")
             if data:
                 telemetry_method = getattr(self, "tel_" + HvacTopic(topic).name)
                 await telemetry_method.set_write(**data)

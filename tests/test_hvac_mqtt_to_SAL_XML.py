@@ -36,7 +36,7 @@ class MqttToSalTestCase(unittest.TestCase):
     def test_mask(self):
         mask = 0b10000000110001
         topics_enabled = [
-            flag for (index, flag) in enumerate(DeviceId) if (mask & 2 ** index)
+            flag for (index, flag) in enumerate(DeviceId) if (mask & 2**index)
         ]
         print(topics_enabled)
         mask_check = 0

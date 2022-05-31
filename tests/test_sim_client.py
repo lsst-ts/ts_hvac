@@ -265,14 +265,10 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                     # TODO: These command items do not have a telemetry counter
                     #  point in the "Lower" components. It is being clarified
                     #  how to verify them so they are skipped for now.
-                    if (
-                        command_item.value
-                        in [
-                            "SETPOINT_VENTILADOR_MIN_LSST",
-                            "SETPOINT_VENTILADOR_MAX_LSST",
-                        ]
-                        and topic.value.startswith("LSST/PISO05/MANEJADORA/LOWER")
-                    ):
+                    if command_item.value in [
+                        "SETPOINT_VENTILADOR_MIN_LSST",
+                        "SETPOINT_VENTILADOR_MAX_LSST",
+                    ] and topic.value.startswith("LSST/PISO05/MANEJADORA/LOWER"):
                         continue
                     self.assertEqual(
                         data[key], mqtt_state[topic.value][command_item.value[:-5]]

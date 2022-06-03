@@ -61,7 +61,7 @@ names = [
 ]
 
 # Find the data directory relative to the location of this file.
-DATA_DIR = pathlib.Path(__file__).resolve().parents[3] / "data"
+DATA_DIR = pathlib.Path(__file__).resolve().parents[0] / "data"
 
 INPUT_DIR = DATA_DIR / "input"
 dat_control_csv_filename = (

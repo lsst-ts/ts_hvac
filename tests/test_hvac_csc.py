@@ -84,7 +84,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_bin_script(self):
-        await self.check_bin_script(name="HVAC", index=None, exe_name="run_hvac.py")
+        await self.check_bin_script(name="HVAC", index=None, exe_name="run_hvac")
 
     async def _verify_evt_deviceEnabled(self, subsystem):
         # Default mask indicating that the three devices that always are
@@ -92,7 +92,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         device_mask = 0b111
         device_id = DeviceId[subsystem]
         deviceId_index = self.csc.device_id_index[device_id]
-        device_mask += 2 ** deviceId_index
+        device_mask += 2**deviceId_index
         await self.assert_next_sample(
             topic=self.remote.evt_deviceEnabled, device_ids=device_mask
         )

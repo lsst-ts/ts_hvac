@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 # This file is part of ts_hvac.
 #
-# Developed for the Vera Rubin Observatory Telescope and Site Systems.
-# This product includes software developed by the Vera Rubin Observatory
-# Project (https://www.lsst.org).
+# Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
 # See the COPYRIGHT file at the top-level directory of this distribution
 # for details of code ownership.
 #
@@ -20,15 +19,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+__all__ = ["execute_csc"]
+
 import asyncio
-import logging
 
-from lsst.ts import hvac
-
-logging.basicConfig(
-    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
-    level=logging.INFO,
-)
+from .csc import HvacCsc
 
 
-asyncio.run(hvac.HvacCsc.amain(index=None))
+def execute_csc():
+    asyncio.run(HvacCsc.amain(index=None))

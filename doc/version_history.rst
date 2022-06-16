@@ -6,6 +6,21 @@
 Version History
 ###############
 
+v0.8.0
+======
+
+* Modernize pre-commit config versions.
+* Move the data directory to within the package directory.
+* Switch to pyproject.toml.
+* Use entry_points instead of bin scripts.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 3.1
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 11.0
+
 v0.7.1
 ======
 

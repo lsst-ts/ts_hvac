@@ -24,6 +24,7 @@ __all__ = ["HvacCsc", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
 import asyncio
 import json
 import re
+import traceback
 
 import numpy as np
 
@@ -216,7 +217,11 @@ class HvacCsc(salobj.BaseCsc):
             )
             self.mqtt_client = MqttClient(host=self.host, port=self.port)
 
-        await self.mqtt_client.connect()
+        try:
+            await self.mqtt_client.connect()
+        except TimeoutError as e:
+            self.log.exception(f"Timeout connecting to host {self.host}")
+            raise e
         if self.start_telemetry_publishing:
             self.telemetry_task = asyncio.create_task(
                 self._publish_telemetry_regularly()
@@ -395,18 +400,22 @@ class HvacCsc(salobj.BaseCsc):
                 item = "SETPOINT_COOLING"
             if item == "SET_POINT_HEATING":
                 item = "SETPOINT_HEATING"
-            item_state = self.hvac_state[topic][item]
-            value = payload
-            if payload not in [
-                b"Automatico",
-                b"Encendido$20Manual",
-                b"Apagado$20Manual",
-            ]:
-                value = json.loads(payload)
-            else:
-                value = True
 
-            item_state.recent_values.append(value)
+            if topic in self.hvac_state:
+                item_state = self.hvac_state[topic][item]
+                value = payload
+                if payload not in [
+                    b"Automatico",
+                    b"Encendido$20Manual",
+                    b"Apagado$20Manual",
+                ]:
+                    value = json.loads(payload)
+                else:
+                    value = True
+
+                item_state.recent_values.append(value)
+            else:
+                self.log.warn(f"Ignoring unknown topic {topic!r}.")
 
     async def publish_telemetry(self):
         self._handle_mqtt_messages()
@@ -420,8 +429,10 @@ class HvacCsc(salobj.BaseCsc):
         except asyncio.CancelledError:
             # Normal exit
             pass
-        except Exception:
-            self.log.exception("get_telemetry() failed")
+        except Exception as e:
+            await self.fault(
+                -1, "Error publishing telemetry.", traceback.format_exception(e)
+            )
 
     @property
     def connected(self):

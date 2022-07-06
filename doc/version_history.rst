@@ -6,6 +6,20 @@
 Version History
 ###############
 
+v0.8.1
+======
+
+* Handle error situations better.
+* Improve endpoint implementation.
+* Prepare conda recipe for builds with multiple Python versions.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 3.1
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 11.0
+
 v0.8.0
 ======
 

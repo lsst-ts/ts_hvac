@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["HvacCsc", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
+__all__ = ["HvacCsc", "run_hvac", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
 
 import asyncio
 import json
@@ -56,6 +56,10 @@ TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
         "manejadoraLower04P05",
     )
 )
+
+
+def run_hvac():
+    asyncio.run(HvacCsc.amain(index=None))
 
 
 class InternalItemState:

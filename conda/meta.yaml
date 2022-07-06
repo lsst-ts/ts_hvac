@@ -10,7 +10,7 @@ build:
   noarch: generic
   script: python -m pip install --no-deps --ignore-installed .
   entry_points:
-    - run_hvac = lsst.ts.hvac.cli:execute_csc
+    - run_hvac = lsst.ts.hvac.csc:run_hvac
   script_env:
     - PATH
     - LD_LIBRARY_PATH

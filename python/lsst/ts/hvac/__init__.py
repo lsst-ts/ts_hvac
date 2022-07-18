@@ -24,7 +24,6 @@ try:
 except ModuleNotFoundError:
     __version__ = "?"
 
-from .cli import *
 from .csc import *
 from .enums import *
 from .utils import *

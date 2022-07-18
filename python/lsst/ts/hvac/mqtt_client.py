@@ -81,7 +81,6 @@ class MqttClient:
         msg: `mqtt.MQTTMessage`
             The MQTT message that holds the topic and payload.
         """
-        self.log.debug(f"Received msg {msg.topic}:{msg.payload}")
         self.msgs.append(msg)
 
     def publish_mqtt_message(self, topic, payload):

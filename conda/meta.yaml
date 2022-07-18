@@ -8,9 +8,9 @@ source:
 
 build:
   noarch: generic
-  script: python -m pip install --no-deps --ignore-installed .
+  script: {{ PYTHON }} -m pip install --no-deps --ignore-installed .
   entry_points:
-    - run_hvac = lsst.ts.hvac.cli:execute_csc
+    - run_hvac = lsst.ts.hvac.csc:run_hvac
   script_env:
     - PATH
     - LD_LIBRARY_PATH
@@ -38,13 +38,20 @@ test:
 
 requirements:
   host:
-    - python
+    - python {{ python }}
     - pip
     - setuptools_scm
     - setuptools
-    - pytest-runner
+  build:
+    - python {{ python }}
+    - setuptools_scm
+    - setuptools
+    - ts-conda-build =0.3
+    - pandas
+    - paho-mqtt
+    - lxml
   run:
-    - python
+    - python {{ python }}
     - setuptools
     - setuptools_scm
     - ts-idl {{ idl_version }}

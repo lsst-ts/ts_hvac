@@ -27,21 +27,21 @@ import re
 import traceback
 
 import numpy as np
+from lsst.ts import salobj, utils
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 from . import __version__
 from .enums import (
+    TOPICS_ALWAYS_ENABLED,
+    TOPICS_WITHOUT_CONFIGURATION,
     CommandItem,
     HvacTopic,
     TelemetryItem,
-    TOPICS_ALWAYS_ENABLED,
-    TOPICS_WITHOUT_CONFIGURATION,
 )
-from .utils import to_camel_case
 from .mqtt_client import MqttClient
-from .simulator.sim_client import SimClient
 from .mqtt_info_reader import MqttInfoReader
-from lsst.ts import salobj, utils
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
+from .simulator.sim_client import SimClient
+from .utils import to_camel_case
 
 # The number of seconds to collect the state of the HVAC system for before the
 # median is reported via SAL telemetry.

@@ -21,8 +21,8 @@
 
 __all__ = ["MqttClient"]
 
-from collections import deque
 import logging
+from collections import deque
 
 import paho.mqtt.client as mqtt
 

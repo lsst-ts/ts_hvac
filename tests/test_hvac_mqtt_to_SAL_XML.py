@@ -25,7 +25,7 @@ import unittest
 from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG

@@ -22,13 +22,12 @@
 __all__ = ["SimClient"]
 
 import asyncio
-from collections import deque
 import json
 import logging
 import random
+from collections import deque
 
 import paho.mqtt.client as mqtt
-
 from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 

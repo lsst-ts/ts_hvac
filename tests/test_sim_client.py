@@ -23,16 +23,15 @@ import json
 import logging
 import unittest
 
+import hvac_test_utils
 import lsst.ts.hvac.simulator.sim_client as sim_client
 from lsst.ts.hvac.enums import (
-    HvacTopic,
-    CommandItem,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
+    CommandItem,
+    HvacTopic,
 )
-
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
-import hvac_test_utils
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG

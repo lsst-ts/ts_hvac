@@ -21,12 +21,11 @@
 
 import re
 
-from lxml import etree
-
 from lsst.ts.hvac.enums import SPANISH_TO_ENGLISH_DICTIONARY, HvacTopic
+from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader, DATA_DIR
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
+from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"
 telemetry_filename = OUTPUT_DIR / "HVAC_Telemetry.xml"

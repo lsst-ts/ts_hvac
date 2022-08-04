@@ -24,15 +24,16 @@ __all__ = [
     "DATA_DIR",
 ]
 
-import pandas
 import pathlib
 import re
 
+import pandas
+
 from .enums import (
+    TOPICS_ALWAYS_ENABLED,
     CommandItem,
     HvacTopic,
     TelemetryItem,
-    TOPICS_ALWAYS_ENABLED,
     TopicType,
 )
 

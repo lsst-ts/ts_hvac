@@ -23,27 +23,21 @@ import logging
 import re
 import unittest
 
-import flake8
-
-from lsst.ts import salobj
-from lsst.ts import hvac
+import hvac_test_utils
+from lsst.ts import hvac, salobj
 from lsst.ts.hvac.enums import (
-    HvacTopic,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
+    HvacTopic,
 )
 from lsst.ts.hvac.utils import to_camel_case
-import hvac_test_utils
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
 )
-
-# Make sure that flake8 log level is set to logging.INFO
-flake8.configure_logging(1)
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):

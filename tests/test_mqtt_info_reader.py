@@ -21,6 +21,7 @@
 
 import logging
 import unittest
+
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 logging.basicConfig(

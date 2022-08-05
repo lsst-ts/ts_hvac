@@ -26,6 +26,6 @@ except ModuleNotFoundError:
 
 from .csc import *
 from .enums import *
-from .utils import *
 from .mqtt_client import *
 from .mqtt_info_reader import *
+from .utils import *

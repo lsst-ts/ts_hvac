@@ -22,13 +22,13 @@
 __all__ = ["SimClient"]
 
 import asyncio
-from collections import deque
 import json
 import logging
 import random
+import typing
+from collections import deque
 
 import paho.mqtt.client as mqtt
-
 from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
@@ -43,20 +43,20 @@ class SimClient:
         unit tests should set it to False.
     """
 
-    def __init__(self, start_publish_telemetry_every_second=True):
+    def __init__(self, start_publish_telemetry_every_second: bool = True) -> None:
         self.log = logging.getLogger("SimClient")
-        self.hvac_topics = {}
-        self.telemetry_task = None
+        self.hvac_topics: dict[str, typing.Any] = {}
+        self.telemetry_task: typing.Optional[asyncio.Task] = None
         self.connected = False
 
         # Holds the incoming messages so the CSC can take them from the Queue.
-        self.msgs = deque()
+        self.msgs: deque = deque()
 
         # Holds info on which topics are enabled and which not.
-        self.topics_enabled = {}
+        self.topics_enabled: dict[str, typing.Any] = {}
 
         # Holds the values received via configuration commands.
-        self.configuration_values = {}
+        self.configuration_values: dict[str, typing.Any] = {}
 
         # Helper for reading the HVAC data
         self.xml = MqttInfoReader()
@@ -68,7 +68,7 @@ class SimClient:
 
         self.log.info("SimClient constructed")
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Start publishing telemetry."""
         self.hvac_topics = self.xml.hvac_topics
         self._collect_topics()
@@ -81,14 +81,14 @@ class SimClient:
         self.connected = True
         self.log.info("Connected.")
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Stop publishing telemetry."""
         if self.telemetry_task:
             self.telemetry_task.cancel()
         self.connected = False
         self.log.info("Disconnected.")
 
-    def _collect_topics(self):
+    def _collect_topics(self) -> None:
         """Loop over all topics and initialize them."""
         topics = self.xml.get_generic_hvac_topics()
         for topic in topics:
@@ -96,7 +96,7 @@ class SimClient:
         for topic in TOPICS_ALWAYS_ENABLED:
             self.topics_enabled[topic] = True
 
-    def publish_mqtt_message(self, topic, payload):
+    def publish_mqtt_message(self, topic: str, payload: str) -> bool:
         """Publish the specified payload to the specified topic.
 
         A topic represents an MQTT topic including the command to execute.
@@ -133,7 +133,7 @@ class SimClient:
         # ever returns False and once that is clear this will be adapted.
         return self.is_published
 
-    def _handle_enable_command(self, topic, payload):
+    def _handle_enable_command(self, topic: str, payload: str) -> None:
         """Enable or disable the topic based on the payload.
 
         Parameters
@@ -145,7 +145,7 @@ class SimClient:
         """
         self.topics_enabled[topic] = payload
 
-    def _handle_config_command(self, topic, command, payload):
+    def _handle_config_command(self, topic: str, command: str, payload: str) -> None:
         """Receive the config command for the topic and verify that the
         corresponding telmetry item exists.
 
@@ -171,7 +171,7 @@ class SimClient:
             command_item = command_item[:-5]
         self.configuration_values[f"{topic}/{command_item}"] = payload
 
-    async def _publish_telemetry_every_second(self):
+    async def _publish_telemetry_every_second(self) -> None:
         """Publish telmetry every second to simulate the behaviour of an MQTT
         server.
         """
@@ -185,7 +185,7 @@ class SimClient:
         except Exception:
             self.log.exception("publish_telemetry() failed")
 
-    def publish_telemetry(self):
+    def publish_telemetry(self) -> None:
         """Publish telmetry once to simulate the behaviour of an MQTT
         server.
         """

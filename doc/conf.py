@@ -24,11 +24,12 @@
 This configuration only affects single-package Sphinx documentation builds.
 """
 
-from documenteer.conf.pipelinespkg import *  # noqa
 import lsst.ts.hvac  # noqa
+from documenteer.conf.pipelinespkg import *  # noqa
 
 project = "ts_hvac"
-html_theme_options["logotext"] = project  # noqa
+html_theme_options["logotext"] = project  # type: ignore # noqa
 html_title = project
 html_short_title = project
-doxylink = {}
+html_static_path = ["_static"]
+html_css_files = ["mystyle.css"]

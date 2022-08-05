@@ -21,18 +21,18 @@
 
 import json
 import logging
+import typing
 import unittest
 
+import hvac_test_utils
 import lsst.ts.hvac.simulator.sim_client as sim_client
 from lsst.ts.hvac.enums import (
-    HvacTopic,
-    CommandItem,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
+    CommandItem,
+    HvacTopic,
 )
-
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
-import hvac_test_utils
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
@@ -42,7 +42,7 @@ expected_units = frozenset(("deg_C", "unitless", "bar", "%", "h", "m3/h"))
 
 
 class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
-    async def asyncSetUp(self):
+    async def asyncSetUp(self) -> None:
         """Setup the unit test."""
         self.log = logging.getLogger("SimClientTestCase")
         # Make sure that all topics and their variables are loaded.
@@ -57,12 +57,12 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         # state for the test.
         await self.mqtt_client.connect()
 
-    async def asyncTearDown(self):
+    async def asyncTearDown(self) -> None:
         """Cleanup after the unit test."""
         if self.mqtt_client:
             await self.mqtt_client.disconnect()
 
-    def collect_mqtt_state(self):
+    def collect_mqtt_state(self) -> dict[str, typing.Any]:
         """Convenience method to collect all MQTT topics and their values.
 
         The structure of the produced dictionary is
@@ -88,7 +88,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         # This method needs to be called first to ensure that all MQTT topics
         # publish their values.
         self.mqtt_client.publish_telemetry()
-        mqtt_state = {}
+        mqtt_state: dict[str, typing.Any] = {}
         # Next the MQTT messages containing the published values for all topics
         # need to be collected.
         msgs = self.mqtt_client.msgs
@@ -104,7 +104,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
             mqtt_state[topic][variable] = data
         return mqtt_state
 
-    def verify_topic_disabled(self, topic):
+    def verify_topic_disabled(self, topic: str) -> None:
         """Verifies that the provided topic is disabled by verifying that
         it doesn't publish any values.
 
@@ -125,7 +125,9 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                     f"Encountered variable {var} with value {data} in topic {topic}"
                 )
 
-    def verify_topic_state(self, topic, expected_state):
+    def verify_topic_state(
+        self, topic: str, expected_state: dict[str, typing.Any]
+    ) -> None:
         """Verifies that the state as reported by the topic is as expected.
 
         For a description of the expected state dict, see the
@@ -158,19 +160,31 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                     f"Encountered variable {var} of type {type(data)} with value {data} in topic {topic}"
                 )
 
-    def enable_topic(self, topic):
-        """Enable the topic by sending True to the enable command."""
+    def enable_topic(self, topic: str) -> None:
+        """Enable the topic by sending True to the enable command.
+
+        Parameters
+        ----------
+        topic: `str`
+            The topic.
+        """
         command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
         value = "true"
         self.mqtt_client.publish_mqtt_message(command, value)
 
-    def disable_topic(self, topic):
-        """Disable the topic by sending False to the enable command."""
+    def disable_topic(self, topic: str) -> None:
+        """Disable the topic by sending False to the enable command.
+
+        Parameters
+        ----------
+        topic: `str`
+            The topic.
+        """
         command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
         value = "false"
         self.mqtt_client.publish_mqtt_message(command, value)
 
-    def determine_expected_state(self, topic):
+    def determine_expected_state(self, topic: str) -> dict[str, typing.Any]:
         """Determine the expected state of the topic by looping over each
         variable of the topic and setting an expected value.
 
@@ -194,7 +208,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
 
         """
         variables = self.xml.get_items_for_hvac_topic(topic)
-        expected_state = {}
+        expected_state: dict[str, typing.Any] = {}
         for variable in variables:
             var = variables[variable]
             if var["topic_type"] == "READ":
@@ -219,7 +233,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                     )
         return expected_state
 
-    async def test_topics(self):
+    async def test_topics(self) -> None:
         """Loop over all topics and perform the following operations for
         each topic:
 
@@ -244,7 +258,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                 self.disable_topic(topic)
                 self.verify_topic_disabled(topic)
 
-    async def test_config(self):
+    async def test_config(self) -> None:
         for topic in HvacTopic:
             if topic.value not in TOPICS_WITHOUT_CONFIGURATION:
                 data = hvac_test_utils.get_random_config_data(topic)

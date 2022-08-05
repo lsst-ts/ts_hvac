@@ -21,8 +21,9 @@
 
 __all__ = ["MqttClient"]
 
-from collections import deque
 import logging
+import typing
+from collections import deque
 
 import paho.mqtt.client as mqtt
 
@@ -41,16 +42,16 @@ class MqttClient:
         The port of the MQTT service.
     """
 
-    def __init__(self, host, port):
+    def __init__(self, host: str, port: int) -> None:
         self.log = logging.getLogger("MqttClient")
         self.host = host
         self.port = port
-        self.client = None
-        self.msgs = deque()
+        self.client = mqtt.Client()
+        self.msgs: deque = deque()
         self.connected = False
         self.log.info("MqttClient constructed")
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect the client to the MQTT server."""
         self.client = mqtt.Client()
         self.client.on_message = self.on_message
@@ -60,14 +61,16 @@ class MqttClient:
         self.connected = True
         self.log.info("Connected")
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Disconnect the client from the MQTT server."""
         self.client.loop_stop()
         self.client.disconnect()
         self.connected = False
         self.log.info("Disconnected")
 
-    def on_message(self, client, userdata, msg):
+    def on_message(
+        self, client: mqtt.Client, userdata: typing.Any, msg: mqtt.MQTTMessage
+    ) -> None:
         """Callback for when an MQTT message arrives.
 
         Parameters
@@ -83,7 +86,7 @@ class MqttClient:
         """
         self.msgs.append(msg)
 
-    def publish_mqtt_message(self, topic, payload):
+    def publish_mqtt_message(self, topic: str, payload: str) -> bool:
         """Publishes the specified payload to the specified topic on the MQTT
         server.
 

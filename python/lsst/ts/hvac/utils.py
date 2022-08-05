@@ -23,8 +23,21 @@
 __all__ = ["to_camel_case"]
 
 
-def to_camel_case(string, first_lower=False):
-    """Return a CamelCase or camelCase version of a snake_case str."""
+def to_camel_case(string: str, first_lower: bool = False) -> str:
+    """Return a CamelCase or camelCase version of a snake_case str.
+
+    Parameters
+    ----------
+    string: `str`
+        The string to convert.
+    first_lower: `bool`
+        True for camelCase and False for CamelCase.
+
+    Returns
+    -------
+    str
+        The string in CamelCase or camelCase.
+    """
     if first_lower:
         first, _, rest = string.partition("_")
     else:

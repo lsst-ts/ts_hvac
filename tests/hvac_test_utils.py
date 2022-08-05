@@ -21,16 +21,16 @@
 
 import random
 
-from lsst.ts.hvac.enums import CommandItem
+from lsst.ts.hvac.enums import CommandItem, HvacTopic
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
-def get_random_config_data(topic):
+def get_random_config_data(topic: HvacTopic) -> dict[str, float]:
     """Generates random values for all command items of the given topic.
 
     Parameters
     ----------
-    topic: `lsst.ts.hvac.hvac_enums.HvacTopic`
+    topic: `lsst.ts.hvac.enums.HvacTopic`
         The topic to get random values for.
 
     Returns
@@ -39,7 +39,7 @@ def get_random_config_data(topic):
         A dictionary of command items and random values.
 
     """
-    data = {}
+    data: dict[str, float] = {}
     # Retrieve the config items of the topic.
     xml = MqttInfoReader()
     mqtt_topics_and_items = xml.get_command_mqtt_topics_and_items()

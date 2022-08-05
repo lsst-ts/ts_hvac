@@ -25,7 +25,7 @@ import unittest
 from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
@@ -33,7 +33,7 @@ logging.basicConfig(
 
 
 class MqttToSalTestCase(unittest.TestCase):
-    def test_mask(self):
+    def test_mask(self) -> None:
         mask = 0b10000000110001
         topics_enabled = [
             flag for (index, flag) in enumerate(DeviceId) if (mask & 2**index)
@@ -45,7 +45,7 @@ class MqttToSalTestCase(unittest.TestCase):
             mask_check += 1 << device_id_index[topic_enabled]
         self.assertEqual(mask_check, mask)
 
-    def test_hvac_command_groups(self):
+    def test_hvac_command_groups(self) -> None:
         xml = MqttInfoReader()
         command_topic_counts = {}
         for hvac_topic in xml.get_generic_hvac_topics():
@@ -83,7 +83,7 @@ class MqttToSalTestCase(unittest.TestCase):
                 f" and {len(DEVICE_GROUPS[command_topic])} DEVICE_GROUP counts.",
             )
 
-    def test_collect_command_topics(self):
+    def test_collect_command_topics(self) -> None:
         xml = MqttInfoReader()
         unique_command_items_per_group = (
             hvac_mqtt_to_SAL_XML.collect_unique_command_items_per_group(

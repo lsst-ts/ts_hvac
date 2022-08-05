@@ -20,13 +20,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import re
-
-from lxml import etree
+import typing
 
 from lsst.ts.hvac.enums import SPANISH_TO_ENGLISH_DICTIONARY, HvacTopic
+from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader, DATA_DIR
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
+from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"
 telemetry_filename = OUTPUT_DIR / "HVAC_Telemetry.xml"
@@ -78,7 +78,7 @@ events_root.addprevious(
 xml = MqttInfoReader()
 
 
-def _translate_item(item):
+def _translate_item(item: str) -> str:
     """Perform a crude translation of the Spanish words in the given item to
     English.
 
@@ -102,8 +102,14 @@ def _translate_item(item):
 
 
 def _create_item_element(
-    parent, topic, item, idl_type, unit, description_text, element_count
-):
+    parent: str,
+    topic: str,
+    item: str,
+    idl_type: str,
+    unit: str,
+    description_text: str,
+    element_count: int,
+) -> None:
     """Create an XML element representing an item.
 
     XML items for telemetry and commands have the same structure so it is easy
@@ -139,7 +145,7 @@ def _create_item_element(
     count.text = str(element_count)
 
 
-def _write_tree_to_file(tree, filename):
+def _write_tree_to_file(tree: etree.Element, filename: str) -> None:
     if not OUTPUT_DIR.exists():
         OUTPUT_DIR.mkdir()
     t = etree.ElementTree(tree)
@@ -158,8 +164,10 @@ def _write_tree_to_file(tree, filename):
     f.close()
 
 
-def collect_unique_command_items_per_group(command_topics):
-    command_items_per_group = {}
+def collect_unique_command_items_per_group(
+    command_topics: dict[str, typing.Any],
+) -> dict[str, typing.Any]:
+    command_items_per_group: dict[str, typing.Any] = {}
     for command_topic in command_topics:
         hvac_topic = HvacTopic[command_topic].value
         command_group = next(
@@ -172,7 +180,7 @@ def collect_unique_command_items_per_group(command_topics):
             command_items_per_group[command_group] = []
         command_items_per_group[command_group].append(command_topics[command_topic])
     # Filter out the duplicates
-    unique_command_items_per_group = {}
+    unique_command_items_per_group: dict[str, typing.Any] = {}
     for command_group in command_items_per_group:
         unique_command_items_per_group[command_group] = [
             i
@@ -190,7 +198,7 @@ def collect_unique_command_items_per_group(command_topics):
     return unique_command_items_per_group
 
 
-def _create_telemetry_xml():
+def _create_telemetry_xml() -> None:
     """Create the Telemetry XML file."""
     for telemetry_topic in xml.telemetry_topics:
         st = etree.SubElement(telemetry_root, "SALTelemetry")
@@ -213,7 +221,9 @@ def _create_telemetry_xml():
     _write_tree_to_file(telemetry_root, telemetry_filename)
 
 
-def _create_command_sub_element(command_name, description_text):
+def _create_command_sub_element(
+    command_name: str, description_text: str
+) -> etree.SubElement:
     st = etree.SubElement(command_root, "SALCommand")
     sub_system = etree.SubElement(st, "Subsystem")
     sub_system.text = "HVAC"
@@ -224,7 +234,7 @@ def _create_command_sub_element(command_name, description_text):
     return st
 
 
-def _create_command_xml(command_items_per_group):
+def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     """Create the Command XML file."""
 
     # Add general enable and disable commands for a single device.
@@ -265,7 +275,7 @@ def _create_command_xml(command_items_per_group):
     _write_tree_to_file(command_root, command_filename)
 
 
-def _create_enumeration_element_from_dict(my_dict):
+def _create_enumeration_element_from_dict(my_dict: DeviceId) -> None:
     string = ",\n    ".join(
         f"{my_dict.__name__}_{item.name}={item.value}" for item in my_dict
     )
@@ -273,7 +283,7 @@ def _create_enumeration_element_from_dict(my_dict):
     st.text = f"\n    {string}\n  "
 
 
-def _create_events_xml(command_items_per_group):
+def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     """Create the Events XML file."""
     # Create the Enumerations.
     _create_enumeration_element_from_dict(DeviceId)
@@ -342,7 +352,7 @@ def _create_events_xml(command_items_per_group):
     _write_tree_to_file(events_root, events_filename)
 
 
-def create_xml():
+def create_xml() -> None:
     command_items_per_group = collect_unique_command_items_per_group(xml.command_topics)
     _create_telemetry_xml()
     _create_command_xml(command_items_per_group)

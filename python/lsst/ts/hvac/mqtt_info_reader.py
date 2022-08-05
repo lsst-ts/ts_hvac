@@ -24,15 +24,18 @@ __all__ = [
     "DATA_DIR",
 ]
 
-import pandas
+import enum
 import pathlib
 import re
+import typing
+
+import pandas
 
 from .enums import (
+    TOPICS_ALWAYS_ENABLED,
     CommandItem,
     HvacTopic,
     TelemetryItem,
-    TOPICS_ALWAYS_ENABLED,
     TopicType,
 )
 
@@ -70,7 +73,7 @@ dat_control_csv_filename = (
 
 
 class MqttInfoReader:
-    def __init__(self):
+    def __init__(self) -> None:
         # This dict contains the general MQTT topics (one for each sub-system)
         # as keys and a dictionary representing the items as value. The
         # structure is
@@ -82,7 +85,7 @@ class MqttInfoReader:
         #         "limits": (lower_limit, upper_limit),
         #     }
         # }
-        self.hvac_topics = {}
+        self.hvac_topics: dict[str, typing.Any] = {}
         # This dict contains the general ts_xml telemetry topics (retrieved by
         # using the `HvacTopic` enum) as keys and a dictionary representing the
         # ts_xml telemetry items (retrieved by using the `TelemetryItem` enum)
@@ -93,7 +96,7 @@ class MqttInfoReader:
         #         "unit": unit,
         #     }
         # }
-        self.telemetry_topics = {}
+        self.telemetry_topics: dict[str, typing.Any] = {}
         # This dict contains the general ts_xml command topics (retrieved by
         # using the `HvacTopic` enum) as keys and a dictionary representing the
         # ts_xml command items (retrieved by using the `CommandItem` enum) as
@@ -104,11 +107,11 @@ class MqttInfoReader:
         #         "unit": unit,
         #     }
         # }
-        self.command_topics = {}
+        self.command_topics: dict[str, typing.Any] = {}
 
         self._collect_hvac_topics_and_items_from_csv()
 
-    def _determine_unit(self, unit_string):
+    def _determine_unit(self, unit_string: str) -> str:
         """Convert the provided unit string to a string representing the unit.
 
         Parameters
@@ -132,7 +135,9 @@ class MqttInfoReader:
             "m3/h": "m3/h",
         }[unit_string]
 
-    def _parse_limits(self, limits_string):
+    def _parse_limits(
+        self, limits_string: str
+    ) -> typing.Tuple[int | float, int | float]:
         """Parse the string value of the limits column by comparing it to known
         regular expressions and extracting the minimum and maximum values.
 
@@ -143,9 +148,9 @@ class MqttInfoReader:
 
         Returns
         -------
-        lower_limit: `float`
+        lower_limit: `int` or `float`
             The lower limit
-        upper_limit: `float`
+        upper_limit: `int` or `float`
             The upper limit
 
         Raises
@@ -154,8 +159,8 @@ class MqttInfoReader:
             In case an unknown string pattern is found in the limits column.
 
         """
-        lower_limit = DEFAULT_LOWER_LIMIT
-        upper_limit = DEFAULT_UPPER_LIMIT
+        lower_limit: int | float = DEFAULT_LOWER_LIMIT
+        upper_limit: int | float = DEFAULT_UPPER_LIMIT
 
         match = re.match(
             r"^(-?\d+)(/| a |% a |°C a | bar a |%RH a )(-?\d+)(%|°C| bar| hr|%RH)?$",
@@ -181,7 +186,7 @@ class MqttInfoReader:
 
         return lower_limit, upper_limit
 
-    def extract_topic_and_item(self, topic_and_item):
+    def extract_topic_and_item(self, topic_and_item: str) -> typing.Tuple[str, str]:
         """Extract the generic topic, representing a HVAC subsystem, and item,
          representing a published value of the subsystem, from a string.
 
@@ -211,8 +216,15 @@ class MqttInfoReader:
         return topic, item
 
     def _generic_collect_topics_and_items(
-        self, topic_and_item, topic_type, idl_type, unit, limits, topics, items
-    ):
+        self,
+        topic_and_item: str,
+        topic_type: str,
+        idl_type: str,
+        unit: str,
+        limits: typing.Tuple[int | float, int | float],
+        topics: dict[str, typing.Any],
+        items: enum.EnumMeta,
+    ) -> None:
         """Collect XML topics and items from a row read from the CSV or JSON
         file with the Rubin Observatory HVAC system information sent by
         DatControl.
@@ -263,7 +275,8 @@ class MqttInfoReader:
                 if hvac_topic.name not in topics:
                     topics[hvac_topic.name] = {}
 
-                for hvac_item in items:
+                # Cannot use type hints in for loops.
+                for hvac_item in items:  # type: ignore
                     if hvac_item.value == item:
                         topics[hvac_topic.name][hvac_item.name] = {
                             "idl_type": idl_type,
@@ -288,7 +301,7 @@ class MqttInfoReader:
                 f"Topic {topic} in topic_and_item {topic_and_item} not found."
             )
 
-    def _collect_topics_and_items(self, topics):
+    def _collect_topics_and_items(self, topics: dict[str, typing.Any]) -> None:
         for topic_and_item in sorted(topics.keys()):
             idl_type = topics[topic_and_item]["idl_type"]
             topic_type = topics[topic_and_item]["topic_type"]
@@ -315,7 +328,7 @@ class MqttInfoReader:
                     CommandItem,
                 )
 
-    def _collect_hvac_topics_and_items_from_csv(self):
+    def _collect_hvac_topics_and_items_from_csv(self) -> None:
         """Loop over all rows in the CSV file and extracts either telemetry
         topic data or command topic data depending on the contents of the "rw"
         column in the CSV row.
@@ -346,7 +359,7 @@ class MqttInfoReader:
                     }
         self._collect_topics_and_items(csv_hvac_topics)
 
-    def get_generic_hvac_topics(self):
+    def get_generic_hvac_topics(self) -> set[str]:
         """Convenience method to collect all generic topics, representing the
         HVAC subsystems.
 
@@ -369,7 +382,7 @@ class MqttInfoReader:
 
         return hvac_topics
 
-    def get_items_for_hvac_topic(self, topic):
+    def get_items_for_hvac_topic(self, topic: str) -> dict[str, typing.Any]:
         """Convenience method to get all items for a generic HVAC topic.
 
         Parameters
@@ -388,15 +401,17 @@ class MqttInfoReader:
         `hvac_topics`.
 
         """
-        items = {}
+        items: dict[str, typing.Any] = {}
         for hvac_topic in self.hvac_topics:
             tpc, item = self.extract_topic_and_item(hvac_topic)
             if tpc == topic:
                 items[item] = self.hvac_topics[hvac_topic]
         return items
 
-    def _get_mqtt_topics_and_items_for_type(self, topic_type):
-        mqtt_topics = {}
+    def _get_mqtt_topics_and_items_for_type(
+        self, topic_type: str
+    ) -> dict[str, typing.Any]:
+        mqtt_topics: dict[str, typing.Any] = {}
         for hvac_topic in self.get_generic_hvac_topics():
             items = self.get_items_for_hvac_topic(hvac_topic)
             topic_items = {}
@@ -407,7 +422,7 @@ class MqttInfoReader:
             mqtt_topics[hvac_topic] = topic_items
         return mqtt_topics
 
-    def get_telemetry_mqtt_topics_and_items(self):
+    def get_telemetry_mqtt_topics_and_items(self) -> dict[str, typing.Any]:
         """Convenience method to collect all MQTT topics and their items that
         publish telemetry.
 
@@ -424,7 +439,7 @@ class MqttInfoReader:
         """
         return self._get_mqtt_topics_and_items_for_type(TopicType.READ)
 
-    def get_command_mqtt_topics_and_items(self):
+    def get_command_mqtt_topics_and_items(self) -> dict[str, typing.Any]:
         """Convenience method to collect all MQTT topics and their items that
         accept commands.
 

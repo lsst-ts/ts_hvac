@@ -25,23 +25,25 @@ import asyncio
 import json
 import re
 import traceback
+import typing
+from types import SimpleNamespace
 
 import numpy as np
+from lsst.ts import salobj, utils
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 from . import __version__
 from .enums import (
+    TOPICS_ALWAYS_ENABLED,
+    TOPICS_WITHOUT_CONFIGURATION,
     CommandItem,
     HvacTopic,
     TelemetryItem,
-    TOPICS_ALWAYS_ENABLED,
-    TOPICS_WITHOUT_CONFIGURATION,
 )
-from .utils import to_camel_case
 from .mqtt_client import MqttClient
-from .simulator.sim_client import SimClient
 from .mqtt_info_reader import MqttInfoReader
-from lsst.ts import salobj, utils
-from lsst.ts.idl.enums.HVAC import DeviceId, DEVICE_GROUPS
+from .simulator.sim_client import SimClient
+from .utils import to_camel_case
 
 # The number of seconds to collect the state of the HVAC system for before the
 # median is reported via SAL telemetry.
@@ -58,7 +60,7 @@ TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
 )
 
 
-def run_hvac():
+def run_hvac() -> None:
     asyncio.run(HvacCsc.amain(index=None))
 
 
@@ -79,17 +81,17 @@ class InternalItemState:
         The data type of the item. Can be "float" or "boolean".
     """
 
-    def __init__(self, topic, item, data_type):
+    def __init__(self, topic: str, item: str, data_type: str) -> None:
         self.topic = topic
         self.item = item
         # A list of float or bool as collected since the last median was
         # computed.
-        self.recent_values = []
+        self.recent_values: list[float | bool] = []
         # Keeps track of the data type so no medians are being computed for
         # bool values.
         self.data_type = data_type
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"InternalItemState["
             f"topic={self.topic}, "
@@ -100,10 +102,10 @@ class InternalItemState:
         )
 
     @property
-    def is_float(self):
+    def is_float(self) -> bool:
         return self.data_type == "float"
 
-    def get_most_recent_value(self):
+    def get_most_recent_value(self) -> None | float | bool:
         """Get the most recent boolean value.
         values.
 
@@ -119,7 +121,7 @@ class InternalItemState:
         self.recent_values.append(most_recent_value)
         return most_recent_value
 
-    def compute_recent_median(self):
+    def compute_recent_median(self) -> None | float:
         """Computes the median of the most recently acquired float values.
 
         Returns
@@ -134,7 +136,7 @@ class InternalItemState:
         self.recent_values.append(median)
         return median
 
-    def _get_and_reset_recent(self):
+    def _get_and_reset_recent(self) -> list[float | bool]:
         recent_values = self.recent_values
         self.recent_values = []
         return recent_values
@@ -167,10 +169,10 @@ class HvacCsc(salobj.BaseCsc):
 
     def __init__(
         self,
-        initial_state=salobj.State.STANDBY,
-        simulation_mode=0,
-        start_telemetry_publishing=True,
-    ):
+        initial_state: salobj.State = salobj.State.STANDBY,
+        simulation_mode: int = 0,
+        start_telemetry_publishing: bool = True,
+    ) -> None:
         self._add_config_commands()
         super().__init__(
             name="HVAC",
@@ -179,9 +181,11 @@ class HvacCsc(salobj.BaseCsc):
             simulation_mode=simulation_mode,
         )
 
-        self.mqtt_client = None
         self.start_telemetry_publishing = start_telemetry_publishing
         self.telemetry_task = utils.make_done_future()
+        self.mqtt_client: SimClient | MqttClient = SimClient(
+            self.start_telemetry_publishing
+        )
 
         # Keep track of the internal state of the MQTT topics. This will
         # collect all values for the duration of HVAC_STATE_TRACK_PERIOD before
@@ -190,7 +194,7 @@ class HvacCsc(salobj.BaseCsc):
         #     "item": InternalItemState
         # }
         # and this gets initialized in the connect method.
-        self.hvac_state = None
+        self.hvac_state: dict[str, typing.Any] = {}
 
         # The host and port to connect to.
         self.host = "hvac01.cp.lsst.org"
@@ -202,7 +206,7 @@ class HvacCsc(salobj.BaseCsc):
         # Keep track of the device indices for the device mask
         self.device_id_index = {dev_id: i for i, dev_id in enumerate(DeviceId)}
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Start the HVAC MQTT client or start the mock client, if in
         simulation mode.
         """
@@ -213,7 +217,6 @@ class HvacCsc(salobj.BaseCsc):
         if self.simulation_mode == 1:
             # Use the Simulator Client.
             self.log.info("Connecting SimClient.")
-            self.mqtt_client = SimClient(self.start_telemetry_publishing)
         else:
             # Use the MQTT Client.
             self.log.info(
@@ -232,14 +235,14 @@ class HvacCsc(salobj.BaseCsc):
             )
         self.log.info("Connected.")
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Disconnect the HVAQ client, if connected."""
         if self.connected:
             self.log.info("Disconnecting")
             self.telemetry_task.cancel()
             await self.mqtt_client.disconnect()
 
-    def _setup_hvac_state(self):
+    def _setup_hvac_state(self) -> None:
         """Set up internal tracking of the MQTT state."""
         self.hvac_state = {}
         mqtt_topics_and_items = self.xml.get_telemetry_mqtt_topics_and_items()
@@ -307,7 +310,7 @@ class HvacCsc(salobj.BaseCsc):
             await self.disconnect()
         await super().end_disable(id_data)
 
-    def _get_topic_enabled_state(self, topic):
+    def _get_topic_enabled_state(self, topic: str) -> typing.Tuple[int, bool]:
         """Determine whether a device represented by the MQTT topic is enabled
         or not.
 
@@ -342,7 +345,7 @@ class HvacCsc(salobj.BaseCsc):
 
         return deviceId_index, enabled
 
-    async def _compute_statistics_and_send_telemetry(self):
+    async def _compute_statistics_and_send_telemetry(self) -> None:
         self.log.debug(
             f"{HVAC_STATE_TRACK_PERIOD} seconds have passed since the last "
             f"computation of the medians, so computing now."
@@ -352,7 +355,7 @@ class HvacCsc(salobj.BaseCsc):
             deviceId_index, enabled = self._get_topic_enabled_state(topic)
             if enabled:
                 enabled_mask += 1 << deviceId_index
-            data = {}
+            data: dict[str, float | bool] = {}
             for item in self.hvac_state[topic]:
                 info = self.hvac_state[topic][item]
                 if info.is_float:
@@ -388,7 +391,7 @@ class HvacCsc(salobj.BaseCsc):
 
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
 
-    def _handle_mqtt_messages(self):
+    def _handle_mqtt_messages(self) -> None:
         while not len(self.mqtt_client.msgs) == 0:
             msg = self.mqtt_client.msgs.popleft()
             topic_and_item = msg.topic
@@ -421,11 +424,11 @@ class HvacCsc(salobj.BaseCsc):
             else:
                 self.log.warn(f"Ignoring unknown topic {topic!r}.")
 
-    async def publish_telemetry(self):
+    async def publish_telemetry(self) -> None:
         self._handle_mqtt_messages()
         await self._compute_statistics_and_send_telemetry()
 
-    async def _publish_telemetry_regularly(self):
+    async def _publish_telemetry_regularly(self) -> None:
         try:
             while True:
                 await self.publish_telemetry()
@@ -439,12 +442,12 @@ class HvacCsc(salobj.BaseCsc):
             )
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
         if self.mqtt_client is None:
             return False
         return self.mqtt_client.connected
 
-    def _add_config_commands(self):
+    def _add_config_commands(self) -> None:
         # Find all device groups that can be commanded.
         command_groups = set(
             k
@@ -457,7 +460,7 @@ class HvacCsc(salobj.BaseCsc):
             function_name = f"do_config{to_camel_case(command_group)}s"
             setattr(self, function_name, self._do_config)
 
-    def do_disableDevice(self, data):
+    def do_disableDevice(self, data: SimpleNamespace) -> None:
         """Disable the specified device.
 
         Parameters
@@ -467,7 +470,7 @@ class HvacCsc(salobj.BaseCsc):
         """
         self._set_enabled_state(data, False)
 
-    def do_enableDevice(self, data):
+    def do_enableDevice(self, data: SimpleNamespace) -> None:
         """Enable the specified device.
 
         Parameters
@@ -477,7 +480,7 @@ class HvacCsc(salobj.BaseCsc):
         """
         self._set_enabled_state(data, True)
 
-    def _set_enabled_state(self, data, enabled):
+    def _set_enabled_state(self, data: SimpleNamespace, enabled: bool) -> None:
         """Send an MQTT message to enable or disable a system.
 
         Parameters
@@ -507,7 +510,7 @@ class HvacCsc(salobj.BaseCsc):
             #  a later point.
             pass
 
-    def _do_config(self, data):
+    def _do_config(self, data: SimpleNamespace) -> None:
         """Send an MQTT message to configure a system.
 
         Parameters

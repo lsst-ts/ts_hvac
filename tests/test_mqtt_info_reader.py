@@ -21,6 +21,7 @@
 
 import logging
 import unittest
+
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 logging.basicConfig(
@@ -29,7 +30,7 @@ logging.basicConfig(
 
 
 class MqttInfoReaderTestCase(unittest.TestCase):
-    def test_extract_topic_and_item(self):
+    def test_extract_topic_and_item(self) -> None:
         mir = MqttInfoReader()
         topic_and_item = "LSST/PISO01/CHILLER_01/TEMPERATURA_AGUA_RETORNO_EVAPORADOR"
         topic, item = mir.extract_topic_and_item(topic_and_item)

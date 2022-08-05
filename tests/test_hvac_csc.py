@@ -21,6 +21,7 @@
 
 import logging
 import re
+import typing
 import unittest
 
 import hvac_test_utils
@@ -41,14 +42,20 @@ logging.basicConfig(
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
-    def basic_make_csc(self, initial_state, simulation_mode, **kwargs):
+    def basic_make_csc(
+        self,
+        initial_state: salobj.State,
+        config_dir: str,
+        simulation_mode: int,
+        **kwargs: typing.Any,
+    ) -> None:
         return hvac.HvacCsc(
             initial_state=initial_state,
             simulation_mode=simulation_mode,
             start_telemetry_publishing=False,
         )
 
-    async def test_standard_state_transitions(self):
+    async def test_standard_state_transitions(self) -> None:
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,
@@ -66,7 +73,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 ),
             )
 
-    async def test_version(self):
+    async def test_version(self) -> None:
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,
@@ -77,10 +84,10 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 subsystemVersions="",
             )
 
-    async def test_bin_script(self):
+    async def test_bin_script(self) -> None:
         await self.check_bin_script(name="HVAC", index=None, exe_name="run_hvac")
 
-    async def _verify_evt_deviceEnabled(self, subsystem):
+    async def _verify_evt_deviceEnabled(self, subsystem: int) -> None:
         # Default mask indicating that the three devices that always are
         # enabled, are enabled.
         device_mask = 0b111
@@ -91,14 +98,14 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             topic=self.remote.evt_deviceEnabled, device_ids=device_mask
         )
 
-    async def _retrieve_all_telemetry(self):
-        all_telemetry = {}
+    async def _retrieve_all_telemetry(self) -> dict[str, typing.Any]:
+        all_telemetry: dict[str, typing.Any] = {}
         for topic in HvacTopic:
             telemetry_topic = getattr(self.remote, "tel_" + topic.name)
             all_telemetry[topic.name] = await telemetry_topic.next(flush=False)
         return all_telemetry
 
-    async def _verify_telemetry(self, subsystem):
+    async def _verify_telemetry(self, subsystem: str) -> None:
         # Loop over all telemetry topics and verify the status
         all_telemetry = await self._retrieve_all_telemetry()
         for name, telemetry in all_telemetry.items():
@@ -119,7 +126,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             else:
                 self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
 
-    async def test_enable_on_all_subsystems_one_by_one(self):
+    async def test_enable_on_all_subsystems_one_by_one(self) -> None:
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,
@@ -151,7 +158,9 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                         **data, timeout=STD_TIMEOUT
                     )
 
-    async def _verify_config_telemetry(self, subsystem, config_data):
+    async def _verify_config_telemetry(
+        self, subsystem: str, config_data: dict[str, float]
+    ) -> None:
         # Loop over all telemetry topics and verify the status
         all_telemetry = await self._retrieve_all_telemetry()
         for name, telemetry in all_telemetry.items():
@@ -186,7 +195,9 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     telemetry_item = getattr(telemetry, key)
                     self.assertAlmostEqual(telemetry_item, config_data[key], 3)
 
-    async def _verify_config_event(self, hvac_topic, config_data):
+    async def _verify_config_event(
+        self, hvac_topic: HvacTopic, config_data: dict[str, float]
+    ) -> None:
         command_group = [k for k, v in DEVICE_GROUPS.items() if hvac_topic.value in v][
             0
         ]
@@ -209,7 +220,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 command_item = getattr(data, command_topic)
                 self.assertAlmostEqual(command_item, config_data[command_topic], 3)
 
-    async def test_config(self):
+    async def test_config(self) -> None:
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,

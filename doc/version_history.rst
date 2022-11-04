@@ -6,6 +6,20 @@
 Version History
 ###############
 
+v0.9.1
+======
+
+* Switch conda test command from py.test to pytest.
+* Restore pytest plugins.
+* Fix error handling status telemetry containing the string 'AUTOMATICO'.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 3.1
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 11.0
+
 v0.9.0
 ======
 

@@ -132,7 +132,7 @@ class InternalItemState:
         recent_values = self._get_and_reset_recent()
         if not recent_values:
             return None
-        median = np.median(recent_values)
+        median = float(np.median(recent_values))  # keep MyPy happy.
         self.recent_values.append(median)
         return median
 
@@ -390,12 +390,14 @@ class HvacCsc(salobj.BaseCsc):
                 await command_group_coro.set_write(**event_data)
 
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
+        self.log.debug("Done.")
 
     def _handle_mqtt_messages(self) -> None:
+        self.log.debug("Handling MQTT messages.")
         while not len(self.mqtt_client.msgs) == 0:
             msg = self.mqtt_client.msgs.popleft()
             topic_and_item = msg.topic
-            payload = msg.payload
+            payload = json.loads(msg.payload)
 
             topic, item = self.xml.extract_topic_and_item(topic_and_item)
             topic = re.sub(r"PISO([1-9])", r"PISO0\1", topic)
@@ -410,19 +412,17 @@ class HvacCsc(salobj.BaseCsc):
 
             if topic in self.hvac_state:
                 item_state = self.hvac_state[topic][item]
-                value = payload
-                if payload not in [
-                    b"Automatico",
-                    b"Encendido$20Manual",
-                    b"Apagado$20Manual",
-                ]:
-                    value = json.loads(payload)
-                else:
-                    value = True
+                if payload in [
+                    "Automatico",
+                    "Encendido$20Manual",
+                    "Apagado$20Manual",
+                ] or (isinstance(payload, str) and "AUTOMATICO" in payload):
+                    payload = True
 
-                item_state.recent_values.append(value)
+                item_state.recent_values.append(payload)
             else:
                 self.log.warn(f"Ignoring unknown topic {topic!r}.")
+        self.log.debug("Done.")
 
     async def publish_telemetry(self) -> None:
         self._handle_mqtt_messages()

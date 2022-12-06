@@ -222,7 +222,7 @@ class HvacCsc(salobj.BaseCsc):
             self.log.info(
                 f"Connecting MqttClient to host {self.host} and port {self.port}."
             )
-            self.mqtt_client = MqttClient(host=self.host, port=self.port)
+            self.mqtt_client = MqttClient(host=self.host, port=self.port, log=self.log)
 
         try:
             await self.mqtt_client.connect()

@@ -6,6 +6,19 @@
 Version History
 ###############
 
+v0.9.2
+======
+
+* Update pre-commit dependencies.
+* Capture MqttClient logs to EFD now as well.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 3.1
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 11.0
+
 v0.9.1
 ======
 

@@ -398,6 +398,7 @@ class HvacCsc(salobj.BaseCsc):
             msg = self.mqtt_client.msgs.popleft()
             topic_and_item = msg.topic
             payload = json.loads(msg.payload)
+            self.log.debug(f"{topic_and_item=!s} -> {payload=!s}")
 
             topic, item = self.xml.extract_topic_and_item(topic_and_item)
             topic = re.sub(r"PISO([1-9])", r"PISO0\1", topic)
@@ -435,8 +436,10 @@ class HvacCsc(salobj.BaseCsc):
                 await asyncio.sleep(HVAC_STATE_TRACK_PERIOD)
         except asyncio.CancelledError:
             # Normal exit
+            self.log.exception("CancelledError but this was expected.")
             pass
         except Exception as e:
+            self.log.exception("Exception and this was unexpected.")
             await self.fault(
                 -1, "Error publishing telemetry.", traceback.format_exception(e)
             )

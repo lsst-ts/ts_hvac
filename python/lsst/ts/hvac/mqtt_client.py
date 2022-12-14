@@ -42,14 +42,14 @@ class MqttClient:
         The port of the MQTT service.
     """
 
-    def __init__(self, host: str, port: int) -> None:
-        self.log = logging.getLogger("MqttClient")
+    def __init__(self, host: str, port: int, log: logging.Logger) -> None:
+        self.log = log.getChild(type(self).__name__)
         self.host = host
         self.port = port
         self.client = mqtt.Client()
         self.msgs: deque = deque()
         self.connected = False
-        self.log.info("MqttClient constructed")
+        self.log.debug("MqttClient constructed.")
 
     async def connect(self) -> None:
         """Connect the client to the MQTT server."""
@@ -59,14 +59,14 @@ class MqttClient:
         self.client.loop_start()
         self.client.subscribe(LSST_GENERAL_TOPIC)
         self.connected = True
-        self.log.info("Connected")
+        self.log.debug("Connected.")
 
     async def disconnect(self) -> None:
         """Disconnect the client from the MQTT server."""
         self.client.loop_stop()
         self.client.disconnect()
         self.connected = False
-        self.log.info("Disconnected")
+        self.log.debug("Disconnected.")
 
     def on_message(
         self, client: mqtt.Client, userdata: typing.Any, msg: mqtt.MQTTMessage

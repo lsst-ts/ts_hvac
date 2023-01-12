@@ -23,7 +23,6 @@ __all__ = ["HvacCsc", "run_hvac", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
 
 import asyncio
 import json
-import re
 import traceback
 import typing
 from types import SimpleNamespace
@@ -415,15 +414,6 @@ class HvacCsc(salobj.BaseCsc):
                     continue
 
             topic, item = self.xml.extract_topic_and_item(topic_and_item)
-            topic = re.sub(r"PISO([1-9])", r"PISO0\1", topic)
-            if topic == "LSST/PISO04/MANEJADORA/SBLANCA":
-                topic = "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA"
-            if topic == "LSST/PISO04/MANEJADORA/SLIMPIA":
-                topic = "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA"
-            if item == "SET_POINT_COOLING":
-                item = "SETPOINT_COOLING"
-            if item == "SET_POINT_HEATING":
-                item = "SETPOINT_HEATING"
 
             if topic in self.hvac_state:
                 item_state = self.hvac_state[topic][item]
@@ -432,6 +422,7 @@ class HvacCsc(salobj.BaseCsc):
                     "Encendido$20Manual",
                     "Apagado$20Manual",
                 ] or (isinstance(payload, str) and "AUTOMATICO" in payload):
+                    self.log.debug(f"Translating {payload=!s} to True.")
                     payload = True
 
                 item_state.recent_values.append(payload)

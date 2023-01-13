@@ -407,7 +407,7 @@ class HvacCsc(salobj.BaseCsc):
                 try:
                     payload = json.loads(msg.payload)
                 except json.decoder.JSONDecodeError:
-                    self.log.error(
+                    self.log.exception(
                         f"Exception decoding topic {msg.topic} "
                         f"payload {msg.payload}. Continuing."
                     )

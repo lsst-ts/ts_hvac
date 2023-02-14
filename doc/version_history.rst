@@ -6,6 +6,19 @@
 Version History
 ###############
 
+v0.9.4
+======
+
+* Update pre-commit hook versions.
+* Remove `pip install` step since the dependencies were added to ts-develop.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 3.1
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 11.0
+
 v0.9.3
 ======
 

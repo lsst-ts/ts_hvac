@@ -19,13 +19,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import enum
 import re
 import typing
 
-from lsst.ts.hvac.enums import SPANISH_TO_ENGLISH_DICTIONARY, HvacTopic
+from lsst.ts.hvac.enums import (
+    SPANISH_TO_ENGLISH_DICTIONARY,
+    DynaleneDescription,
+    HvacTopic,
+)
 from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
+from lsst.ts.idl.enums.HVAC import (
+    DEVICE_GROUPS,
+    DeviceId,
+    DynaleneSafetyState,
+    DynaleneState,
+)
 from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"
@@ -75,6 +85,11 @@ events_root.addprevious(
     )
 )
 
+# These topics are marked as telemetry in the CSV file due to limitations when
+# the file was created that came up when the Dynalene topics were added. These
+# topics are events really.
+EVENT_TOPICS = {"dynaleneP05": ("dynState", "dynSafeties")}
+
 xml = MqttInfoReader()
 
 
@@ -93,11 +108,16 @@ def _translate_item(item: str) -> str:
         A string containing a crude English translation of the Spanish words.
 
     """
-    translated_item = re.sub(r"([A-Z])", lambda m: " " + m.group(1), item).upper()
-    for key in SPANISH_TO_ENGLISH_DICTIONARY.keys():
-        translated_item = re.sub(
-            rf"{key}", rf"{SPANISH_TO_ENGLISH_DICTIONARY[key]}", translated_item
-        )
+    if item[:3] == "dyn":
+        translated_item = DynaleneDescription[item].value
+    else:
+        # Perform a crude translation of Spanish into English. This code can be
+        # improved.
+        translated_item = re.sub(r"([A-Z])", lambda m: " " + m.group(1), item).upper()
+        for key in SPANISH_TO_ENGLISH_DICTIONARY.keys():
+            translated_item = re.sub(
+                rf"{key}", rf"{SPANISH_TO_ENGLISH_DICTIONARY[key]}", translated_item
+            )
     return translated_item
 
 
@@ -205,10 +225,17 @@ def _create_telemetry_xml() -> None:
         sub_system = etree.SubElement(st, "Subsystem")
         sub_system.text = "HVAC"
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
+        telemetry_topic_name = telemetry_topic
         efdb_topic.text = f"HVAC_{telemetry_topic}"
         description = etree.SubElement(st, "Description")
-        description.text = f"Telemetry for the {telemetry_topic} device."
+        if telemetry_topic == "dynaleneP05":
+            telemetry_topic_name = "Dynalene"
+        description.text = f"Telemetry for the {telemetry_topic_name} device."
         for telemetry_item in xml.telemetry_topics[telemetry_topic]:
+            if telemetry_topic in EVENT_TOPICS:
+                topic_items_that_should_be_events = EVENT_TOPICS[telemetry_topic]
+                if telemetry_item in topic_items_that_should_be_events:
+                    continue
             _create_item_element(
                 st,
                 telemetry_topic,
@@ -275,9 +302,12 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     _write_tree_to_file(command_root, command_filename)
 
 
-def _create_enumeration_element_from_dict(my_dict: DeviceId) -> None:
+def _create_enumeration_element_from_enum(my_enum: enum.Enum) -> None:
+    # The "type: ignore" on the next line is to keep MyPy happy. If omitted,
+    # it will complain that "Enum" has no attribute "__name__" or "__iter__".
     string = ",\n    ".join(
-        f"{my_dict.__name__}_{item.name}={item.value}" for item in my_dict
+        f"{my_enum.__name__}_{item.name}" f"={item.value}"  # type: ignore
+        for item in my_enum  # type: ignore
     )
     st = etree.SubElement(events_root, "Enumeration")
     st.text = f"\n    {string}\n  "
@@ -286,11 +316,13 @@ def _create_enumeration_element_from_dict(my_dict: DeviceId) -> None:
 def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     """Create the Events XML file."""
     # Create the Enumerations.
-    _create_enumeration_element_from_dict(DeviceId)
+    _create_enumeration_element_from_enum(DeviceId)
+    _create_enumeration_element_from_enum(DynaleneSafetyState)
+    _create_enumeration_element_from_enum(DynaleneState)
 
     # Create the events. In order to add events, simply add dictionary
     # elements as follows:
-    events_topics = {
+    event_topics = {
         "deviceEnabled": {
             "device_ids": {
                 "idl_type": "long long",
@@ -303,22 +335,22 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
         },
     }
 
-    for events_topic in events_topics:
+    for event_topic in event_topics:
         st = etree.SubElement(events_root, "SALEvent")
         sub_system = etree.SubElement(st, "Subsystem")
         sub_system.text = "HVAC"
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
-        efdb_topic.text = f"HVAC_logevent_{events_topic}"
+        efdb_topic.text = f"HVAC_logevent_{event_topic}"
         description = etree.SubElement(st, "Description")
         description.text = "Report which devices are enabled."
-        for events_item in events_topics[events_topic]:
+        for events_item in event_topics[event_topic]:
             _create_item_element(
                 st,
-                events_topic,
+                event_topic,
                 events_item,
-                events_topics[events_topic][events_item]["idl_type"],
-                events_topics[events_topic][events_item]["unit"],
-                events_topics[events_topic][events_item]["description"],
+                event_topics[event_topic][events_item]["idl_type"],
+                event_topics[event_topic][events_item]["unit"],
+                event_topics[event_topic][events_item]["description"],
                 1,
             )
 
@@ -348,6 +380,36 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
                 _translate_item(command_item),
                 1,
             )
+
+    # Add Dynalene State and Dynalene Safety State events.
+    dynalene_event_topics = {
+        "dynaleneState": (
+            "Dynalene state; a DynaleneState enum.",
+            "Dynalene State.",
+        ),
+        "dynaleneSafetyState": (
+            "Dynalene safety state; a DynaleneSafetyState enum.",
+            "Dynalene Safety State.",
+        ),
+    }
+    for event_topic in dynalene_event_topics:
+        item_description = dynalene_event_topics[event_topic][0]
+        st = etree.SubElement(events_root, "SALEvent")
+        sub_system = etree.SubElement(st, "Subsystem")
+        sub_system.text = "HVAC"
+        efdb_topic = etree.SubElement(st, "EFDB_Topic")
+        efdb_topic.text = f"HVAC_logevent_{event_topic}"
+        description = etree.SubElement(st, "Description")
+        description.text = dynalene_event_topics[event_topic][1]
+        _create_item_element(
+            st,
+            event_topic,
+            "state",
+            "int",
+            "unitless",
+            item_description,
+            1,
+        )
 
     _write_tree_to_file(events_root, events_filename)
 

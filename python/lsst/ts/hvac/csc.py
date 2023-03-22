@@ -33,6 +33,7 @@ from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 from . import __version__
 from .enums import (
+    EVENT_TOPIC_DICT,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
     CommandItem,
@@ -396,7 +397,7 @@ class HvacCsc(salobj.BaseCsc):
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
         self.log.debug("Done.")
 
-    def _handle_mqtt_messages(self) -> None:
+    async def _handle_mqtt_messages(self) -> None:
         self.log.debug("Handling MQTT messages.")
         while not len(self.mqtt_client.msgs) == 0:
             msg = self.mqtt_client.msgs.popleft()
@@ -415,6 +416,14 @@ class HvacCsc(salobj.BaseCsc):
 
             topic, item = self.xml.extract_topic_and_item(topic_and_item)
 
+            # Some Dynalene topics need to be emitted as events rather than as
+            # telemetry. This next if statement takes care of that.
+            if topic_and_item in EVENT_TOPIC_DICT:
+                event_name = EVENT_TOPIC_DICT[topic_and_item]["event"]
+                event = getattr(self, event_name)
+                await event.set_write(state=payload)
+                continue
+
             if topic in self.hvac_state:
                 item_state = self.hvac_state[topic][item]
                 if payload in [
@@ -431,7 +440,7 @@ class HvacCsc(salobj.BaseCsc):
         self.log.debug("Done.")
 
     async def publish_telemetry(self) -> None:
-        self._handle_mqtt_messages()
+        await self._handle_mqtt_messages()
         await self._compute_statistics_and_send_telemetry()
 
     async def _publish_telemetry_regularly(self) -> None:

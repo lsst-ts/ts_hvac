@@ -67,9 +67,7 @@ names = [
 DATA_DIR = pathlib.Path(__file__).resolve().parents[0] / "data"
 
 INPUT_DIR = DATA_DIR / "input"
-dat_control_csv_filename = (
-    INPUT_DIR / "Direccionamiento_Lsst_Final_JSON_one_sheet_rev2021_rev8.csv"
-)
+dat_control_csv_filename = INPUT_DIR / "Direccionamiento_RubinObservatory.csv"
 
 
 class MqttInfoReader:
@@ -128,11 +126,15 @@ class MqttInfoReader:
             "-": "unitless",
             "": "unitless",
             "°C": "deg_C",
+            " °C": "deg_C",
             "bar": "bar",
             "%": "%",
             "hr": "h",
             "%RH": "%",
             "m3/h": "m3/h",
+            "LPM": "l/min",
+            "PSI": "Pa",
+            "KW": "kW",
         }[unit_string]
 
     def _parse_limits(
@@ -163,7 +165,8 @@ class MqttInfoReader:
         upper_limit: int | float = DEFAULT_UPPER_LIMIT
 
         match = re.match(
-            r"^(-?\d+)(/| a |% a |°C a | bar a |%RH a )(-?\d+)(%|°C| bar| hr|%RH)?$",
+            r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a | LPM a | PSI a | KW a )(-?\d+)"
+            r"( ?%| ?°C| bar| hr|%RH| LPM| PSI| KW)?$",
             limits_string,
         )
         if match:

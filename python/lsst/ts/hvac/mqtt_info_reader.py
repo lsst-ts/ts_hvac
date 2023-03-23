@@ -38,6 +38,7 @@ from .enums import (
     TelemetryItem,
     TopicType,
 )
+from .utils import bar_to_pa, psi_to_pa
 
 # The default lower limit
 DEFAULT_LOWER_LIMIT = -9999
@@ -126,8 +127,7 @@ class MqttInfoReader:
             "-": "unitless",
             "": "unitless",
             "°C": "deg_C",
-            " °C": "deg_C",
-            "bar": "bar",
+            "bar": "Pa",
             "%": "%",
             "hr": "h",
             "%RH": "%",
@@ -135,7 +135,7 @@ class MqttInfoReader:
             "LPM": "l/min",
             "PSI": "Pa",
             "KW": "kW",
-        }[unit_string]
+        }[unit_string.strip()]
 
     def _parse_limits(
         self, limits_string: str
@@ -186,6 +186,14 @@ class MqttInfoReader:
             pass
         else:
             raise ValueError(f"Couldn't match limits_string {limits_string}")
+
+        # Convert non-standard units to standard ones.
+        if "bar" in limits_string:
+            lower_limit = round(bar_to_pa(lower_limit), 1)
+            upper_limit = round(bar_to_pa(upper_limit), 1)
+        if "PSI" in limits_string:
+            lower_limit = round(psi_to_pa(lower_limit), 1)
+            upper_limit = round(psi_to_pa(upper_limit), 1)
 
         return lower_limit, upper_limit
 
@@ -337,7 +345,6 @@ class MqttInfoReader:
         column in the CSV row.
         """
         csv_hvac_topics = {}
-        print(f"Loading CSV file {dat_control_csv_filename}")
         with open(dat_control_csv_filename) as csv_file:
             csv_reader = pandas.read_csv(
                 csv_file,

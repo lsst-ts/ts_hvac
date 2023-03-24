@@ -20,16 +20,20 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = [
+    "EVENT_TOPIC_DICT",
     "SPANISH_TO_ENGLISH_DICTIONARY",
     "TOPICS_ALWAYS_ENABLED",
     "TOPICS_WITHOUT_CONFIGURATION",
+    "CommandItem",
+    "DynaleneDescription",
     "HvacTopic",
     "TelemetryItem",
-    "CommandItem",
     "TopicType",
 ]
 
 from enum import Enum
+
+from lsst.ts.idl.enums.HVAC import DynaleneSafetyState, DynaleneState
 
 SPANISH_TO_ENGLISH_DICTIONARY = {
     "ACTIVO": "Active",
@@ -115,6 +119,7 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO01/BOMBA_AGUA_FRIA",
         "LSST/PISO01/GENERAL",
         "LSST/PISO01/VALVULA",
+        "LSST/PISO05/DYNALENE",
     )
 )
 
@@ -125,6 +130,7 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO01/GENERAL",
         "LSST/PISO01/VALVULA",
         "LSST/PISO01/VEA_01",
+        "LSST/PISO05/DYNALENE",
         "LSST/PISO05/VEA_01",
         "LSST/PISO05/VEA_08",
         "LSST/PISO05/VEA_09",
@@ -143,6 +149,19 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
     )
 )
 
+# These topics cannot be distinguished from telemetry topics in the CSV file,
+# so they get marked here that they should be emitted as events instead.
+EVENT_TOPIC_DICT = {
+    "LSST/PISO05/DYNALENE/DynaleneState": {
+        "event": "evt_dynaleneState",
+        "enum": DynaleneState,
+    },
+    "LSST/PISO05/DYNALENE/Safeties": {
+        "event": "evt_dynaleneSafetyState",
+        "enum": DynaleneSafetyState,
+    },
+}
+
 
 class HvacTopic(Enum):
     bombaAguaFriaP01 = "LSST/PISO01/BOMBA_AGUA_FRIA"
@@ -151,6 +170,7 @@ class HvacTopic(Enum):
     chiller03P01 = "LSST/PISO01/CHILLER_03"
     crack01P02 = "LSST/PISO02/CRACK01"
     crack02P02 = "LSST/PISO02/CRACK02"
+    dynaleneP05 = "LSST/PISO05/DYNALENE"
     fancoil01P02 = "LSST/PISO02/FANCOIL01"
     fancoil02P02 = "LSST/PISO02/FANCOIL02"
     fancoil03P02 = "LSST/PISO02/FANCOIL03"
@@ -207,6 +227,28 @@ class TelemetryItem(Enum):
     compresor03Funcionando = "COMPRESOR_03_FUNCIONANDO"
     compresor04Alarmado = "COMPRESOR_04_ALARMADO"
     compresor04Funcionando = "COMPRESOR_04_FUNCIONANDO"
+    dynCH01LS01 = "DCH01LS01"
+    dynCH01supFS01 = "DCH01supFS01"
+    dynCH01supPS11 = "DCH01supPS11"
+    dynCH01supTS05 = "DCH01supTS05"
+    dynCH02LS02 = "DCH02LS02"
+    dynCH02supFS02 = "DCH02supFS02"
+    dynCH02supPS13 = "DCH02supPS13"
+    dynCH02supTS07 = "DCH02supTS07"
+    dynSafeties = "Safeties"
+    dynState = "DynaleneState"
+    dynTAretPS04 = "DynTAretPS04"
+    dynTAretTS04 = "DynTAretTS04"
+    dynTAsupFS04 = "DynTAsupFS04"
+    dynTAsupPS03 = "DynTAsupPS03"
+    dynTAsupTS03 = "DynTAsupTS03"
+    dynTAtpd = "DynTAtpd"
+    dynTMAtpd = "DynTMAtpd"
+    dynTMAretPS02 = "DynTMAretPS02"
+    dynTMAretTS02 = "DynTMAretTS02"
+    dynTMAsupFS03 = "DynTMAsupFS03"
+    dynTMAsupPS01 = "DynTMAsupPS01"
+    dynTMAsupTS01 = "DynTMAsupTS01"
     estadoCalefactor = "ESTADO_CALEFACTOR"
     estadoDamper = "ESTADO_DAMPER"
     estadoFuncionamiento = "ESTADO_FUNCIONAMIENTO"
@@ -264,6 +306,33 @@ class TelemetryItem(Enum):
     temperaturaRetorno = "TEMPERATURA_RETORNO"
     temperaturaSala = "TEMPERATURA_SALA"
     valorConsigna = "VALOR_CONSIGNA"
+
+
+class DynaleneDescription(Enum):
+    """Descriptions for the Dynalene telemetry items."""
+
+    dynCH01LS01 = "Dynalene Tank Level on Chiller 01."
+    dynCH01supFS01 = "Dynalene Chiller 01 supply flowrate."
+    dynCH01supPS11 = "Dynalene Chiller 01 supply pressure."
+    dynCH01supTS05 = "Dynalene Chiller 01 supply temperature."
+    dynCH02LS02 = "Dynalene Tank Level on Chiller 02."
+    dynCH02supFS02 = "Dynalene Chiller 02 supply flowrate ."
+    dynCH02supPS13 = "Dynalene Chiller 02 supply pressure."
+    dynCH02supTS07 = "Dynalene Chiller 02 supply temperature."
+    dynSafeties = "Safety state."
+    dynState = "Dynalene state."
+    dynTAretPS04 = "Test Area Dynalene manifold supply pressure."
+    dynTAretTS04 = "Test Area Dynalene manifold return temperature."
+    dynTAsupFS04 = "Test Area Dynalene flowrate to L3 Manifold."
+    dynTAsupPS03 = "Test Area Dynalene manifold supply pressure."
+    dynTAsupTS03 = "Test Area Dynalene manifold supply temperature."
+    dynTAtpd = "Thermal Power Dissipation on L3 Manifold."
+    dynTMAtpd = "Thermal Power Dissipation on L6 Manifold."
+    dynTMAretPS02 = "TMA Dynalene manifold supply pressure."
+    dynTMAretTS02 = "TMA Dynalene manifold return temperature."
+    dynTMAsupFS03 = "TMA Dynalene flowrate to L6 Manifold."
+    dynTMAsupPS01 = "TMA Dynalene manifold supply pressure."
+    dynTMAsupTS01 = "TMA Dynalene manifold supply temperature."
 
 
 class CommandItem(Enum):

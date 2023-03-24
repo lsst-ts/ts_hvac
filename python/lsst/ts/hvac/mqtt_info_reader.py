@@ -38,6 +38,7 @@ from .enums import (
     TelemetryItem,
     TopicType,
 )
+from .utils import bar_to_pa, psi_to_pa
 
 # The default lower limit
 DEFAULT_LOWER_LIMIT = -9999
@@ -67,9 +68,7 @@ names = [
 DATA_DIR = pathlib.Path(__file__).resolve().parents[0] / "data"
 
 INPUT_DIR = DATA_DIR / "input"
-dat_control_csv_filename = (
-    INPUT_DIR / "Direccionamiento_Lsst_Final_JSON_one_sheet_rev2021_rev8.csv"
-)
+dat_control_csv_filename = INPUT_DIR / "Direccionamiento_RubinObservatory.csv"
 
 
 class MqttInfoReader:
@@ -128,12 +127,15 @@ class MqttInfoReader:
             "-": "unitless",
             "": "unitless",
             "°C": "deg_C",
-            "bar": "bar",
+            "bar": "Pa",
             "%": "%",
             "hr": "h",
             "%RH": "%",
             "m3/h": "m3/h",
-        }[unit_string]
+            "LPM": "l/min",
+            "PSI": "Pa",
+            "KW": "kW",
+        }[unit_string.strip()]
 
     def _parse_limits(
         self, limits_string: str
@@ -163,7 +165,8 @@ class MqttInfoReader:
         upper_limit: int | float = DEFAULT_UPPER_LIMIT
 
         match = re.match(
-            r"^(-?\d+)(/| a |% a |°C a | bar a |%RH a )(-?\d+)(%|°C| bar| hr|%RH)?$",
+            r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a | LPM a | PSI a | KW a )(-?\d+)"
+            r"( ?%| ?°C| bar| hr|%RH| LPM| PSI| KW)?$",
             limits_string,
         )
         if match:
@@ -183,6 +186,14 @@ class MqttInfoReader:
             pass
         else:
             raise ValueError(f"Couldn't match limits_string {limits_string}")
+
+        # Convert non-standard units to standard ones.
+        if "bar" in limits_string:
+            lower_limit = round(bar_to_pa(lower_limit), 1)
+            upper_limit = round(bar_to_pa(upper_limit), 1)
+        if "PSI" in limits_string:
+            lower_limit = round(psi_to_pa(lower_limit), 1)
+            upper_limit = round(psi_to_pa(upper_limit), 1)
 
         return lower_limit, upper_limit
 
@@ -334,7 +345,6 @@ class MqttInfoReader:
         column in the CSV row.
         """
         csv_hvac_topics = {}
-        print(f"Loading CSV file {dat_control_csv_filename}")
         with open(dat_control_csv_filename) as csv_file:
             csv_reader = pandas.read_csv(
                 csv_file,

@@ -20,7 +20,46 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-__all__ = ["to_camel_case"]
+__all__ = ["bar_to_pa", "psi_to_pa", "to_camel_case"]
+
+import astropy.units as u
+from astropy.units import imperial, misc
+
+
+def bar_to_pa(value: float) -> float:
+    """Convert a value in bar to a value in Pa.
+
+    Parameters
+    ----------
+    value: `float`
+        The value in bar.
+
+    Returns
+    -------
+    float
+        The value in Pa.
+    """
+    quantity_in_bar = value * misc.bar
+    quantity_in_pa = quantity_in_bar.to(u.Pa)
+    return quantity_in_pa.value
+
+
+def psi_to_pa(value: float) -> float:
+    """Convert a value in PSI to a value in Pa.
+
+    Parameters
+    ----------
+    value: `float`
+        The value in PSI.
+
+    Returns
+    -------
+    float
+        The value in Pa.
+    """
+    quantity_in_psi = value * imperial.psi
+    quantity_in_pa = quantity_in_psi.to(u.Pa)
+    return quantity_in_pa.value
 
 
 def to_camel_case(string: str, first_lower: bool = False) -> str:

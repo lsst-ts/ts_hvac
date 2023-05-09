@@ -25,3 +25,7 @@ ospl-info.log
 python/data/output/
 
 .idea/
+.pre-commit-config.yaml
+.flake8
+.isort.cfg
+.mypy.ini

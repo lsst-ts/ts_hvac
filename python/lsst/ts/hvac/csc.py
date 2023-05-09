@@ -440,6 +440,12 @@ class HvacCsc(salobj.BaseCsc):
 
             topic, item = self.xml.extract_topic_and_item(topic_and_item)
 
+            # DM-39103 Workaround for unknown or misspelled topic and item
+            # names.
+            if topic not in self.hvac_state or item not in self.hvac_state[topic]:
+                self.log.warning(f"Ignoring unknown {topic=} and {item=}.")
+                continue
+
             # Some Dynalene topics need to be emitted as events rather than as
             # telemetry. This next if statement takes care of that.
             if topic_and_item in EVENT_TOPIC_DICT:
@@ -448,25 +454,22 @@ class HvacCsc(salobj.BaseCsc):
                 await event.set_write(state=payload)
                 continue
 
-            if topic in self.hvac_state:
-                item_state = self.hvac_state[topic][item]
-                if payload in [
-                    "Automatico",
-                    "Encendido$20Manual",
-                    "Apagado$20Manual",
-                ] or (isinstance(payload, str) and "AUTOMATICO" in payload):
-                    self.log.debug(f"Translating {payload=!s} to True.")
-                    payload = True
-                if topic_and_item in TOPICS_WITH_DATA_IN_BAR:
-                    self.log.debug(f"Converting {topic_and_item} from bar to Pa.")
-                    payload = bar_to_pa(float(payload))
-                if topic_and_item in TOPICS_WITH_DATA_IN_PSI:
-                    self.log.debug(f"Converting {topic_and_item} from PSI to Pa.")
-                    payload = psi_to_pa(float(payload))
+            item_state = self.hvac_state[topic][item]
+            if payload in [
+                "Automatico",
+                "Encendido$20Manual",
+                "Apagado$20Manual",
+            ] or (isinstance(payload, str) and "AUTOMATICO" in payload):
+                self.log.debug(f"Translating {payload=!s} to True.")
+                payload = True
+            if topic_and_item in TOPICS_WITH_DATA_IN_BAR:
+                self.log.debug(f"Converting {topic_and_item} from bar to Pa.")
+                payload = bar_to_pa(float(payload))
+            if topic_and_item in TOPICS_WITH_DATA_IN_PSI:
+                self.log.debug(f"Converting {topic_and_item} from PSI to Pa.")
+                payload = psi_to_pa(float(payload))
 
-                item_state.recent_values.append(payload)
-            else:
-                self.log.warning(f"Ignoring unknown topic {topic!r}.")
+            item_state.recent_values.append(payload)
         self.log.debug("Done.")
 
     async def publish_telemetry(self) -> None:
@@ -506,7 +509,7 @@ class HvacCsc(salobj.BaseCsc):
             function_name = f"do_config{to_camel_case(command_group)}s"
             setattr(self, function_name, self._do_config)
 
-    def do_disableDevice(self, data: SimpleNamespace) -> None:
+    async def do_disableDevice(self, data: SimpleNamespace) -> None:
         """Disable the specified device.
 
         Parameters
@@ -516,7 +519,7 @@ class HvacCsc(salobj.BaseCsc):
         """
         self._set_enabled_state(data, False)
 
-    def do_enableDevice(self, data: SimpleNamespace) -> None:
+    async def do_enableDevice(self, data: SimpleNamespace) -> None:
         """Enable the specified device.
 
         Parameters
@@ -556,7 +559,7 @@ class HvacCsc(salobj.BaseCsc):
             #  a later point.
             pass
 
-    def _do_config(self, data: SimpleNamespace) -> None:
+    async def _do_config(self, data: SimpleNamespace) -> None:
         """Send an MQTT message to configure a system.
 
         Parameters

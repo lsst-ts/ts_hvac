@@ -509,7 +509,7 @@ class HvacCsc(salobj.BaseCsc):
             function_name = f"do_config{to_camel_case(command_group)}s"
             setattr(self, function_name, self._do_config)
 
-    def do_disableDevice(self, data: SimpleNamespace) -> None:
+    async def do_disableDevice(self, data: SimpleNamespace) -> None:
         """Disable the specified device.
 
         Parameters
@@ -519,7 +519,7 @@ class HvacCsc(salobj.BaseCsc):
         """
         self._set_enabled_state(data, False)
 
-    def do_enableDevice(self, data: SimpleNamespace) -> None:
+    async def do_enableDevice(self, data: SimpleNamespace) -> None:
         """Enable the specified device.
 
         Parameters
@@ -559,7 +559,7 @@ class HvacCsc(salobj.BaseCsc):
             #  a later point.
             pass
 
-    def _do_config(self, data: SimpleNamespace) -> None:
+    async def _do_config(self, data: SimpleNamespace) -> None:
         """Send an MQTT message to configure a system.
 
         Parameters

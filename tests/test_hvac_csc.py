@@ -36,6 +36,9 @@ from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
 
+# These topics don't report whether they are switched on or not.
+TOPICS_NOT_REPORT_SWITCHED_ON = frozenset(("generalP01", "dynaleneP05"))
+
 logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
 )
@@ -90,7 +93,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
     async def _verify_evt_deviceEnabled(self, subsystem: int) -> None:
         # Default mask indicating that the three devices that always are
         # enabled, are enabled.
-        device_mask = 0b111
+        device_mask = 0b1111
         device_id = DeviceId[subsystem]
         deviceId_index = self.csc.device_id_index[device_id]
         device_mask += 2**deviceId_index
@@ -110,8 +113,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         all_telemetry = await self._retrieve_all_telemetry()
         for name, telemetry in all_telemetry.items():
             topic = HvacTopic[name]
-            # This topic only publishes a temperature so we skip it here.
-            if name == "generalP01":
+            if name in TOPICS_NOT_REPORT_SWITCHED_ON:
                 continue
             if topic.value in TOPICS_ALWAYS_ENABLED or name == subsystem:
                 # This is the one subsystem we have enabled.
@@ -165,8 +167,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         all_telemetry = await self._retrieve_all_telemetry()
         for name, telemetry in all_telemetry.items():
             topic = HvacTopic[name]
-            # This topic only publishes a temperature so we skip it here.
-            if name == "generalP01":
+            if name in TOPICS_NOT_REPORT_SWITCHED_ON:
                 continue
             if topic.value in TOPICS_ALWAYS_ENABLED or name == subsystem:
                 # This is the one subsystem we have enabled.

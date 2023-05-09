@@ -6,6 +6,19 @@
 Version History
 ###############
 
+v0.10.0
+=======
+
+* Add Dynalene telemetry and events.
+* Convert all pressure telemetry values from bar or PSI to Pa.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 4.4
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 16.0
+
 v0.9.4
 ======
 

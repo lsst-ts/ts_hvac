@@ -33,6 +33,7 @@ from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
 
 from . import __version__
 from .enums import (
+    EVENT_TOPIC_DICT,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
     CommandItem,
@@ -42,7 +43,7 @@ from .enums import (
 from .mqtt_client import MqttClient
 from .mqtt_info_reader import MqttInfoReader
 from .simulator.sim_client import SimClient
-from .utils import to_camel_case
+from .utils import bar_to_pa, psi_to_pa, to_camel_case
 
 # The number of seconds to collect the state of the HVAC system for before the
 # median is reported via SAL telemetry.
@@ -62,6 +63,30 @@ TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
 STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON = {
     b"AUTOMATICO {ok} @ 10",
 }
+
+# For these topics, the data are in bar which need to be converted to Pa.
+TOPICS_WITH_DATA_IN_BAR = frozenset(
+    (
+        "LSST/PISO01/CHILLER_01/PRESION_BAJA_CTO1",
+        "LSST/PISO01/CHILLER_01/PRESION_BAJA_CTO2",
+        "LSST/PISO01/CHILLER_02/PRESION_BAJA_CTO1",
+        "LSST/PISO01/CHILLER_02/PRESION_BAJA_CTO2",
+        "LSST/PISO01/CHILLER_03/PRESION_BAJA_CTO1",
+        "LSST/PISO01/CHILLER_03/PRESION_BAJA_CTO2",
+    )
+)
+
+# For these topics, the data are in PSI which need to be converted to Pa.
+TOPICS_WITH_DATA_IN_PSI = frozenset(
+    (
+        "LSST/PISO05/DYNALENE/DynTMAsupPS01",
+        "LSST/PISO05/DYNALENE/DynTMAretPS02",
+        "LSST/PISO05/DYNALENE/DynTAsupPS03",
+        "LSST/PISO05/DYNALENE/DynTAretPS04",
+        "LSST/PISO05/DYNALENE/DCH01supPS11",
+        "LSST/PISO05/DYNALENE/DCH02supPS13",
+    )
+)
 
 
 def run_hvac() -> None:
@@ -396,7 +421,7 @@ class HvacCsc(salobj.BaseCsc):
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
         self.log.debug("Done.")
 
-    def _handle_mqtt_messages(self) -> None:
+    async def _handle_mqtt_messages(self) -> None:
         self.log.debug("Handling MQTT messages.")
         while not len(self.mqtt_client.msgs) == 0:
             msg = self.mqtt_client.msgs.popleft()
@@ -415,6 +440,14 @@ class HvacCsc(salobj.BaseCsc):
 
             topic, item = self.xml.extract_topic_and_item(topic_and_item)
 
+            # Some Dynalene topics need to be emitted as events rather than as
+            # telemetry. This next if statement takes care of that.
+            if topic_and_item in EVENT_TOPIC_DICT:
+                event_name = EVENT_TOPIC_DICT[topic_and_item]["event"]
+                event = getattr(self, event_name)
+                await event.set_write(state=payload)
+                continue
+
             if topic in self.hvac_state:
                 item_state = self.hvac_state[topic][item]
                 if payload in [
@@ -424,14 +457,20 @@ class HvacCsc(salobj.BaseCsc):
                 ] or (isinstance(payload, str) and "AUTOMATICO" in payload):
                     self.log.debug(f"Translating {payload=!s} to True.")
                     payload = True
+                if topic_and_item in TOPICS_WITH_DATA_IN_BAR:
+                    self.log.debug(f"Converting {topic_and_item} from bar to Pa.")
+                    payload = bar_to_pa(float(payload))
+                if topic_and_item in TOPICS_WITH_DATA_IN_PSI:
+                    self.log.debug(f"Converting {topic_and_item} from PSI to Pa.")
+                    payload = psi_to_pa(float(payload))
 
                 item_state.recent_values.append(payload)
             else:
-                self.log.warn(f"Ignoring unknown topic {topic!r}.")
+                self.log.warning(f"Ignoring unknown topic {topic!r}.")
         self.log.debug("Done.")
 
     async def publish_telemetry(self) -> None:
-        self._handle_mqtt_messages()
+        await self._handle_mqtt_messages()
         await self._compute_statistics_and_send_telemetry()
 
     async def _publish_telemetry_regularly(self) -> None:

@@ -6,6 +6,21 @@
 Version History
 ###############
 
+v0.11.0
+=======
+
+* Update HVAC CSV file with topics and items.
+* Adjust generation of HVAC XML files to updated CSV file.
+* Adjust simulator to updated CSV file.
+* Adjust CSC to updated CSV file.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 4.4
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 17.0
+
 v0.10.1
 =======
 

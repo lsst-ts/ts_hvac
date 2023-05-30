@@ -216,7 +216,14 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
             if var["topic_type"] == "READ":
                 if var["idl_type"] == "boolean":
                     expected_state[variable] = True
-                    if "ALARM" in variable:
+                    if "ALARM" in variable or (
+                        variable.startswith("dyn")
+                        and (
+                            variable.endswith("ON")
+                            or variable.endswith("Warning")
+                            or variable.endswith("LevelAlarm")
+                        )
+                    ):
                         expected_state[variable] = False
                 elif var["idl_type"] == "float":
                     lower_limit, upper_limit = var["limits"]

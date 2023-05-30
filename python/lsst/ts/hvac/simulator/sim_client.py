@@ -123,7 +123,7 @@ class SimClient:
         ValueError
             In case a topic doesn't exist.
         """
-        self.log.debug(f"Recevied message on topic {topic} with payload {payload}")
+        self.log.debug(f"Publishing message on topic {topic} with payload {payload}")
         topic, command = self.xml.extract_topic_and_item(topic)
         if command == "COMANDO_ENCENDIDO_LSST":
             self._handle_enable_command(topic, json.loads(payload))
@@ -198,18 +198,30 @@ class SimClient:
             limits = self.hvac_topics[hvac_topic]["limits"]
             value = None
             if hvac_topic in EVENT_TOPIC_DICT:
-                # Some Dynalene topics need to be emitted as events rather than
-                # as telemetry and therefore should emit an int value from the
-                # corresponding enum.
-                enum = EVENT_TOPIC_DICT[hvac_topic]["enum"]
-                value = random.choice(list(enum))
+                # Some Dynalene topics need to be emitted as events instead of
+                # telemetry. Some have an enum value, others a boolean value.
+                if EVENT_TOPIC_DICT[hvac_topic]["type"] == "enum":
+                    enum = EVENT_TOPIC_DICT[hvac_topic]["enum"]
+                    value = random.choice(list(enum))
+                else:
+                    value = True
+                    # Make sure that no alarm bells start ringing. The Dynalene
+                    # alarms need special treatment.
+                    if "ALARM" in variable or (
+                        variable.startswith("dyn")
+                        and (
+                            variable.endswith("ON")
+                            or variable.endswith("Warning")
+                            or variable.endswith("LevelAlarm")
+                        )
+                    ):
+                        value = False
             elif topic_enabled:
                 if hvac_topic in self.configuration_values.keys():
                     value = self.configuration_values[hvac_topic]
                 elif topic_type == "READ":
                     if idl_type == "boolean":
                         value = True
-
                         # Making sure that no alarm bells start ringing.
                         if "ALARM" in variable:
                             value = False

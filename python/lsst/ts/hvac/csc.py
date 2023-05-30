@@ -29,10 +29,11 @@ from types import SimpleNamespace
 
 import numpy as np
 from lsst.ts import salobj, utils
-from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
+from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId, DynaleneTankLevel
 
 from . import __version__
 from .enums import (
+    DYNALENE_EVENT_GROUP_DICT,
     EVENT_TOPIC_DICT,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
@@ -425,7 +426,7 @@ class HvacCsc(salobj.BaseCsc):
         self.log.debug("Handling MQTT messages.")
         while not len(self.mqtt_client.msgs) == 0:
             msg = self.mqtt_client.msgs.popleft()
-            topic_and_item = msg.topic
+            topic_and_item: str = msg.topic
             if msg.payload in STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON:
                 payload = msg.payload.decode("utf-8")
             else:
@@ -445,6 +446,54 @@ class HvacCsc(salobj.BaseCsc):
             if topic not in self.hvac_state or item not in self.hvac_state[topic]:
                 self.log.warning(f"Ignoring unknown {topic=} and {item=}.")
                 continue
+
+            # Some Dynalene event topics need to be grouped together, which is
+            # what these next lines do.
+            for dynEventGrp in DYNALENE_EVENT_GROUP_DICT:
+                if topic_and_item.endswith(dynEventGrp):
+                    # First set the correct event group. See EVENT_TOPIC_DICT
+                    # for the event groups.
+                    topic_and_item = topic_and_item.replace(
+                        dynEventGrp,
+                        DYNALENE_EVENT_GROUP_DICT[dynEventGrp],
+                    )
+
+                    # Then set the correct payload value.
+                    # There are two types of events in three groups. In all
+                    # cases all MQTT topics in the group are received and each
+                    # one is converted to a generic alarm. Only one of these
+                    # MQTT topics is received at a time but eventually all MQTT
+                    # topics in a group are recevied. In the code only the
+                    # cases where the payload needs to be changed are
+                    # considered, since the others are evident.
+
+                    # The first type has one MQTT topic that ends in "ON" and
+                    # one in "OFF". There are two groups of these events and
+                    # for them the following applies:
+                    # * If ON==True and OFF==False, the alarm state is True.
+                    # * If ON==False and OFF==True, the alarm state is False.
+                    # It is not verifed that if one is True, the other is
+                    # False.
+                    if dynEventGrp.endswith("OFF") or dynEventGrp.endswith("ON"):
+                        # The net result is negating the payload of the "OFF"
+                        # MQTT topic.
+                        if dynEventGrp.endswith("OFF") and payload is False:
+                            payload = True
+                        elif dynEventGrp.endswith("OFF") and payload is True:
+                            payload = False
+
+                    # The second type has three MQTT topics, one for each alarm
+                    # level of OK, Warning and Alarm. At a given time only one
+                    # of the three should be True and the other two False. This
+                    # is not verified.
+                    else:
+                        if dynEventGrp.endswith("OK") and payload is True:
+                            payload = DynaleneTankLevel.OK.value
+                        elif dynEventGrp.endswith("Warning") and payload is True:
+                            payload = DynaleneTankLevel.Warning.value
+                        else:
+                            payload = DynaleneTankLevel.Alarm.value
+                    break
 
             # Some Dynalene topics need to be emitted as events rather than as
             # telemetry. This next if statement takes care of that.

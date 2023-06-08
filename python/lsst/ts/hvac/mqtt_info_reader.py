@@ -32,6 +32,7 @@ import typing
 import pandas
 
 from .enums import (
+    DYNALENE_EVENT_GROUP_DICT,
     TOPICS_ALWAYS_ENABLED,
     CommandItem,
     HvacTopic,
@@ -224,6 +225,12 @@ class MqttInfoReader:
         """
         # This throws a ValueError in case no forward slash is found.
         topic, item = topic_and_item.rsplit("/", 1)
+        # Treat the Dynelane Safety topics in a special way.
+        if topic == "LSST/PISO05/DYNALENE/Safeties":
+            topic = "LSST/PISO05/DYNALENE"
+        # Some Dynalene event items need to be grouped together.
+        if item in DYNALENE_EVENT_GROUP_DICT:
+            item = DYNALENE_EVENT_GROUP_DICT[item]
         return topic, item
 
     def _generic_collect_topics_and_items(

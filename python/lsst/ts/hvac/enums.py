@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = [
+    "DYNALENE_EVENT_GROUP_DICT",
     "EVENT_TOPIC_DICT",
     "SPANISH_TO_ENGLISH_DICTIONARY",
     "TOPICS_ALWAYS_ENABLED",
@@ -33,7 +34,7 @@ __all__ = [
 
 from enum import Enum
 
-from lsst.ts.idl.enums.HVAC import DynaleneSafetyState, DynaleneState
+from lsst.ts.idl.enums.HVAC import DynaleneState, DynaleneTankLevel
 
 SPANISH_TO_ENGLISH_DICTIONARY = {
     "ACTIVO": "Active",
@@ -149,19 +150,6 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
     )
 )
 
-# These topics cannot be distinguished from telemetry topics in the CSV file,
-# so they get marked here that they should be emitted as events instead.
-EVENT_TOPIC_DICT = {
-    "LSST/PISO05/DYNALENE/DynaleneState": {
-        "event": "evt_dynaleneState",
-        "enum": DynaleneState,
-    },
-    "LSST/PISO05/DYNALENE/Safeties": {
-        "event": "evt_dynaleneSafetyState",
-        "enum": DynaleneSafetyState,
-    },
-}
-
 
 class HvacTopic(Enum):
     bombaAguaFriaP01 = "LSST/PISO01/BOMBA_AGUA_FRIA"
@@ -235,8 +223,20 @@ class TelemetryItem(Enum):
     dynCH02supFS02 = "DCH02supFS02"
     dynCH02supPS13 = "DCH02supPS13"
     dynCH02supTS07 = "DCH02supTS07"
+    dynMainGridAlarm = "DynMainGridAlarm"
+    dynMainGridAlarmCMD = "DynMainGridAlarmCMD"
+    dynMainGridFailureFlag = "DynMainGridFailureFlag"
     dynSafeties = "Safeties"
+    dynSafetyResetFlag = "DynSafetyResetFlag"
     dynState = "DynaleneState"
+    dynTAalarm = "DynTAalarm"
+    dynTAalarmCMD = "DynTAalarmCMD"
+    dynTAalarmMonitor = "DynTAalarmMonitor"
+    dynTankLevel = "DynTankLevel"
+    dynTankLevelAlarmCMD = "DynTankLevelAlarmCMD"
+    dynTMAalarm = "DynTMAalarm"
+    dynTMAalarmCMD = "DynTMAalarmCMD"
+    dynTMAalarmMonitor = "DynTMAalarmMonitor"
     dynTAretPS04 = "DynTAretPS04"
     dynTAretTS04 = "DynTAretTS04"
     dynTAsupFS04 = "DynTAsupFS04"
@@ -319,8 +319,24 @@ class DynaleneDescription(Enum):
     dynCH02supFS02 = "Dynalene Chiller 02 supply flowrate ."
     dynCH02supPS13 = "Dynalene Chiller 02 supply pressure."
     dynCH02supTS07 = "Dynalene Chiller 02 supply temperature."
-    dynSafeties = "Safety state."
-    dynState = "Dynalene state."
+    # This next value is available in XML 16 but not before or after.
+    dynSafeties = "Dynalene Safety State."
+
+    # These next values are available from XML 17 on.
+    dynMainGridAlarm = "Dynalene Main Grid Alarm State."
+    dynMainGridAlarmCMD = "Dynalene Main Grid Alarm Command State."
+    dynMainGridFailureFlag = "Dynalene Main Grid Failure Flag State."
+    dynSafetyResetFlag = "Dynalene Safety Reset Flag State."
+    dynTAalarm = "Dynalene TA Alarm State."
+    dynTAalarmCMD = "Dynalene TA Alarm Command State."
+    dynTAalarmMonitor = "Dynalene TA Alarm Monitor State."
+    dynTankLevel = "Dynalene Tank Level Alarm State."
+    dynTankLevelAlarmCMD = "Dynalene Tank Level Alarm Command State."
+    dynTMAalarm = "Dynalene TMA Alarm State."
+    dynTMAalarmCMD = "Dynalene TMA Alarm Command State."
+    dynTMAalarmMonitor = "Dynalene TMA Alarm Monitor State."
+
+    dynState = "Dynalene State."
     dynTAretPS04 = "Test Area Dynalene manifold supply pressure."
     dynTAretTS04 = "Test Area Dynalene manifold return temperature."
     dynTAsupFS04 = "Test Area Dynalene flowrate to L3 Manifold."
@@ -333,6 +349,17 @@ class DynaleneDescription(Enum):
     dynTMAsupFS03 = "TMA Dynalene flowrate to L6 Manifold."
     dynTMAsupPS01 = "TMA Dynalene manifold supply pressure."
     dynTMAsupTS01 = "TMA Dynalene manifold supply temperature."
+
+
+DYNALENE_EVENT_GROUP_DICT = {
+    "DynTAalarmMonitorOFF": "DynTAalarmMonitor",
+    "DynTAalarmMonitorON": "DynTAalarmMonitor",
+    "DynTMAalarmMonitorOFF": "DynTMAalarmMonitor",
+    "DynTMAalarmMonitorON": "DynTMAalarmMonitor",
+    "DynTankLevelAlarm": "DynTankLevel",
+    "DynTankLevelWarning": "DynTankLevel",
+    "DynTankLevelOK": "DynTankLevel",
+}
 
 
 class CommandItem(Enum):
@@ -357,3 +384,51 @@ class CommandItem(Enum):
 class TopicType(str, Enum):
     READ = "READ"
     WRITE = "WRITE"
+
+
+# These topics cannot be distinguished from telemetry topics in the CSV file,
+# so they get marked here to be emitted as events instead.
+EVENT_TOPIC_DICT = {
+    "LSST/PISO05/DYNALENE/DynaleneState": {
+        "topic": HvacTopic.dynaleneP05.name,
+        "item": DynaleneDescription.dynState.name.replace("dyn", "dynalene"),
+        "event": f"evt_{DynaleneDescription.dynState.name.replace('dyn', 'dynalene')}",
+        "type": "enum",
+        "enum": DynaleneState,
+        "item_description": f"{DynaleneDescription.dynState.value.replace(' State.', ' state;')} "
+        f"a DynaleneState enum.",
+        "evt_description": f"{DynaleneDescription.dynState.value}",
+    },
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
+        "topic": HvacTopic.dynaleneP05.name,
+        "item": DynaleneDescription.dynTankLevel.name.replace("dyn", "dynalene"),
+        "event": f"evt_{DynaleneDescription.dynTankLevel.name.replace('dyn', 'dynalene')}",
+        "type": "enum",
+        "enum": DynaleneTankLevel,
+        "item_description": f"{DynaleneDescription.dynTankLevel.value.replace(' State.', ' state;')} "
+        f"a DynaleneTankLevel enum.",
+        "evt_description": f"{DynaleneDescription.dynTankLevel.value}",
+    },
+} | {
+    f"LSST/PISO05/DYNALENE/Safeties/{dyn_enum.name.replace('dyn', 'Dyn')}": {
+        "topic": HvacTopic.dynaleneP05.name,
+        "item": dyn_enum.name,
+        "event": f"evt_{dyn_enum.name}",
+        "type": "boolean",
+        "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
+        "evt_description": f"{dyn_enum.value}",
+    }
+    for dyn_enum in [
+        DynaleneDescription.dynTMAalarm,
+        DynaleneDescription.dynTMAalarmCMD,
+        DynaleneDescription.dynTMAalarmMonitor,
+        DynaleneDescription.dynTAalarm,
+        DynaleneDescription.dynTAalarmCMD,
+        DynaleneDescription.dynTAalarmMonitor,
+        DynaleneDescription.dynMainGridAlarm,
+        DynaleneDescription.dynMainGridAlarmCMD,
+        DynaleneDescription.dynMainGridFailureFlag,
+        DynaleneDescription.dynTankLevelAlarmCMD,
+        DynaleneDescription.dynSafetyResetFlag,
+    ]
+}

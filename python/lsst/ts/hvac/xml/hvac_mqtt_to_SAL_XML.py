@@ -24,6 +24,7 @@ import re
 import typing
 
 from lsst.ts.hvac.enums import (
+    EVENT_TOPIC_DICT,
     SPANISH_TO_ENGLISH_DICTIONARY,
     DynaleneDescription,
     HvacTopic,
@@ -33,8 +34,8 @@ from lsst.ts.hvac.utils import to_camel_case
 from lsst.ts.idl.enums.HVAC import (
     DEVICE_GROUPS,
     DeviceId,
-    DynaleneSafetyState,
     DynaleneState,
+    DynaleneTankLevel,
 )
 from lxml import etree
 
@@ -84,11 +85,6 @@ events_root.addprevious(
         + "href='http://lsst-sal.tuc.noao.edu/schema/SALEventSet.xsl'",
     )
 )
-
-# These topics are marked as telemetry in the CSV file due to limitations when
-# the file was created that came up when the Dynalene topics were added. These
-# topics are events really.
-EVENT_TOPICS = {"dynaleneP05": ("dynState", "dynSafeties")}
 
 xml = MqttInfoReader()
 
@@ -220,6 +216,11 @@ def collect_unique_command_items_per_group(
 
 def _create_telemetry_xml() -> None:
     """Create the Telemetry XML file."""
+    # Create a list of topic items that should be events.
+    topic_items_that_should_be_events = [
+        val["item"].replace("dynalene", "dyn")
+        for topic, val in EVENT_TOPIC_DICT.items()
+    ]
     for telemetry_topic in xml.telemetry_topics:
         st = etree.SubElement(telemetry_root, "SALTelemetry")
         sub_system = etree.SubElement(st, "Subsystem")
@@ -232,10 +233,12 @@ def _create_telemetry_xml() -> None:
             telemetry_topic_name = "Dynalene"
         description.text = f"Telemetry for the {telemetry_topic_name} device."
         for telemetry_item in xml.telemetry_topics[telemetry_topic]:
-            if telemetry_topic in EVENT_TOPICS:
-                topic_items_that_should_be_events = EVENT_TOPICS[telemetry_topic]
-                if telemetry_item in topic_items_that_should_be_events:
-                    continue
+            # Skip if a topic item should be an event.
+            if (
+                telemetry_item in topic_items_that_should_be_events
+                or telemetry_item == "dynSafeties"
+            ):
+                continue
             _create_item_element(
                 st,
                 telemetry_topic,
@@ -317,8 +320,8 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     """Create the Events XML file."""
     # Create the Enumerations.
     _create_enumeration_element_from_enum(DeviceId)
-    _create_enumeration_element_from_enum(DynaleneSafetyState)
     _create_enumeration_element_from_enum(DynaleneState)
+    _create_enumeration_element_from_enum(DynaleneTankLevel)
 
     # Create the events. In order to add events, simply add dictionary
     # elements as follows:
@@ -382,32 +385,23 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             )
 
     # Add Dynalene State and Dynalene Safety State events.
-    dynalene_event_topics = {
-        "dynaleneState": (
-            "Dynalene state; a DynaleneState enum.",
-            "Dynalene State.",
-        ),
-        "dynaleneSafetyState": (
-            "Dynalene safety state; a DynaleneSafetyState enum.",
-            "Dynalene Safety State.",
-        ),
-    }
-    for event_topic in dynalene_event_topics:
-        item_description = dynalene_event_topics[event_topic][0]
+    for event_topic in EVENT_TOPIC_DICT:
         st = etree.SubElement(events_root, "SALEvent")
         sub_system = etree.SubElement(st, "Subsystem")
         sub_system.text = "HVAC"
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
-        efdb_topic.text = f"HVAC_logevent_{event_topic}"
+        efdb_topic.text = f"HVAC_logevent_{EVENT_TOPIC_DICT[event_topic]['item']}"
         description = etree.SubElement(st, "Description")
-        description.text = dynalene_event_topics[event_topic][1]
+        description.text = EVENT_TOPIC_DICT[event_topic]["evt_description"]
         _create_item_element(
             st,
             event_topic,
             "state",
-            "int",
+            "int"
+            if EVENT_TOPIC_DICT[event_topic]["type"] == "enum"
+            else EVENT_TOPIC_DICT[event_topic]["type"],
             "unitless",
-            item_description,
+            EVENT_TOPIC_DICT[event_topic]["item_description"],
             1,
         )
 

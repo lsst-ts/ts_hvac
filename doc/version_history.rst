@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.11.1
+=======
+
+* Fix telemetry data type.
+
+Requires:
+
+* ts_salobj 7.0
+* ts_idl 4.4
+* ts_utils 1.0
+* IDL files for HVAC from ts_xml 17.0
+
 v0.11.0
 =======
 

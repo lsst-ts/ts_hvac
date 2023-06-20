@@ -500,7 +500,7 @@ class HvacCsc(salobj.BaseCsc):
             if topic_and_item in EVENT_TOPIC_DICT:
                 event_name = EVENT_TOPIC_DICT[topic_and_item]["event"]
                 event = getattr(self, event_name)
-                await event.set_write(state=payload)
+                await event.set_write(state=int(payload))
                 continue
 
             item_state = self.hvac_state[topic][item]

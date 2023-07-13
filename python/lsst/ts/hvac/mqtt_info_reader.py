@@ -225,8 +225,11 @@ class MqttInfoReader:
         """
         # This throws a ValueError in case no forward slash is found.
         topic, item = topic_and_item.rsplit("/", 1)
-        # Treat the Dynelane Safety topics in a special way.
-        if topic == "LSST/PISO05/DYNALENE/Safeties":
+        # Treat the Dynelane Safety and Status topics in a special way.
+        if (
+            topic == "LSST/PISO05/DYNALENE/Safeties"
+            or topic == "LSST/PISO05/DYNALENE/Status"
+        ):
             topic = "LSST/PISO05/DYNALENE"
         # Some Dynalene event items need to be grouped together.
         if item in DYNALENE_EVENT_GROUP_DICT:
@@ -308,7 +311,7 @@ class MqttInfoReader:
                         }
                         break
                 else:
-                    raise ValueError(
+                    print(
                         f"TelemetryItem '{item}' for {topic} not found in {topic_and_item}"
                     )
 

@@ -206,7 +206,8 @@ def collect_unique_command_items_per_group(
     # Remove "comandoEncendido" command item
     for command_group in unique_command_items_per_group:
         command_items = unique_command_items_per_group[command_group]
-        del command_items["comandoEncendido"]
+        if "comandoEncendido" in command_items:
+            del command_items["comandoEncendido"]
     # Remove empty command_groups
     unique_command_items_per_group = {
         group: items for group, items in unique_command_items_per_group.items() if items

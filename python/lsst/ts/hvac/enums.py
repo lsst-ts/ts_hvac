@@ -306,6 +306,27 @@ class TelemetryItem(Enum):
     temperaturaRetorno = "TEMPERATURA_RETORNO"
     temperaturaSala = "TEMPERATURA_SALA"
     valorConsigna = "VALOR_CONSIGNA"
+    dynCH01retCGLYpres = "DynCH01retCGLYpres"
+    dynCH01retCGLYtemp = "DynCH01retCGLYtemp"
+    dynCH01supCGLYpres = "DynCH01supCGLYpres"
+    dynCH01supCGLYtemp = "DynCH01supCGLYtemp"
+    dynCH02retGPGLYpres = "DynCH02retGPGLYpres"
+    dynCH02retGPGLYtemp = "DynCH02retGPGLYtemp"
+    dynCH02supGPGLYpres = "DynCH02supGPGLYpres"
+    dynCH02supGPGLYtemp = "DynCH02supGPGLYtemp"
+    dynCH1CGLYtpd = "DynCH1CGLYtpd"
+    dynCH1supCGLYflow = "DynCH1supCGLYflow"
+    dynCH2GPGLYtpd = "DynCH2GPGLYtpd"
+    dynCH2supGPGLYflow = "DynCH2supGPGLYflow"
+    dynTMAcmv01pos = "DynTMAcmv01pos"
+    dynTMAcmv02pos = "DynTMAcmv02pos"
+    dynSysFault = "DynSysFault"
+    dynSysOK = "DynSysOK"
+    dynSysWarning = "DynSysWarning"
+    dynAmbientDeltaModeStatus = "DynAmbientDeltaModeStatus"
+    dynExhaustAirBackupModeStatus = "DynExhaustAirBackupModeStatus"
+    dynRemoteLocalModeStatus = "DynRemoteLocalModeStatus"
+    exhAirAvrgTemp = "ExhAirAvrgTemp"
 
 
 class DynaleneDescription(Enum):
@@ -349,6 +370,27 @@ class DynaleneDescription(Enum):
     dynTMAsupFS03 = "TMA Dynalene flowrate to L6 Manifold."
     dynTMAsupPS01 = "TMA Dynalene manifold supply pressure."
     dynTMAsupTS01 = "TMA Dynalene manifold supply temperature."
+    dynCH01retCGLYpres = "Dynalene return glycol channel 1 pressure."
+    dynCH01retCGLYtemp = "Dynalene return glycol channel 1 temperature."
+    dynCH01supCGLYpres = "Dynalene supplied glycol channel 1 pressure."
+    dynCH01supCGLYtemp = "Dynalene supplied glycol channel 1 temperature."
+    dynCH02retGPGLYpres = "Dynalene return glycol channel 2 pressure."
+    dynCH02retGPGLYtemp = "Dynalene return glycol channel 2 temperature."
+    dynCH02supGPGLYpres = "Dynalene supplied glycol channel 2 pressure."
+    dynCH02supGPGLYtemp = "Dynalene supplied glycol channel 2 temperature."
+    dynCH1CGLYtpd = "Dynalene glycol channel 1 tpd."
+    dynCH1supCGLYflow = "Dynalene supplied glycol channel 1 flow."
+    dynCH2GPGLYtpd = "Dynalene glycol channel 2 tpd."
+    dynCH2supGPGLYflow = "Dynalene supplied glycol channel 2 flow."
+    dynTMAcmv01pos = "TMA Dynalene cmv01 position."
+    dynTMAcmv02pos = "TMA Dynalene cmv02 position."
+    dynSysFault = "Dynalene System Fault."
+    dynSysOK = "Dynalene System OK."
+    dynSysWarning = "Dynalene System Warning."
+    dynAmbientDeltaModeStatus = "Dynalene Ambient Delta Mode Status."
+    dynExhaustAirBackupModeStatus = "Dynalene Exhaust Air Backup Mode Status."
+    dynRemoteLocalModeStatus = "Dynalene Remote Local Mode Status."
+    exhAirAvrgTemp = "Exhaust Air Average Temp."
 
 
 DYNALENE_EVENT_GROUP_DICT = {
@@ -388,47 +430,68 @@ class TopicType(str, Enum):
 
 # These topics cannot be distinguished from telemetry topics in the CSV file,
 # so they get marked here to be emitted as events instead.
-EVENT_TOPIC_DICT = {
-    "LSST/PISO05/DYNALENE/DynaleneState": {
-        "topic": HvacTopic.dynaleneP05.name,
-        "item": DynaleneDescription.dynState.name.replace("dyn", "dynalene"),
-        "event": f"evt_{DynaleneDescription.dynState.name.replace('dyn', 'dynalene')}",
-        "type": "enum",
-        "enum": DynaleneState,
-        "item_description": f"{DynaleneDescription.dynState.value.replace(' State.', ' state;')} "
-        f"a DynaleneState enum.",
-        "evt_description": f"{DynaleneDescription.dynState.value}",
-    },
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
-        "topic": HvacTopic.dynaleneP05.name,
-        "item": DynaleneDescription.dynTankLevel.name.replace("dyn", "dynalene"),
-        "event": f"evt_{DynaleneDescription.dynTankLevel.name.replace('dyn', 'dynalene')}",
-        "type": "enum",
-        "enum": DynaleneTankLevel,
-        "item_description": f"{DynaleneDescription.dynTankLevel.value.replace(' State.', ' state;')} "
-        f"a DynaleneTankLevel enum.",
-        "evt_description": f"{DynaleneDescription.dynTankLevel.value}",
-    },
-} | {
-    f"LSST/PISO05/DYNALENE/Safeties/{dyn_enum.name.replace('dyn', 'Dyn')}": {
-        "topic": HvacTopic.dynaleneP05.name,
-        "item": dyn_enum.name,
-        "event": f"evt_{dyn_enum.name}",
-        "type": "boolean",
-        "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
-        "evt_description": f"{dyn_enum.value}",
+EVENT_TOPIC_DICT = (
+    {
+        "LSST/PISO05/DYNALENE/DynaleneState": {
+            "topic": HvacTopic.dynaleneP05.name,
+            "item": DynaleneDescription.dynState.name.replace("dyn", "dynalene"),
+            "event": f"evt_{DynaleneDescription.dynState.name.replace('dyn', 'dynalene')}",
+            "type": "enum",
+            "enum": DynaleneState,
+            "item_description": f"{DynaleneDescription.dynState.value.replace(' State.', ' state;')} "
+            f"a DynaleneState enum.",
+            "evt_description": f"{DynaleneDescription.dynState.value}",
+        },
+        "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
+            "topic": HvacTopic.dynaleneP05.name,
+            "item": DynaleneDescription.dynTankLevel.name.replace("dyn", "dynalene"),
+            "event": f"evt_{DynaleneDescription.dynTankLevel.name.replace('dyn', 'dynalene')}",
+            "type": "enum",
+            "enum": DynaleneTankLevel,
+            "item_description": f"{DynaleneDescription.dynTankLevel.value.replace(' State.', ' state;')} "
+            f"a DynaleneTankLevel enum.",
+            "evt_description": f"{DynaleneDescription.dynTankLevel.value}",
+        },
     }
-    for dyn_enum in [
-        DynaleneDescription.dynTMAalarm,
-        DynaleneDescription.dynTMAalarmCMD,
-        DynaleneDescription.dynTMAalarmMonitor,
-        DynaleneDescription.dynTAalarm,
-        DynaleneDescription.dynTAalarmCMD,
-        DynaleneDescription.dynTAalarmMonitor,
-        DynaleneDescription.dynMainGridAlarm,
-        DynaleneDescription.dynMainGridAlarmCMD,
-        DynaleneDescription.dynMainGridFailureFlag,
-        DynaleneDescription.dynTankLevelAlarmCMD,
-        DynaleneDescription.dynSafetyResetFlag,
-    ]
-}
+    | {
+        f"LSST/PISO05/DYNALENE/Safeties/{dyn_enum.name.replace('dyn', 'Dyn')}": {
+            "topic": HvacTopic.dynaleneP05.name,
+            "item": dyn_enum.name,
+            "event": f"evt_{dyn_enum.name}",
+            "type": "boolean",
+            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
+            "evt_description": f"{dyn_enum.value}",
+        }
+        for dyn_enum in [
+            DynaleneDescription.dynTMAalarm,
+            DynaleneDescription.dynTMAalarmCMD,
+            DynaleneDescription.dynTMAalarmMonitor,
+            DynaleneDescription.dynTAalarm,
+            DynaleneDescription.dynTAalarmCMD,
+            DynaleneDescription.dynTAalarmMonitor,
+            DynaleneDescription.dynMainGridAlarm,
+            DynaleneDescription.dynMainGridAlarmCMD,
+            DynaleneDescription.dynMainGridFailureFlag,
+            DynaleneDescription.dynTankLevelAlarmCMD,
+            DynaleneDescription.dynSafetyResetFlag,
+            DynaleneDescription.dynSysFault,
+            DynaleneDescription.dynSysWarning,
+            DynaleneDescription.dynSysOK,
+        ]
+    }
+    | {
+        f"LSST/PISO05/DYNALENE/Status/{dyn_enum.name.replace('dyn', 'Dyn')}": {
+            "topic": HvacTopic.dynaleneP05.name,
+            "item": dyn_enum.name,
+            "event": f"evt_{dyn_enum.name}",
+            "type": "boolean",
+            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
+            "evt_description": f"{dyn_enum.value}",
+        }
+        for dyn_enum in [
+            DynaleneDescription.dynRemoteLocalModeStatus,
+            DynaleneDescription.dynAmbientDeltaModeStatus,
+            DynaleneDescription.dynExhaustAirBackupModeStatus,
+        ]
+    }
+)

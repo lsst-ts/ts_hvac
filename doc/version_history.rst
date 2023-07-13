@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.12.0
+=======
+
+* Add more Dynalene events and telemetry.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.4
+* ts_utils 1
+* IDL files for HVAC from ts_xml 18.0
+
 v0.11.1
 =======
 

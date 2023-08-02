@@ -22,7 +22,7 @@ ospl-error.log
 ospl-info.log
 
 # Created when regenerating the XML files
-python/data/output/
+python/lsst/ts/hvac/data/output/
 
 .idea/
 .pre-commit-config.yaml

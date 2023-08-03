@@ -392,6 +392,16 @@ class DynaleneDescription(Enum):
     dynRemoteLocalModeStatus = "Dynalene Remote Local Mode Status."
     exhAirAvrgTemp = "Exhaust Air Average Temp."
 
+    # Dynalene commands.
+    dynTmaRemoteSP = "TMA setpoint."
+    dynTaRemoteSP = "TA setpoint."
+    dynExtAirRemoteSP = "Exit air setpoint."
+    dynCH1PressRemoteSP = "Chiller 1 pressure setpoint."
+    dynCH2PressRemoteSP = "Chiller 2 pressure setpoint."
+    dynSystOnOff = "Switch dynalene system on or off."
+    dynTelemetryEnable = "Enable telemetry."
+    dynPierFansOnOff = "Switch the pier fans on or off."
+
 
 DYNALENE_EVENT_GROUP_DICT = {
     "DynTAalarmMonitorOFF": "DynTAalarmMonitor",
@@ -407,6 +417,14 @@ DYNALENE_EVENT_GROUP_DICT = {
 class CommandItem(Enum):
     comandoEncendido = "COMANDO_ENCENDIDO_LSST"
     aperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO_LSST"
+    dynCH1PressRemoteSP = "CH1PressRemoteSP"
+    dynCH2PressRemoteSP = "CH2PressRemoteSP"
+    dynSystOnOff = "DynSystOnOff"
+    dynTaRemoteSP = "DynTaRemoteSP"
+    dynTmaRemoteSP = "DynTmaRemoteSP"
+    dynExtAirRemoteSP = "ExtAirRemoteSP"
+    dynPierFansOnOff = "PierFansOnOff"
+    dynTelemetryEnable = "TelemetryEnable"
     setpointActivo = "SETPOINT_ACTIVO_LSST"
     setpointCooling = "SETPOINT_COOLING_LSST"
     setpointCoolingDay = "SETPOINT_COOLING_DAY_LSST"

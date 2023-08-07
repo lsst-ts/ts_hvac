@@ -73,6 +73,14 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     "configManejadoras",
                     "disableDevice",
                     "enableDevice",
+                    "dynCH1PressRemoteSP",
+                    "dynCH2PressRemoteSP",
+                    "dynSystOnOff",
+                    "dynTaRemoteSP",
+                    "dynTmaRemoteSP",
+                    "dynExtAirRemoteSP",
+                    "dynPierFansOnOff",
+                    "dynTelemetryEnable",
                 ),
             )
 
@@ -265,3 +273,18 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     await self.remote.cmd_disableDevice.set_start(
                         **enable_data, timeout=STD_TIMEOUT
                     )
+
+    async def test_dynalene_set_chiller1_pressure_setpoint(self) -> None:
+        async with self.make_csc(
+            initial_state=salobj.State.STANDBY,
+            simulation_mode=1,
+        ):
+            await salobj.set_summary_state(
+                remote=self.remote, state=salobj.State.ENABLED
+            )
+            value = 5.0
+            await self.remote.cmd_dynCH1PressRemoteSP.set_start(
+                dynCH1PressRemoteSP=value, timeout=STD_TIMEOUT
+            )
+            evt = await self.remote.evt_dynCH1PressRemoteSP.next(flush=False)
+            assert evt.dynCH1PressRemoteSP == value

@@ -6,6 +6,19 @@
 Version History
 ###############
 
+v0.13.0
+=======
+
+* Remove XML files that get generated.
+* Add Dynalene commands and related events.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* IDL files for HVAC from ts_xml 19.0
+
 v0.12.0
 =======
 

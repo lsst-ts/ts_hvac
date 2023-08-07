@@ -191,7 +191,7 @@ def collect_unique_command_items_per_group(
             None,
         )
         if not command_group:
-            raise ValueError(f"Unknown command topic {command_topic}")
+            raise ValueError(f"Unknown command topic {command_topic=}")
         if command_group not in command_items_per_group:
             command_items_per_group[command_group] = []
         command_items_per_group[command_group].append(command_topics[command_topic])
@@ -283,6 +283,9 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     # Create configuration commands for the devices grouped by similar
     # functionality
     for command_group in command_items_per_group:
+        if command_group == "DYNALENE":
+            # Dynalene commands are treated separately below.
+            continue
         description_text = f"Configure a {command_group} device."
         st = _create_command_sub_element(
             f"config{to_camel_case(command_group)}s", description_text
@@ -303,6 +306,22 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
                 _translate_item(command_item),
                 1,
             )
+
+    # Add the Dynalene commands.
+    dynalene_group = command_items_per_group["DYNALENE"]
+    for dynalene_item in dynalene_group:
+        description_text = f"Set Dynalene {dynalene_item}."
+        st = _create_command_sub_element(f"{dynalene_item}", description_text)
+        _create_item_element(
+            st,
+            dynalene_item,
+            dynalene_item,
+            dynalene_group[dynalene_item]["idl_type"],
+            dynalene_group[dynalene_item]["unit"],
+            _translate_item(dynalene_item),
+            1,
+        )
+
     _write_tree_to_file(command_root, command_filename)
 
 
@@ -359,6 +378,9 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             )
 
     for command_group in command_items_per_group:
+        if command_group == "DYNALENE":
+            # Dynalene events are treated separately below.
+            continue
         st = etree.SubElement(events_root, "SALEvent")
         sub_system = etree.SubElement(st, "Subsystem")
         sub_system.text = "HVAC"
@@ -384,6 +406,26 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
                 _translate_item(command_item),
                 1,
             )
+
+    # Add Dynalene command events.
+    dynalene_group = command_items_per_group["DYNALENE"]
+    for dynalene_item in dynalene_group:
+        st = etree.SubElement(events_root, "SALEvent")
+        sub_system = etree.SubElement(st, "Subsystem")
+        sub_system.text = "HVAC"
+        efdb_topic = etree.SubElement(st, "EFDB_Topic")
+        efdb_topic.text = f"HVAC_logevent_{dynalene_item}"
+        description = etree.SubElement(st, "Description")
+        description.text = f"Set Dynalene {dynalene_item}."
+        _create_item_element(
+            st,
+            dynalene_item,
+            dynalene_item,
+            dynalene_group[dynalene_item]["idl_type"],
+            dynalene_group[dynalene_item]["unit"],
+            _translate_item(dynalene_item),
+            1,
+        )
 
     # Add Dynalene State and Dynalene Safety State events.
     for event_topic in EVENT_TOPIC_DICT:

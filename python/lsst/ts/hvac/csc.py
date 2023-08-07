@@ -90,6 +90,14 @@ TOPICS_WITH_DATA_IN_PSI = frozenset(
 )
 
 
+# Dynalene command items.
+DYNALENE_COMMAND_ITEMS = {
+    command_item.name
+    for command_item in CommandItem
+    if command_item.name.startswith("dyn")
+}
+
+
 def run_hvac() -> None:
     asyncio.run(HvacCsc.amain(index=None))
 
@@ -204,6 +212,7 @@ class HvacCsc(salobj.BaseCsc):
         start_telemetry_publishing: bool = True,
     ) -> None:
         self._add_config_commands()
+        self._add_dynalene_commands()
         super().__init__(
             name="HVAC",
             index=0,
@@ -555,8 +564,15 @@ class HvacCsc(salobj.BaseCsc):
         )
         # This adds the do_configFoos functions.
         for command_group in command_groups:
+            if command_group == "DYNALENE":
+                continue
             function_name = f"do_config{to_camel_case(command_group)}s"
             setattr(self, function_name, self._do_config)
+
+    def _add_dynalene_commands(self) -> None:
+        for command in DYNALENE_COMMAND_ITEMS:
+            function_name = f"do_{command}"
+            setattr(self, function_name, self._do_dynalene_command)
 
     async def do_disableDevice(self, data: SimpleNamespace) -> None:
         """Disable the specified device.
@@ -636,6 +652,27 @@ class HvacCsc(salobj.BaseCsc):
                     topic.value + "/" + command_item.value,
                     json.dumps(getattr(data, command_item.name)),
                 )
+        else:
+            # TODO: DM-28028: Handling of was_published == False will come at
+            #  a later point.
+            pass
+
+    async def _do_dynalene_command(self, data: SimpleNamespace) -> None:
+        self.assert_enabled()
+        data_dict = data.get_vars() if hasattr(data, "get_vars") else vars(data)
+        command_item = [dci for dci in DYNALENE_COMMAND_ITEMS if dci in data_dict][0]
+        topic = DEVICE_GROUPS["DYNALENE"][0] + "/" + CommandItem[command_item].value
+        value = getattr(data, command_item)
+        was_published = self.mqtt_client.publish_mqtt_message(
+            topic,
+            json.dumps(value),
+        )
+
+        if was_published:
+            log_event = getattr(self, f"evt_{command_item}")
+            for data_item in data_dict:
+                setattr(log_event.data, data_item, getattr(data, data_item))
+            await log_event.set_write()
         else:
             # TODO: DM-28028: Handling of was_published == False will come at
             #  a later point.

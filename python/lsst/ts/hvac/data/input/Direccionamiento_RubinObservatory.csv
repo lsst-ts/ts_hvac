@@ -711,5 +711,13 @@ PISO 5;DYNALENE;DynTMAsupTS01;LSST/PISO05/DYNALENE/DynTMAsupTS01;.;;ANALOG VALUE
 ;;DynRemoteLocalModeStatus_Bit0;LSST/PISO05/DYNALENE/Status/DynRemoteLocalModeStatus;.;;BINARY VALUE;READ ;TRUE (O) FALSE;true o false;-;OK;;;
 ;;DynAmbientDeltaModeStatus_Bit1;LSST/PISO05/DYNALENE/Status/DynAmbientDeltaModeStatus;.;;BINARY VALUE;READ ;TRUE (O) FALSE;true o false;-;OK;;;
 ;;DynExhaustAirBackupModeStatus_Bit2;LSST/PISO05/DYNALENE/Status/DynExhaustAirBackupModeStatus;.;;BINARY VALUE;READ ;TRUE (O) FALSE;true o false;-;OK;;;
+;;DynTmaRemoteSP;LSST/PISO05/DYNALENE/DynTmaRemoteSP;;.;ANALOG VALUE;WRITE;10; -20°C a 50 °C;°C;OK;;;
+;;DynTaRemoteSP;LSST/PISO05/DYNALENE/DynTaRemoteSP;;.;ANALOG VALUE;WRITE;10; -20°C a 50 °C;°C;OK;;;
+;;ExtAirRemoteSP;LSST/PISO05/DYNALENE/ExtAirRemoteSP;;.;ANALOG VALUE;WRITE;10; -10°C a 50 °C;°C;OK;;;
+;;CH1PressRemoteSP;LSST/PISO05/DYNALENE/CH1PressRemoteSP;;.;ANALOG VALUE;WRITE;10; 0 PSI a 250 PSI;PSI;OK;;;
+;;CH2PressRemoteSP;LSST/PISO05/DYNALENE/CH2PressRemoteSP;;.;ANALOG VALUE;WRITE;10; 0 PSI a 250 PSI;PSI;OK;;;
+;;DynSystOnOff-Bit0;LSST/PISO05/DYNALENE/DynSystOnOff;;.;BINARY OUTPUT;WRITE;TRUE (O) FALSE;0/1;-;OK;;;
+;;TelemetryEnable-Bit1;LSST/PISO05/DYNALENE/TelemetryEnable;;.;BINARY OUTPUT;WRITE;TRUE (O) FALSE;0/1;-;OK;;;
+;;PierFansOnOff-Bit2;LSST/PISO05/DYNALENE/PierFansOnOff;;.;BINARY OUTPUT;WRITE;TRUE (O) FALSE;0/1;-;OK;;;
 ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;

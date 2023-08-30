@@ -29,10 +29,11 @@ from types import SimpleNamespace
 
 import numpy as np
 from lsst.ts import salobj, utils
-from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId, DynaleneTankLevel
+from lsst.ts.idl.enums.HVAC import DeviceId, DynaleneTankLevel
 
 from . import __version__
 from .enums import (
+    DEVICE_GROUPS,
     DYNALENE_EVENT_GROUP_DICT,
     EVENT_TOPIC_DICT,
     TOPICS_ALWAYS_ENABLED,

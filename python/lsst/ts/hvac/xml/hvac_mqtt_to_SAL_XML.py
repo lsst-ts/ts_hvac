@@ -24,6 +24,7 @@ import re
 import typing
 
 from lsst.ts.hvac.enums import (
+    DEVICE_GROUPS,
     EVENT_TOPIC_DICT,
     SPANISH_TO_ENGLISH_DICTIONARY,
     DynaleneDescription,
@@ -31,12 +32,7 @@ from lsst.ts.hvac.enums import (
 )
 from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.idl.enums.HVAC import (
-    DEVICE_GROUPS,
-    DeviceId,
-    DynaleneState,
-    DynaleneTankLevel,
-)
+from lsst.ts.idl.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
 from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"

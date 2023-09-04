@@ -27,12 +27,13 @@ import unittest
 import hvac_test_utils
 from lsst.ts import hvac, salobj
 from lsst.ts.hvac.enums import (
+    DEVICE_GROUPS,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
     HvacTopic,
 )
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.idl.enums.HVAC import DEVICE_GROUPS, DeviceId
+from lsst.ts.idl.enums.HVAC import DeviceId
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
 

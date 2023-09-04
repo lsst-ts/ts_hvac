@@ -20,12 +20,15 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 __all__ = [
+    "DEVICE_GROUPS",
+    "DEVICE_GROUP_IDS",
     "DYNALENE_EVENT_GROUP_DICT",
     "EVENT_TOPIC_DICT",
     "SPANISH_TO_ENGLISH_DICTIONARY",
     "TOPICS_ALWAYS_ENABLED",
     "TOPICS_WITHOUT_CONFIGURATION",
     "CommandItem",
+    "DeviceIndex",
     "DynaleneDescription",
     "HvacTopic",
     "TelemetryItem",
@@ -34,7 +37,7 @@ __all__ = [
 
 from enum import Enum
 
-from lsst.ts.idl.enums.HVAC import DynaleneState, DynaleneTankLevel
+from lsst.ts.idl.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
 
 SPANISH_TO_ENGLISH_DICTIONARY = {
     "ACTIVO": "Active",
@@ -513,3 +516,82 @@ EVENT_TOPIC_DICT = (
         ]
     }
 )
+
+# Dict of index: DeviceId, where index is the index of the device in DeviceId.
+# Used to understand the bits in the device_ids field of the deviceEnabled
+# event.
+DeviceIndex = {i: dev_id for i, dev_id in enumerate(DeviceId)}
+
+# Dict grouping MQTT topics representing HVAC devices together.
+DEVICE_GROUPS = {
+    "CHILLER": [
+        "LSST/PISO01/CHILLER_01",
+        "LSST/PISO01/CHILLER_02",
+        "LSST/PISO01/CHILLER_03",
+    ],
+    "CRACK": [
+        "LSST/PISO02/CRACK01",
+        "LSST/PISO02/CRACK02",
+    ],
+    "DYNALENE": ["LSST/PISO05/DYNALENE"],
+    "FANCOIL": [
+        "LSST/PISO02/FANCOIL01",
+        "LSST/PISO02/FANCOIL02",
+        "LSST/PISO02/FANCOIL03",
+        "LSST/PISO02/FANCOIL04",
+        "LSST/PISO02/FANCOIL05",
+        "LSST/PISO02/FANCOIL06",
+        "LSST/PISO02/FANCOIL07",
+        "LSST/PISO02/FANCOIL08",
+        "LSST/PISO02/FANCOIL09",
+        "LSST/PISO02/FANCOIL10",
+        "LSST/PISO02/FANCOIL11",
+        "LSST/PISO02/FANCOIL12",
+    ],
+    "MANEJADORA_LOWER": [
+        "LSST/PISO05/MANEJADORA/LOWER_01",
+        "LSST/PISO05/MANEJADORA/LOWER_02",
+        "LSST/PISO05/MANEJADORA/LOWER_03",
+        "LSST/PISO05/MANEJADORA/LOWER_04",
+    ],
+    "MANEJADORA": [
+        "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA",
+        "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA",
+    ],
+    "VEA": [
+        "LSST/PISO05/VEA_01",
+        "LSST/PISO05/VEA_08",
+        "LSST/PISO05/VEA_09",
+        "LSST/PISO05/VEA_10",
+        "LSST/PISO05/VEA_11",
+        "LSST/PISO05/VEA_12",
+        "LSST/PISO05/VEA_13",
+        "LSST/PISO05/VEA_14",
+        "LSST/PISO05/VEA_15",
+        "LSST/PISO05/VEA_16",
+        "LSST/PISO05/VEA_17",
+    ],
+    "SALA_MAQUINAS": [
+        "LSST/PISO01/VEA_01",
+        "LSST/PISO01/VIN_01",
+        "LSST/PISO01/VEC_01",
+    ],
+    "VEX": [
+        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
+        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+    ],
+}
+
+# Dict assigning an ID to each device group. This is used in dictionary
+# comprehension so it is better to keep it as a dict instead of an enum.
+DEVICE_GROUP_IDS = {
+    "CHILLER": 100,
+    "CRACK": 200,
+    "FANCOIL": 300,
+    "MANEJADORA_LOWER": 400,
+    "MANEJADORA": 500,
+    "VEA": 600,
+    "SALA_MAQUINAS": 700,
+    "VEX": 800,
+    "DYNALENE": 900,
+}

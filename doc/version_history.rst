@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.13.1
+=======
+
+* Move non-XML dicts to this project.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* IDL files for HVAC from ts_xml 19.0
+
 v0.13.0
 =======
 

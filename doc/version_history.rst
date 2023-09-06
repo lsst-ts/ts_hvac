@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.13.2
+=======
+
+* Remove XML 16 overrides.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* IDL files for HVAC from ts_xml 19.0
+
 v0.13.1
 =======
 

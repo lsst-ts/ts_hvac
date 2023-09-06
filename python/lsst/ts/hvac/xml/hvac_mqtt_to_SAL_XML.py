@@ -231,10 +231,7 @@ def _create_telemetry_xml() -> None:
         description.text = f"Telemetry for the {telemetry_topic_name} device."
         for telemetry_item in xml.telemetry_topics[telemetry_topic]:
             # Skip if a topic item should be an event.
-            if (
-                telemetry_item in topic_items_that_should_be_events
-                or telemetry_item == "dynSafeties"
-            ):
+            if telemetry_item in topic_items_that_should_be_events:
                 continue
             _create_item_element(
                 st,

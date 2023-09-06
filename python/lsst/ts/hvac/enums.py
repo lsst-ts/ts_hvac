@@ -229,7 +229,6 @@ class TelemetryItem(Enum):
     dynMainGridAlarm = "DynMainGridAlarm"
     dynMainGridAlarmCMD = "DynMainGridAlarmCMD"
     dynMainGridFailureFlag = "DynMainGridFailureFlag"
-    dynSafeties = "Safeties"
     dynSafetyResetFlag = "DynSafetyResetFlag"
     dynState = "DynaleneState"
     dynTAalarm = "DynTAalarm"
@@ -343,10 +342,6 @@ class DynaleneDescription(Enum):
     dynCH02supFS02 = "Dynalene Chiller 02 supply flowrate ."
     dynCH02supPS13 = "Dynalene Chiller 02 supply pressure."
     dynCH02supTS07 = "Dynalene Chiller 02 supply temperature."
-    # This next value is available in XML 16 but not before or after.
-    dynSafeties = "Dynalene Safety State."
-
-    # These next values are available from XML 17 on.
     dynMainGridAlarm = "Dynalene Main Grid Alarm State."
     dynMainGridAlarmCMD = "Dynalene Main Grid Alarm Command State."
     dynMainGridFailureFlag = "Dynalene Main Grid Failure Flag State."
@@ -359,7 +354,6 @@ class DynaleneDescription(Enum):
     dynTMAalarm = "Dynalene TMA Alarm State."
     dynTMAalarmCMD = "Dynalene TMA Alarm Command State."
     dynTMAalarmMonitor = "Dynalene TMA Alarm Monitor State."
-
     dynState = "Dynalene State."
     dynTAretPS04 = "Test Area Dynalene manifold supply pressure."
     dynTAretTS04 = "Test Area Dynalene manifold return temperature."

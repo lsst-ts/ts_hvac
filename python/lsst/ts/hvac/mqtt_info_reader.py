@@ -33,8 +33,10 @@ import pandas
 
 from .enums import (
     DYNALENE_EVENT_GROUP_DICT,
+    EVENT_TOPICS,
     TOPICS_ALWAYS_ENABLED,
     CommandItem,
+    EventItem,
     HvacTopic,
     TelemetryItem,
     TopicType,
@@ -108,6 +110,17 @@ class MqttInfoReader:
         #     }
         # }
         self.command_topics: dict[str, typing.Any] = {}
+        # This dict contains the general ts_xml event topics (retrieved by
+        # using the `HvacTopic` enum) as keys and a dictionary representing the
+        # ts_xml command items (retrieved by using the `eventItem` enum) as
+        # values. The structure is
+        # "HvacTopic" : {
+        #     "EventItem": {
+        #         "idl_type": idl_type,
+        #         "unit": unit,
+        #     }
+        # }
+        self.event_topics: dict[str, typing.Any] = {}
 
         self._collect_hvac_topics_and_items_from_csv()
 
@@ -288,7 +301,6 @@ class MqttInfoReader:
         The hvac_topics dictionary gets filled as well by this method.
 
         """
-        topic_found = False
         topic, item = self.extract_topic_and_item(topic_and_item)
 
         for hvac_topic in HvacTopic:
@@ -315,15 +327,10 @@ class MqttInfoReader:
                         f"TelemetryItem '{item}' for {topic} not found in {topic_and_item}"
                     )
 
-                topic_found = True
-                break
-        if not topic_found:
-            raise ValueError(
-                f"Topic {topic} in topic_and_item {topic_and_item} not found."
-            )
-
     def _collect_topics_and_items(self, topics: dict[str, typing.Any]) -> None:
         for topic_and_item in sorted(topics.keys()):
+            if topic_and_item in EVENT_TOPICS:
+                continue
             idl_type = topics[topic_and_item]["idl_type"]
             topic_type = topics[topic_and_item]["topic_type"]
             unit = topics[topic_and_item]["unit"]
@@ -348,6 +355,20 @@ class MqttInfoReader:
                     self.command_topics,
                     CommandItem,
                 )
+        for topic_and_item in EVENT_TOPICS:
+            idl_type = topics[topic_and_item]["idl_type"]
+            topic_type = topics[topic_and_item]["topic_type"]
+            unit = topics[topic_and_item]["unit"]
+            limits = topics[topic_and_item]["limits"]
+            self._generic_collect_topics_and_items(
+                topic_and_item,
+                topic_type,
+                idl_type,
+                unit,
+                limits,
+                self.event_topics,
+                EventItem,
+            )
 
     def _collect_hvac_topics_and_items_from_csv(self) -> None:
         """Loop over all rows in the CSV file and extracts either telemetry

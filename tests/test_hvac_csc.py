@@ -137,6 +137,17 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             else:
                 self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
 
+    async def _verify_event(self, subsystem: HvacTopic) -> None:
+        """Verify that an event has been sent for the specified HvacTopic.
+
+        No validation of the data in the event is done. If no event has been
+        emitted, this will timeout and it shouldn't for those subsystems for
+        which HVAC events exist.
+        """
+        event = getattr(self.remote, "evt_" + subsystem.name, None)
+        if event:
+            await event.next(flush=False, timeout=STD_TIMEOUT)
+
     async def test_enable_on_all_subsystems_one_by_one(self) -> None:
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
@@ -147,9 +158,8 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             )
             for topic in HvacTopic:
                 if topic.value not in TOPICS_ALWAYS_ENABLED:
-                    subsystem = topic.name
                     # Retrieve the DeviceId.
-                    device_id = DeviceId[subsystem]
+                    device_id = DeviceId[topic.name]
                     data = {"device_id": device_id}
                     # Enable the subsystem.
                     await self.remote.cmd_enableDevice.set_start(
@@ -160,9 +170,11 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     # Make sure that the CSC publishes the telemetry.
                     await self.csc.publish_telemetry()
                     # Check deviceEnabled event.
-                    await self._verify_evt_deviceEnabled(subsystem)
+                    await self._verify_evt_deviceEnabled(topic.name)
                     # Check all telemetry.
-                    await self._verify_telemetry(subsystem)
+                    await self._verify_telemetry(topic.name)
+                    # Check all events.
+                    await self._verify_event(topic)
 
                     # Disable the subsystem.
                     await self.remote.cmd_disableDevice.set_start(

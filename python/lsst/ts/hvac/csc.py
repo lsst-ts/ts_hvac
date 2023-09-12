@@ -39,6 +39,7 @@ from .enums import (
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
     CommandItem,
+    EventItem,
     HvacTopic,
     TelemetryItem,
 )
@@ -451,6 +452,17 @@ class HvacCsc(salobj.BaseCsc):
 
             topic, item = self.xml.extract_topic_and_item(topic_and_item)
 
+            # Prepare the HVAC event if the message applies to one.
+            event_items = [
+                event_item for event_item in EventItem if event_item.value == item
+            ]
+            if len(event_items) > 0:
+                hvac_topic = HvacTopic(topic)
+                event_item = event_items[0]
+                event = getattr(self, f"evt_{hvac_topic.name}")
+                setattr(event.data, event_item.name, payload)
+                continue
+
             # DM-39103 Workaround for unknown or misspelled topic and item
             # names.
             if topic not in self.hvac_state or item not in self.hvac_state[topic]:
@@ -529,6 +541,14 @@ class HvacCsc(salobj.BaseCsc):
                 payload = psi_to_pa(float(payload))
 
             item_state.recent_values.append(payload)
+
+        # Now send the events. SalObj will only really emit an event if the
+        # data has changed so this is a safe operation.
+        for hvac_topic in HvacTopic:
+            event = getattr(self, f"evt_{hvac_topic.name}", None)
+            if event:
+                await event.write()
+
         self.log.debug("Done.")
 
     async def publish_telemetry(self) -> None:

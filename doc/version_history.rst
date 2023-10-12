@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.14.0
+=======
+
+* Add HVAC events.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* IDL files for HVAC from ts_xml 20.0
+
 v0.13.2
 =======
 

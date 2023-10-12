@@ -113,6 +113,29 @@ def _translate_item(item: str) -> str:
     return translated_item
 
 
+def _split_event_description(item: str) -> str:
+    """Split a camelCase event description string into its components.
+
+    Parameters
+    ----------
+    item: `str`
+        A camelCase string containing an event description.
+
+    Returns
+    -------
+    split_item: `str`
+        A string containing the event description split into its items.
+
+    """
+    splitted_items = re.findall(
+        "[A-Z][a-z]+|[0-9A-Z]+(?=[A-Z][a-z])|[0-9A-Z]{2,}|[a-z0-9]{2,}|[a-zA-Z0-9]",
+        item,
+    )
+    splitted_item = " ".join(splitted_items)
+    splitted_item = splitted_item[0].upper() + splitted_item[1:]
+    return splitted_item
+
+
 def _create_item_element(
     parent: str,
     topic: str,
@@ -440,6 +463,25 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             EVENT_TOPIC_DICT[event_topic]["item_description"],
             1,
         )
+
+    for event_topic in xml.event_topics:
+        st = etree.SubElement(events_root, "SALEvent")
+        sub_system = etree.SubElement(st, "Subsystem")
+        sub_system.text = "HVAC"
+        efdb_topic = etree.SubElement(st, "EFDB_Topic")
+        efdb_topic.text = f"HVAC_logevent_{event_topic}"
+        description = etree.SubElement(st, "Description")
+        description.text = f"{event_topic[0].upper()}"
+        for event_item in xml.event_topics[event_topic]:
+            _create_item_element(
+                st,
+                event_topic,
+                event_item,
+                xml.event_topics[event_topic][event_item]["idl_type"],
+                xml.event_topics[event_topic][event_item]["unit"],
+                _split_event_description(event_item),
+                1,
+            )
 
     _write_tree_to_file(events_root, events_filename)
 

@@ -108,5 +108,6 @@ class MqttClient:
             "done via the HVAC software user interface."
         )
         return False
+        # Future improvement.
         # msg_info = self.client.publish(topic=topic, payload=payload)
         # return msg_info.is_published()

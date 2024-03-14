@@ -232,9 +232,8 @@ class SimClient:
                     else:
                         value = random.randint(10 * limits[0], 10 * limits[1]) / 10.0
             else:
-                if topic_type == "READ":
-                    if idl_type == "boolean":
-                        value = False
+                if topic_type == "READ" and idl_type == "boolean":
+                    value = False
 
             if value is not None:
                 msg = mqtt.MQTTMessage(topic=hvac_topic.encode())

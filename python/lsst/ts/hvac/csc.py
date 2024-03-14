@@ -362,17 +362,17 @@ class HvacCsc(salobj.BaseCsc):
 
         Returns
         -------
-        deviceId_index: `int`
+        device_id_index: `int`
             The index of the device in the `lsst.ts.idl.enums.HVAC.DeviceId`
             enum.
         enabled: `bool`
             Whether the device is enabled or not.
         """
         enabled = False
-        deviceId_index = 0
+        device_id_index = 0
         hvac_topic = HvacTopic(topic)
         device_id = DeviceId[hvac_topic.name]
-        deviceId_index = self.device_id_index[device_id]
+        device_id_index = self.device_id_index[device_id]
 
         item = "COMANDO_ENCENDIDO"
         if hvac_topic.name in TOPICS_WITHOUT_COMANDO_ENCENDIDO:
@@ -384,7 +384,7 @@ class HvacCsc(salobj.BaseCsc):
             if len(self.hvac_state[topic][item].recent_values) > 0:
                 enabled = self.hvac_state[topic][item].recent_values[-1]
 
-        return deviceId_index, enabled
+        return device_id_index, enabled
 
     async def _compute_statistics_and_send_telemetry(self) -> None:
         self.log.debug(
@@ -393,9 +393,9 @@ class HvacCsc(salobj.BaseCsc):
         )
         enabled_mask = 0b0
         for topic in self.hvac_state:
-            deviceId_index, enabled = self._get_topic_enabled_state(topic)
+            device_id_index, enabled = self._get_topic_enabled_state(topic)
             if enabled:
-                enabled_mask += 1 << deviceId_index
+                enabled_mask += 1 << device_id_index
             data: dict[str, float | bool] = {}
             for item in self.hvac_state[topic]:
                 info = self.hvac_state[topic][item]
@@ -411,31 +411,41 @@ class HvacCsc(salobj.BaseCsc):
                 await telemetry_method.set_write(**data)
             hvac_topic = HvacTopic(topic)
             device_id = DeviceId[hvac_topic.name]
-            if topic not in TOPICS_WITHOUT_CONFIGURATION and enabled:
-                command_group = [
-                    k for k, v in DEVICE_GROUPS.items() if hvac_topic.value in v
-                ][0]
-                command_group_coro = getattr(
-                    self, f"evt_{to_camel_case(command_group, True)}Configuration"
-                )
-                event_data = {"device_id": device_id}
-                command_topics = self.xml.command_topics[hvac_topic.name]
-                for command_topic in command_topics:
-                    # skip topics that are not reported
-                    if command_topic not in [
-                        "comandoEncendido",
-                        "setpointVentiladorMax",
-                        "setpointVentiladorMin",
-                    ]:
-                        event_data[command_topic] = data[command_topic]
-                await command_group_coro.set_write(**event_data)
+            await self.send_events(topic, enabled, hvac_topic, device_id, data)
 
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
         self.log.debug("Done.")
 
+    async def send_events(
+        self,
+        topic: str,
+        enabled: bool,
+        hvac_topic: HvacTopic,
+        device_id: DeviceId,
+        data: dict[str, float | bool],
+    ) -> None:
+        if topic not in TOPICS_WITHOUT_CONFIGURATION and enabled:
+            command_group = [
+                k for k, v in DEVICE_GROUPS.items() if hvac_topic.value in v
+            ][0]
+            command_group_coro = getattr(
+                self, f"evt_{to_camel_case(command_group, True)}Configuration"
+            )
+            event_data = {"device_id": device_id}
+            command_topics = self.xml.command_topics[hvac_topic.name]
+            for command_topic in command_topics:
+                # skip topics that are not reported
+                if command_topic not in [
+                    "comandoEncendido",
+                    "setpointVentiladorMax",
+                    "setpointVentiladorMin",
+                ]:
+                    event_data[command_topic] = data[command_topic]
+            await command_group_coro.set_write(**event_data)
+
     async def _handle_mqtt_messages(self) -> None:
         self.log.debug("Handling MQTT messages.")
-        while not len(self.mqtt_client.msgs) == 0:
+        while len(self.mqtt_client.msgs) != 0:
             msg = self.mqtt_client.msgs.popleft()
             topic_and_item: str = msg.topic
             if msg.payload in STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON:
@@ -471,13 +481,13 @@ class HvacCsc(salobj.BaseCsc):
 
             # Some Dynalene event topics need to be grouped together, which is
             # what these next lines do.
-            for dynEventGrp in DYNALENE_EVENT_GROUP_DICT:
-                if topic_and_item.endswith(dynEventGrp):
+            for dyn_event_grp in DYNALENE_EVENT_GROUP_DICT:
+                if topic_and_item.endswith(dyn_event_grp):
                     # First set the correct event group. See EVENT_TOPIC_DICT
                     # for the event groups.
                     topic_and_item = topic_and_item.replace(
-                        dynEventGrp,
-                        DYNALENE_EVENT_GROUP_DICT[dynEventGrp],
+                        dyn_event_grp,
+                        DYNALENE_EVENT_GROUP_DICT[dyn_event_grp],
                     )
 
                     # Then set the correct payload value.
@@ -496,12 +506,12 @@ class HvacCsc(salobj.BaseCsc):
                     # * If ON==False and OFF==True, the alarm state is False.
                     # It is not verifed that if one is True, the other is
                     # False.
-                    if dynEventGrp.endswith("OFF") or dynEventGrp.endswith("ON"):
+                    if dyn_event_grp.endswith("OFF") or dyn_event_grp.endswith("ON"):
                         # The net result is negating the payload of the "OFF"
                         # MQTT topic.
-                        if dynEventGrp.endswith("OFF") and payload is False:
+                        if dyn_event_grp.endswith("OFF") and payload is False:
                             payload = True
-                        elif dynEventGrp.endswith("OFF") and payload is True:
+                        elif dyn_event_grp.endswith("OFF") and payload is True:
                             payload = False
 
                     # The second type has three MQTT topics, one for each alarm
@@ -509,9 +519,9 @@ class HvacCsc(salobj.BaseCsc):
                     # of the three should be True and the other two False. This
                     # is not verified.
                     else:
-                        if dynEventGrp.endswith("OK") and payload is True:
+                        if dyn_event_grp.endswith("OK") and payload is True:
                             payload = DynaleneTankLevel.OK.value
-                        elif dynEventGrp.endswith("Warning") and payload is True:
+                        elif dyn_event_grp.endswith("Warning") and payload is True:
                             payload = DynaleneTankLevel.Warning.value
                         else:
                             payload = DynaleneTankLevel.Alarm.value
@@ -667,16 +677,16 @@ class HvacCsc(salobj.BaseCsc):
         for item in items:
             if item not in ["COMANDO_ENCENDIDO_LSST"]:
                 command_item = CommandItem(item)
-                was_published[
-                    command_item.name
-                ] = self.mqtt_client.publish_mqtt_message(
-                    topic.value + "/" + command_item.value,
-                    json.dumps(getattr(data, command_item.name)),
+                was_published[command_item.name] = (
+                    self.mqtt_client.publish_mqtt_message(
+                        topic.value + "/" + command_item.value,
+                        json.dumps(getattr(data, command_item.name)),
+                    )
                 )
-        else:
-            # TODO: DM-28028: Handling of was_published == False will come at
-            #  a later point.
-            pass
+                if not was_published:
+                    # TODO: DM-28028: Handling of was_published == False will
+                    #  come at a later point.
+                    pass
 
     async def _do_dynalene_command(self, data: SimpleNamespace) -> None:
         self.assert_enabled()

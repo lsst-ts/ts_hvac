@@ -416,7 +416,7 @@ class MqttInfoReader:
             if topic_type == TopicType.WRITE and hvac_topic_and_item.endswith(
                 "COMANDO_ENCENDIDO_LSST"
             ):
-                topic, item = self.extract_topic_and_item(hvac_topic_and_item)
+                topic, _ = self.extract_topic_and_item(hvac_topic_and_item)
                 hvac_topics.add(topic)
         for topic in TOPICS_ALWAYS_ENABLED:
             hvac_topics.add(topic)

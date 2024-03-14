@@ -39,7 +39,7 @@ __all__ = [
 
 from enum import Enum
 
-from lsst.ts.idl.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
+from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
 
 SPANISH_TO_ENGLISH_DICTIONARY = {
     "ACTIVO": "Active",

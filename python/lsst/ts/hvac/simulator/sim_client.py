@@ -30,10 +30,12 @@ from collections import deque
 
 import paho.mqtt.client as mqtt
 from lsst.ts.hvac.enums import EVENT_TOPIC_DICT, TOPICS_ALWAYS_ENABLED
-from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
+
+from ..base_mqtt_client import BaseMqttClient
+from ..mqtt_info_reader import MqttInfoReader
 
 
-class SimClient:
+class SimClient(BaseMqttClient):
     """Simulator to act as MQTT Client.
 
     Parameters
@@ -43,8 +45,10 @@ class SimClient:
         unit tests should set it to False.
     """
 
-    def __init__(self, start_publish_telemetry_every_second: bool = True) -> None:
-        self.log = logging.getLogger("SimClient")
+    def __init__(
+        self, log: logging.Logger, start_publish_telemetry_every_second: bool = True
+    ) -> None:
+        super().__init__(log)
         self.hvac_topics: dict[str, typing.Any] = {}
         self.telemetry_task: typing.Optional[asyncio.Task] = None
         self.connected = False
@@ -230,11 +234,10 @@ class SimClient:
                     ):
                         value = 0.0
                     else:
-                        value = random.randint(10 * limits[0], 10 * limits[1]) / 10.0
+                        value = random.uniform(10 * limits[0], 10 * limits[1]) / 10.0
             else:
-                if topic_type == "READ":
-                    if idl_type == "boolean":
-                        value = False
+                if topic_type == "READ" and idl_type == "boolean":
+                    value = False
 
             if value is not None:
                 msg = mqtt.MQTTMessage(topic=hvac_topic.encode())

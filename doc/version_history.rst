@@ -6,6 +6,20 @@
 Version History
 ###############
 
+v0.15.0
+=======
+
+* Switch from ts_idl to ts_xml.
+* Extract BaseMqttClient interface.
+* Make sure to disconnect when going to FAULT state.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* IDL files for HVAC from ts_xml 20.0
+
 v0.14.0
 =======
 

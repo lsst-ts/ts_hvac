@@ -54,10 +54,10 @@ def get_random_config_data(topic: HvacTopic) -> dict[str, float]:
             limits = items[item]["limits"]
             if idl_type == "float":
                 data[data_item.name] = (
-                    random.randint(10 * limits[0], 10 * limits[1]) / 10.0
+                    random.uniform(10 * limits[0], 10 * limits[1]) / 10.0
                 )
             else:
-                raise Exception(
+                raise RuntimeError(
                     f"Encountered IDL type {idl_type!r} for {topic.value}/{item}"
                 )
     return data

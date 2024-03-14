@@ -24,6 +24,7 @@ try:
 except ModuleNotFoundError:
     __version__ = "?"
 
+from .base_mqtt_client import *
 from .csc import *
 from .enums import *
 from .mqtt_client import *

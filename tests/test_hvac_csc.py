@@ -33,7 +33,7 @@ from lsst.ts.hvac.enums import (
     HvacTopic,
 )
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.idl.enums.HVAC import DeviceId
+from lsst.ts.xml.enums.HVAC import DeviceId
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
 

@@ -32,7 +32,7 @@ from lsst.ts.hvac.enums import (
 )
 from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.idl.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
+from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
 from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"
@@ -41,6 +41,7 @@ command_filename = OUTPUT_DIR / "HVAC_Commands.xml"
 events_filename = OUTPUT_DIR / "HVAC_Events.xml"
 
 XML_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
+XSL = "type='text/xsl' "
 NSMAP = {"xsi": XML_NAMESPACE}
 attr_qname = etree.QName(
     "http://www.w3.org/2001/XMLSchema-instance", "noNamespaceSchemaLocation"
@@ -53,8 +54,7 @@ telemetry_root = etree.Element(
 telemetry_root.addprevious(
     etree.ProcessingInstruction(
         "xml-stylesheet",
-        "type='text/xsl' "
-        + "href='http://lsst-sal.tuc.noao.edu/schema/SALTelemetrySet.xsl'",
+        XSL + "href='http://lsst-sal.tuc.noao.edu/schema/SALTelemetrySet.xsl'",
     )
 )
 command_root = etree.Element(
@@ -65,8 +65,7 @@ command_root = etree.Element(
 command_root.addprevious(
     etree.ProcessingInstruction(
         "xml-stylesheet",
-        "type='text/xsl' "
-        + "href='http://lsst-sal.tuc.noao.edu/schema/SALCommandSet.xsl'",
+        XSL + "href='http://lsst-sal.tuc.noao.edu/schema/SALCommandSet.xsl'",
     )
 )
 events_root = etree.Element(
@@ -77,8 +76,7 @@ events_root = etree.Element(
 events_root.addprevious(
     etree.ProcessingInstruction(
         "xml-stylesheet",
-        "type='text/xsl' "
-        + "href='http://lsst-sal.tuc.noao.edu/schema/SALEventSet.xsl'",
+        XSL + "href='http://lsst-sal.tuc.noao.edu/schema/SALEventSet.xsl'",
     )
 )
 
@@ -100,7 +98,7 @@ def _translate_item(item: str) -> str:
         A string containing a crude English translation of the Spanish words.
 
     """
-    if item[:3] == "dyn":
+    if item.startswith("dyn"):
         translated_item = DynaleneDescription[item].value
     else:
         # Perform a crude translation of Spanish into English. This code can be
@@ -345,7 +343,7 @@ def _create_enumeration_element_from_enum(my_enum: enum.Enum) -> None:
     # The "type: ignore" on the next line is to keep MyPy happy. If omitted,
     # it will complain that "Enum" has no attribute "__name__" or "__iter__".
     string = ",\n    ".join(
-        f"{my_enum.__name__}_{item.name}" f"={item.value}"  # type: ignore
+        f"{my_enum.__name__}_{item.name}={item.value}"  # type: ignore
         for item in my_enum  # type: ignore
     )
     st = etree.SubElement(events_root, "Enumeration")
@@ -456,9 +454,11 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             st,
             event_topic,
             "state",
-            "int"
-            if EVENT_TOPIC_DICT[event_topic]["type"] == "enum"
-            else EVENT_TOPIC_DICT[event_topic]["type"],
+            (
+                "int"
+                if EVENT_TOPIC_DICT[event_topic]["type"] == "enum"
+                else EVENT_TOPIC_DICT[event_topic]["type"]
+            ),
             "unitless",
             EVENT_TOPIC_DICT[event_topic]["item_description"],
             1,

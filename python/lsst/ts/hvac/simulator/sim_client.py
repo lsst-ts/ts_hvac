@@ -230,7 +230,7 @@ class SimClient:
                     ):
                         value = 0.0
                     else:
-                        value = random.randint(10 * limits[0], 10 * limits[1]) / 10.0
+                        value = random.uniform(10 * limits[0], 10 * limits[1]) / 10.0
             else:
                 if topic_type == "READ" and idl_type == "boolean":
                     value = False

@@ -278,11 +278,11 @@ class HvacCsc(salobj.BaseCsc):
 
     async def disconnect(self) -> None:
         """Disconnect the HVAQ client, if connected."""
-        if self.connected:
-            self.log.info("Disconnecting")
+        self.log.info("Disconnecting")
+        if not self.telemetry_task.done() and not self.telemetry_task.cancelled():
             self.telemetry_task.cancel()
-            assert self.mqtt_client is not None
-            await self.mqtt_client.disconnect()
+        assert self.mqtt_client is not None
+        await self.mqtt_client.disconnect()
 
     def _setup_hvac_state(self) -> None:
         """Set up internal tracking of the MQTT state."""
@@ -348,8 +348,7 @@ class HvacCsc(salobj.BaseCsc):
         id_data: `CommandIdData`
             Command ID and data
         """
-        if self.connected:
-            await self.disconnect()
+        await self.disconnect()
         await super().end_disable(id_data)
 
     def _get_topic_enabled_state(self, topic: str) -> typing.Tuple[int, bool]:

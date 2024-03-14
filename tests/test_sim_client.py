@@ -53,7 +53,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
 
         # Set up the simulator client.
         self.mqtt_client = sim_client.SimClient(
-            start_publish_telemetry_every_second=False
+            self.log, start_publish_telemetry_every_second=False
         )
         # Call connect to make sure that the MQTT client is in the correct
         # state for the test.
@@ -96,7 +96,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         msgs = self.mqtt_client.msgs
         # Finally loop over the messages to fetch the published values of each
         # topic and collect them per topic.
-        while not len(msgs) == 0:
+        while len(msgs) != 0:
             msg = msgs.popleft()
             topic = msg.topic
             data = json.loads(msg.payload)

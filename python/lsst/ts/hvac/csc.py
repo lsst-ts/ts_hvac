@@ -32,6 +32,7 @@ from lsst.ts import salobj, utils
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
 from . import __version__
+from .base_mqtt_client import BaseMqttClient
 from .enums import (
     DEVICE_GROUPS,
     DYNALENE_EVENT_GROUP_DICT,
@@ -224,9 +225,7 @@ class HvacCsc(salobj.BaseCsc):
 
         self.start_telemetry_publishing = start_telemetry_publishing
         self.telemetry_task = utils.make_done_future()
-        self.mqtt_client: SimClient | MqttClient = SimClient(
-            self.start_telemetry_publishing
-        )
+        self.mqtt_client: BaseMqttClient | None = None
 
         # Keep track of the internal state of the MQTT topics. This will
         # collect all values for the duration of HVAC_STATE_TRACK_PERIOD before
@@ -257,6 +256,7 @@ class HvacCsc(salobj.BaseCsc):
 
         if self.simulation_mode == 1:
             # Use the Simulator Client.
+            self.mqtt_client = SimClient(self.log, self.start_telemetry_publishing)
             self.log.info("Connecting SimClient.")
         else:
             # Use the MQTT Client.
@@ -281,6 +281,7 @@ class HvacCsc(salobj.BaseCsc):
         if self.connected:
             self.log.info("Disconnecting")
             self.telemetry_task.cancel()
+            assert self.mqtt_client is not None
             await self.mqtt_client.disconnect()
 
     def _setup_hvac_state(self) -> None:
@@ -445,6 +446,7 @@ class HvacCsc(salobj.BaseCsc):
 
     async def _handle_mqtt_messages(self) -> None:
         self.log.debug("Handling MQTT messages.")
+        assert self.mqtt_client is not None
         while len(self.mqtt_client.msgs) != 0:
             msg = self.mqtt_client.msgs.popleft()
             topic_and_item: str = msg.topic
@@ -638,12 +640,15 @@ class HvacCsc(salobj.BaseCsc):
         self.assert_enabled()
         device_id = DeviceId(data.device_id)
         hvac_topic = HvacTopic[device_id.name]
+
         # Publish the data to the MQTT topic and receive confirmation whether
         # the publication was done correctly.
+        assert self.mqtt_client is not None
         was_published = self.mqtt_client.publish_mqtt_message(
             hvac_topic.value + "/" + CommandItem.comandoEncendido.value,
             json.dumps(enabled),
         )
+
         # Do some housekeeping if the message was sent correctly.
         if was_published:
             telemetry_item = TelemetryItem.comandoEncendido.value
@@ -674,6 +679,7 @@ class HvacCsc(salobj.BaseCsc):
         mqtt_topics_and_items = self.xml.get_command_mqtt_topics_and_items()
         items = mqtt_topics_and_items[topic.value]
         was_published = {}
+        assert self.mqtt_client is not None
         for item in items:
             if item not in ["COMANDO_ENCENDIDO_LSST"]:
                 command_item = CommandItem(item)
@@ -694,6 +700,7 @@ class HvacCsc(salobj.BaseCsc):
         command_item = [dci for dci in DYNALENE_COMMAND_ITEMS if dci in data_dict][0]
         topic = DEVICE_GROUPS["DYNALENE"][0] + "/" + CommandItem[command_item].value
         value = getattr(data, command_item)
+        assert self.mqtt_client is not None
         was_published = self.mqtt_client.publish_mqtt_message(
             topic,
             json.dumps(value),

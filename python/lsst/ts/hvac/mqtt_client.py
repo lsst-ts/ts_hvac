@@ -23,15 +23,16 @@ __all__ = ["MqttClient"]
 
 import logging
 import typing
-from collections import deque
 
 import paho.mqtt.client as mqtt
+
+from .base_mqtt_client import BaseMqttClient
 
 LSST_CLIENT_ID = "LSST"
 LSST_GENERAL_TOPIC = "LSST/#"
 
 
-class MqttClient:
+class MqttClient(BaseMqttClient):
     """Client class to connect to the HVAC MQTT server.
 
     Parameters
@@ -43,12 +44,10 @@ class MqttClient:
     """
 
     def __init__(self, host: str, port: int, log: logging.Logger) -> None:
-        self.log = log.getChild(type(self).__name__)
+        super().__init__(log)
         self.host = host
         self.port = port
         self.client = mqtt.Client()
-        self.msgs: deque = deque()
-        self.connected = False
         self.log.debug("MqttClient constructed.")
 
     async def connect(self) -> None:

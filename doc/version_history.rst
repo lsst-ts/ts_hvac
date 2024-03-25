@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.15.1
+=======
+
+* Update the version of ts-conda-build to 0.4 in the conda recipe.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* IDL files for HVAC from ts_xml 20.0
+
 v0.15.0
 =======
 

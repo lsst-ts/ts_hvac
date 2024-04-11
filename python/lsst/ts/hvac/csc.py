@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["HvacCsc", "run_hvac", "TOPICS_WITHOUT_COMANDO_ENCENDIDO"]
+__all__ = ["HvacCsc", "run_hvac"]
 
 import asyncio
 import json
@@ -35,9 +35,14 @@ from . import __version__
 from .base_mqtt_client import BaseMqttClient
 from .enums import (
     DEVICE_GROUPS,
+    DYNALENE_COMMAND_ITEMS,
     DYNALENE_EVENT_GROUP_DICT,
     EVENT_TOPIC_DICT,
+    STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON,
     TOPICS_ALWAYS_ENABLED,
+    TOPICS_WITH_DATA_IN_BAR,
+    TOPICS_WITH_DATA_IN_PSI,
+    TOPICS_WITHOUT_COMANDO_ENCENDIDO,
     TOPICS_WITHOUT_CONFIGURATION,
     CommandItem,
     EventItem,
@@ -52,53 +57,6 @@ from .utils import bar_to_pa, psi_to_pa, to_camel_case
 # The number of seconds to collect the state of the HVAC system for before the
 # median is reported via SAL telemetry.
 HVAC_STATE_TRACK_PERIOD = 60
-
-# These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
-TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
-    (
-        "manejadoraLower01P05",
-        "manejadoraLower02P05",
-        "manejadoraLower03P05",
-        "manejadoraLower04P05",
-    )
-)
-
-# These strings cannot be decoded by JSON and need to be treated separately.
-STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON = {
-    b"AUTOMATICO {ok} @ 10",
-}
-
-# For these topics, the data are in bar which need to be converted to Pa.
-TOPICS_WITH_DATA_IN_BAR = frozenset(
-    (
-        "LSST/PISO01/CHILLER_01/PRESION_BAJA_CTO1",
-        "LSST/PISO01/CHILLER_01/PRESION_BAJA_CTO2",
-        "LSST/PISO01/CHILLER_02/PRESION_BAJA_CTO1",
-        "LSST/PISO01/CHILLER_02/PRESION_BAJA_CTO2",
-        "LSST/PISO01/CHILLER_03/PRESION_BAJA_CTO1",
-        "LSST/PISO01/CHILLER_03/PRESION_BAJA_CTO2",
-    )
-)
-
-# For these topics, the data are in PSI which need to be converted to Pa.
-TOPICS_WITH_DATA_IN_PSI = frozenset(
-    (
-        "LSST/PISO05/DYNALENE/DynTMAsupPS01",
-        "LSST/PISO05/DYNALENE/DynTMAretPS02",
-        "LSST/PISO05/DYNALENE/DynTAsupPS03",
-        "LSST/PISO05/DYNALENE/DynTAretPS04",
-        "LSST/PISO05/DYNALENE/DCH01supPS11",
-        "LSST/PISO05/DYNALENE/DCH02supPS13",
-    )
-)
-
-
-# Dynalene command items.
-DYNALENE_COMMAND_ITEMS = {
-    command_item.name
-    for command_item in CommandItem
-    if command_item.name.startswith("dyn")
-}
 
 
 def run_hvac() -> None:

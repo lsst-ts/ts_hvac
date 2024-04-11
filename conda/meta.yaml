@@ -39,10 +39,6 @@ requirements:
     - python {{ python }}
     - setuptools_scm
     - setuptools
-    - ts-conda-build =0.3
-    - pandas
-    - paho-mqtt
-    - lxml
   run:
     - python {{ python }}
     - setuptools

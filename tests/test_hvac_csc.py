@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
+import math
 import re
 import typing
 import unittest
@@ -100,12 +101,12 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         await self.check_bin_script(name="HVAC", index=None, exe_name="run_hvac")
 
     async def _verify_evt_deviceEnabled(self, subsystem: int) -> None:
-        # Default mask indicating that the three devices that always are
-        # enabled, are enabled.
-        device_mask = 0b1111
+        # Default mask indicating that the devices that always are enabled, are
+        # enabled.
+        device_mask = 0b11111
         device_id = DeviceId[subsystem]
-        deviceId_index = self.csc.device_id_index[device_id]
-        device_mask += 2**deviceId_index
+        device_id_index = self.csc.device_id_index[device_id]
+        device_mask += 2**device_id_index
         await self.assert_next_sample(
             topic=self.remote.evt_deviceEnabled, device_ids=device_mask
         )
@@ -132,6 +133,9 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 status_to_check = False
             if name == "valvulaP01":
                 self.assertEqual(telemetry.estadoValvula12, status_to_check)
+            elif name == "glycolSensor":
+                # No status to check.
+                pass
             elif name not in hvac.TOPICS_WITHOUT_COMANDO_ENCENDIDO:
                 self.assertEqual(telemetry.comandoEncendido, status_to_check)
             else:
@@ -198,24 +202,37 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 status_to_check = False
             if name == "valvulaP01":
                 self.assertEqual(telemetry.estadoValvula12, status_to_check)
+            elif name == "glycolSensor":
+                # No status to check.
+                pass
             elif name not in hvac.TOPICS_WITHOUT_COMANDO_ENCENDIDO:
                 self.assertEqual(telemetry.comandoEncendido, status_to_check)
             else:
                 self.assertEqual(telemetry.estadoFuncionamiento, status_to_check)
 
-            # Check the configurable items and verify that the value is equal
-            # to the corresponding value of the configure command.
-            if name == subsystem:
-                for key in config_data.keys():
-                    # TODO: These command items do not have a telemetry counter
-                    #  point in the "Lower" components. It is being clarified
-                    #  how to verify them so they are skipped for now.
-                    if "Lower" in name and "setpointVentilador" in key:
-                        continue
-                    if key == "device_id":
-                        continue
-                    telemetry_item = getattr(telemetry, key)
-                    self.assertAlmostEqual(telemetry_item, config_data[key], 3)
+            await self._verify_configigurable_items(
+                subsystem, config_data, name, telemetry
+            )
+
+    async def _verify_configigurable_items(
+        self,
+        subsystem: str,
+        config_data: dict[str, float],
+        name: str,
+        telemetry: typing.Any,
+    ) -> None:
+        # Check the configurable items and verify that the value is equal
+        # to the corresponding value of the configure command.
+        if name == subsystem:
+            for key in config_data.keys():
+                # These command items do not have a telemetry counter
+                #  point in the "Lower" components, so they are skipped.
+                if "Lower" in name and "setpointVentilador" in key:
+                    continue
+                if key == "device_id":
+                    continue
+                telemetry_item = getattr(telemetry, key)
+                self.assertAlmostEqual(telemetry_item, config_data[key], 3)
 
     async def _verify_config_event(
         self, hvac_topic: HvacTopic, config_data: dict[str, float]
@@ -300,4 +317,4 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 dynCH1PressRemoteSP=value, timeout=STD_TIMEOUT
             )
             evt = await self.remote.evt_dynCH1PressRemoteSP.next(flush=False)
-            assert evt.dynCH1PressRemoteSP == value
+            assert math.isclose(evt.dynCH1PressRemoteSP, value)

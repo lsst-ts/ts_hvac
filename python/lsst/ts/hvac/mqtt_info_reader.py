@@ -147,6 +147,7 @@ class MqttInfoReader:
             "%RH": "%",
             "m3/h": "m3/h",
             "LPM": "l/min",
+            "l/m": "l/min",
             "PSI": "Pa",
             "KW": "kW",
         }[unit_string.strip()]

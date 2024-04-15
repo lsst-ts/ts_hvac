@@ -33,7 +33,7 @@ Contributing
 ============
 
 ``lsst.ts.hvac`` is developed at https://github.com/lsst-ts/ts_hvac.
-You can find Jira issues for this module under the `ts_hvac <https://jira.lsstcorp.org/issues/?jql=project%20%3D%20DM%20AND%20labels%20%3D%20ts_hvac>`_ label.
+You can find Jira issues for this module under the `ts_hvac <https://rubinobs.atlassian.net/issues/?jql=project%20%3D%20DM%20AND%20labels%20%3D%20ts_hvac>`_ label.
 
 Python API reference
 ====================

@@ -22,11 +22,16 @@
 __all__ = [
     "DEVICE_GROUPS",
     "DEVICE_GROUP_IDS",
+    "DYNALENE_COMMAND_ITEMS",
     "DYNALENE_EVENT_GROUP_DICT",
     "EVENT_TOPICS",
     "EVENT_TOPIC_DICT",
     "SPANISH_TO_ENGLISH_DICTIONARY",
+    "STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON",
     "TOPICS_ALWAYS_ENABLED",
+    "TOPICS_WITH_DATA_IN_BAR",
+    "TOPICS_WITH_DATA_IN_PSI",
+    "TOPICS_WITHOUT_COMANDO_ENCENDIDO",
     "TOPICS_WITHOUT_CONFIGURATION",
     "CommandItem",
     "DeviceIndex",
@@ -44,11 +49,13 @@ from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
 SPANISH_TO_ENGLISH_DICTIONARY = {
     "ACTIVO": "Active",
     "AGUA": "Water",
+    "AIR": "Air",
     "ALARMA": "Alarm",
     "ALARMADO": "Alarming",
     "AMBIENTE": "Ambient",
     "ANTICONGELANTE": "Anti-freeze",
     "APERTURA": "Opening",
+    "AVRG": "Average",
     "BAJA": "Low",
     "BOMBA": "Pump",
     "CALEFACCION": "Heating",
@@ -70,9 +77,11 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "ESTADO": "State",
     "ETAPA": "Stage",
     "EVAPORADOR": "Evaparator",
+    "EXH": "Exhaust",
     "EXTERIOR": "Exterior",
     "FALLA": "Error",
     "FILTRO": "Filter",
+    "FLOW": "Flow",
     "FRIA": "Cold",
     "FRIO": "Cold",
     "FUNCIONAMIENTO": "Working",
@@ -84,6 +93,7 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "HUMIDIFICADOR": "Humidifier",
     "IMPULSION": "Impulse",
     "INYECCION": "Injection",
+    "INY": "Injection",
     "LOWER": "Lower",
     "MANEJADORA": "Manager",
     "MAX": "Max",
@@ -97,9 +107,11 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "POTENCIA": "Power",
     "PRESENCIA": "Presense",
     "PRESION": "Pressure",
+    "PRESS": "Pressure",
     "PROMEDIO": "Mean",
     "RESET": "Reset",
     "RETORNO": "Return",
+    "RET": "Return",
     "REQUERIMIENTO": "Requirement",
     "SALA": "Room",
     "SBLANCA": "White Room",
@@ -107,6 +119,7 @@ SPANISH_TO_ENGLISH_DICTIONARY = {
     "SETPOINT": "Setpoint",
     "SET POINT": "Setpoint",
     "TEMPERATURA": "Temperature",
+    "TEMP": "Temperature",
     "TERMICA": "Thermal",
     "TRABAJO": "Work",
     "UNIDAD": "Unit",
@@ -124,6 +137,7 @@ TOPICS_ALWAYS_ENABLED = frozenset(
     (
         "LSST/PISO01/BOMBA_AGUA_FRIA",
         "LSST/PISO01/GENERAL",
+        "LSST/PISO01/SENSOR_GLYCOL",
         "LSST/PISO01/VALVULA",
         "LSST/PISO05/DYNALENE",
     )
@@ -134,6 +148,7 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
     (
         "LSST/PISO01/BOMBA_AGUA_FRIA",
         "LSST/PISO01/GENERAL",
+        "LSST/PISO01/SENSOR_GLYCOL",
         "LSST/PISO01/VALVULA",
         "LSST/PISO01/VEA_01",
         "LSST/PISO05/DYNALENE",
@@ -177,6 +192,7 @@ class HvacTopic(Enum):
     fancoil11P02 = "LSST/PISO02/FANCOIL11"
     fancoil12P02 = "LSST/PISO02/FANCOIL12"
     generalP01 = "LSST/PISO01/GENERAL"
+    glycolSensor = "LSST/PISO01/SENSOR_GLYCOL"
     manejadoraLower01P05 = "LSST/PISO05/MANEJADORA/LOWER_01"
     manejadoraLower02P05 = "LSST/PISO05/MANEJADORA/LOWER_02"
     manejadoraLower03P05 = "LSST/PISO05/MANEJADORA/LOWER_03"
@@ -688,6 +704,18 @@ class TelemetryItem(Enum):
     horasCompresorPromedio = "HORAS_COMPRESOR_PROMEDIO"
     horometro = "HOROMETRO"
     humedadSala = "%_HUMEDAD_SALA"
+    inyFlowChiller01 = "INY_FLOW_CHILLER_01"
+    inyFlowChiller02 = "INY_FLOW_CHILLER_02"
+    inyFlowChiller03 = "INY_FLOW_CHILLER_03"
+    inyFlowSlac = "INY_FLOW_SLAC"
+    inyPressChiller01 = "INY_PRESS_CHILLER_01"
+    inyPressChiller02 = "INY_PRESS_CHILLER_02"
+    inyPressChiller03 = "INY_PRESS_CHILLER_03"
+    inyPressSlac = "INY_PRESS_SLAC"
+    inyTempChiller01 = "INY_TEMP_CHILLER_01"
+    inyTempChiller02 = "INY_TEMP_CHILLER_02"
+    inyTempChiller03 = "INY_TEMP_CHILLER_03"
+    inyTempSlac = "INY_TEMP_SLAC"
     modoOperacion = "MODO_OPERACION"
     modoOperacionUnidad = "MODO_OPERACION_UNIDAD"
     numeroCircuitos = "NUMERO_CIRCUITOS"
@@ -697,6 +725,14 @@ class TelemetryItem(Enum):
     presionBajaCto2 = "PRESION_BAJA_CTO2"
     requerimientoHumidificador = "REQUERIMIENTO_HUMIDIFICADOR"
     resetAlarma = "RESET_ALARMA"
+    retPressChiller01 = "RET_PRESS_CHILLER_01"
+    retPressChiller02 = "RET_PRESS_CHILLER_02"
+    retPressChiller03 = "RET_PRESS_CHILLER_03"
+    retPressSlac = "RET_PRESS_SLAC"
+    retTempChiller01 = "RET_TEMP_CHILLER_01"
+    retTempChiller02 = "RET_TEMP_CHILLER_02"
+    retTempChiller03 = "RET_TEMP_CHILLER_03"
+    retTempSlac = "RET_TEMP_SLAC"
     setpointActivo = "SETPOINT_ACTIVO"
     setpointCooling = "SETPOINT_COOLING"
     setpointCoolingDay = "SETPOINT_COOLING_DAY"
@@ -1165,4 +1201,54 @@ DEVICE_GROUP_IDS = {
     "SALA_MAQUINAS": 700,
     "VEX": 800,
     "DYNALENE": 900,
+}
+
+# These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
+TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
+    (
+        "glycolSensor",
+        "manejadoraLower01P05",
+        "manejadoraLower02P05",
+        "manejadoraLower03P05",
+        "manejadoraLower04P05",
+    )
+)
+
+# These strings cannot be decoded by JSON and need to be treated separately.
+STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON = {
+    b"AUTOMATICO {ok} @ 10",
+}
+
+# For these topics, the data are in bar which need to be converted to Pa.
+TOPICS_WITH_DATA_IN_BAR = frozenset(
+    (
+        "LSST/PISO01/CHILLER_01/PRESION_BAJA_CTO1",
+        "LSST/PISO01/CHILLER_01/PRESION_BAJA_CTO2",
+        "LSST/PISO01/CHILLER_02/PRESION_BAJA_CTO1",
+        "LSST/PISO01/CHILLER_02/PRESION_BAJA_CTO2",
+        "LSST/PISO01/CHILLER_03/PRESION_BAJA_CTO1",
+        "LSST/PISO01/CHILLER_03/PRESION_BAJA_CTO2",
+        "LSST/PISO01/SENSOR_GLYCOL/INY_PRESS_CHILLER_03",
+        "LSST/PISO01/SENSOR_GLYCOL/RET_PRESS_CHILLER_03",
+    )
+)
+
+# For these topics, the data are in PSI which need to be converted to Pa.
+TOPICS_WITH_DATA_IN_PSI = frozenset(
+    (
+        "LSST/PISO05/DYNALENE/DynTMAsupPS01",
+        "LSST/PISO05/DYNALENE/DynTMAretPS02",
+        "LSST/PISO05/DYNALENE/DynTAsupPS03",
+        "LSST/PISO05/DYNALENE/DynTAretPS04",
+        "LSST/PISO05/DYNALENE/DCH01supPS11",
+        "LSST/PISO05/DYNALENE/DCH02supPS13",
+    )
+)
+
+
+# Dynalene command items.
+DYNALENE_COMMAND_ITEMS = {
+    command_item.name
+    for command_item in CommandItem
+    if command_item.name.startswith("dyn")
 }

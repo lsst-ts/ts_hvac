@@ -6,6 +6,21 @@
 Version History
 ###############
 
+v0.16.0
+=======
+
+* Update the Jira URL in index.rst.
+* Fix the conda recipe.
+* Add a unit test for the MqttClient class.
+* Add glycol sensor telemetry.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* IDL files for HVAC from ts_xml 20.4
+
 v0.15.1
 =======
 

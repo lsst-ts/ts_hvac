@@ -32,7 +32,13 @@ from lsst.ts.hvac.enums import (
 )
 from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
+from lsst.ts.xml.enums.HVAC import (
+    DeviceId,
+    DynaleneState,
+    DynaleneTankLevel,
+    OperatingMode,
+    UnitState,
+)
 from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"
@@ -98,6 +104,24 @@ def _translate_item(item: str) -> str:
         A string containing a crude English translation of the Spanish words.
 
     """
+    translation_addition = ""
+    if item in [
+        "estadoUnidad",
+        "estadoDeUnidad",
+        "estadoValvula",
+        "estadoValvula03",
+        "estadoValvula04",
+        "estadoValvula05",
+        "estadoValvula06",
+        "estadoValvula12",
+        "estadoVentilador",
+    ]:
+        translation_addition = " - a UnitState enum"
+    if item in [
+        "modoOperacion",
+        "modoOperacionUnidad",
+    ]:
+        translation_addition = " - an OperatingMode enum"
     if item.startswith("dyn"):
         translated_item = DynaleneDescription[item].value
     else:
@@ -108,7 +132,7 @@ def _translate_item(item: str) -> str:
             translated_item = re.sub(
                 rf"{key}", rf"{SPANISH_TO_ENGLISH_DICTIONARY[key]}", translated_item
             )
-    return translated_item
+    return translated_item + translation_addition
 
 
 def _split_event_description(item: str) -> str:
@@ -356,6 +380,8 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     _create_enumeration_element_from_enum(DeviceId)
     _create_enumeration_element_from_enum(DynaleneState)
     _create_enumeration_element_from_enum(DynaleneTankLevel)
+    _create_enumeration_element_from_enum(OperatingMode)
+    _create_enumeration_element_from_enum(UnitState)
 
     # Create the events. In order to add events, simply add dictionary
     # elements as follows:

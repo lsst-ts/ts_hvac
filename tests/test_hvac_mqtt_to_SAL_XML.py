@@ -22,7 +22,12 @@
 import logging
 import unittest
 
-from lsst.ts.hvac.enums import DEVICE_GROUPS, TOPICS_ALWAYS_ENABLED
+from lsst.ts.hvac.enums import (
+    DEVICE_GROUPS,
+    DEVICE_GROUPS_ENGLISH,
+    TOPICS_ALWAYS_ENABLED,
+    Language,
+)
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML
 from lsst.ts.xml.enums.HVAC import DeviceId
@@ -47,6 +52,12 @@ class MqttToSalTestCase(unittest.TestCase):
 
     def test_hvac_command_groups(self) -> None:
         xml = MqttInfoReader()
+
+        # TODO DM-46835 Remove backward compatibility with XML 22.1.
+        device_groups = DEVICE_GROUPS_ENGLISH
+        if xml.xml_language == Language.SPANISH:
+            device_groups = DEVICE_GROUPS
+
         command_topic_counts = {}
         for hvac_topic in xml.get_generic_hvac_topics():
             topic_found = False
@@ -57,7 +68,7 @@ class MqttToSalTestCase(unittest.TestCase):
             command_group = next(
                 (
                     group
-                    for group, topic in DEVICE_GROUPS.items()
+                    for group, topic in device_groups.items()
                     if hvac_topic in topic
                 ),
                 None,
@@ -78,9 +89,9 @@ class MqttToSalTestCase(unittest.TestCase):
         for command_topic in command_topic_counts.keys():
             self.assertEqual(
                 command_topic_counts[command_topic],
-                len(DEVICE_GROUPS[command_topic]),
+                len(device_groups[command_topic]),
                 f"{command_topic!r} has {command_topic_counts[command_topic]} command_topic_counts"
-                f" and {len(DEVICE_GROUPS[command_topic])} DEVICE_GROUP counts.",
+                f" and {len(device_groups[command_topic])} DEVICE_GROUP counts.",
             )
 
     def test_collect_command_topics(self) -> None:

@@ -30,15 +30,20 @@ import re
 import typing
 
 import pandas
+from lsst.ts.xml.component_info import ComponentInfo
 
 from .enums import (
     DYNALENE_EVENT_GROUP_DICT,
     EVENT_TOPICS,
     TOPICS_ALWAYS_ENABLED,
     CommandItem,
+    CommandItemEnglish,
     EventItem,
     HvacTopic,
+    HvacTopicEnglish,
+    Language,
     TelemetryItem,
+    TelemetryItemEnglish,
     TopicType,
 )
 from .utils import bar_to_pa, psi_to_pa
@@ -89,10 +94,10 @@ class MqttInfoReader:
         # }
         self.hvac_topics: dict[str, typing.Any] = {}
         # This dict contains the general ts_xml telemetry topics (retrieved by
-        # using the `HvacTopic` enum) as keys and a dictionary representing the
-        # ts_xml telemetry items (retrieved by using the `TelemetryItem` enum)
-        # as values. The structure is
-        # "HvacTopic" : {
+        # using the `HvacTopicEnglish` enum) as keys and a dictionary
+        # representing the ts_xml telemetry items (retrieved by using the
+        # `TelemetryItem` enum) as values. The structure is
+        # "HvacTopicEnglish" : {
         #     "TelemetryItem": {
         #         "idl_type": idl_type,
         #         "unit": unit,
@@ -100,27 +105,34 @@ class MqttInfoReader:
         # }
         self.telemetry_topics: dict[str, typing.Any] = {}
         # This dict contains the general ts_xml command topics (retrieved by
-        # using the `HvacTopic` enum) as keys and a dictionary representing the
-        # ts_xml command items (retrieved by using the `CommandItem` enum) as
-        # values. The structure is
-        # "HvacTopic" : {
-        #     "CommandItem": {
+        # using the `HvacTopicEnglish` enum) as keys and a dictionary
+        # representing the ts_xml command items (retrieved by using the
+        # `CommandItemEnglish` enum) as values. The structure is
+        # "HvacTopicEnglish" : {
+        #     "CommandItemEnglish": {
         #         "idl_type": idl_type,
         #         "unit": unit,
         #     }
         # }
         self.command_topics: dict[str, typing.Any] = {}
         # This dict contains the general ts_xml event topics (retrieved by
-        # using the `HvacTopic` enum) as keys and a dictionary representing the
-        # ts_xml command items (retrieved by using the `eventItem` enum) as
-        # values. The structure is
-        # "HvacTopic" : {
+        # using the `HvacTopicEnglish` enum) as keys and a dictionary
+        # representing the ts_xml command items (retrieved by using the
+        # `eventItem` enum) as values. The structure is
+        # "HvacTopicEnglish" : {
         #     "EventItem": {
         #         "idl_type": idl_type,
         #         "unit": unit,
         #     }
         # }
         self.event_topics: dict[str, typing.Any] = {}
+
+        # TODO DM-46835 Remove backward compatibility with XML 22.1.
+        component_info = ComponentInfo(name="HVAC", topic_subname="")
+        if "tel_coldWaterPump01" in component_info.topics:
+            self.xml_language = Language.ENGLISH
+        else:
+            self.xml_language = Language.SPANISH
 
         self._collect_hvac_topics_and_items_from_csv()
 
@@ -258,7 +270,7 @@ class MqttInfoReader:
         unit: str,
         limits: typing.Tuple[int | float, int | float],
         topics: dict[str, typing.Any],
-        items: enum.EnumMeta,
+        items: enum.EnumType,
     ) -> None:
         """Collect XML topics and items from a row read from the CSV or JSON
         file with the Rubin Observatory HVAC system information sent by
@@ -304,7 +316,20 @@ class MqttInfoReader:
         """
         topic, item = self.extract_topic_and_item(topic_and_item)
 
-        for hvac_topic in HvacTopic:
+        # TODO DM-46835 Remove backward compatibility with XML 22.1.
+        # Work around inconsistent telmetry item names.
+        if self.xml_language == Language.ENGLISH:
+            if item == "ESTADO_DE_UNIDAD":
+                item = "ESTADO_UNIDAD"
+            if item == "MODO_OPERACION_UNIDAD":
+                item = "MODO_OPERACION"
+
+            topic_enum: enum.EnumType = HvacTopicEnglish
+        else:
+            topic_enum = HvacTopic
+        # End TODO
+
+        for hvac_topic in topic_enum:  # type: ignore
             if hvac_topic.value in topic:
                 if hvac_topic.name not in topics:
                     topics[hvac_topic.name] = {}
@@ -329,6 +354,15 @@ class MqttInfoReader:
                     )
 
     def _collect_topics_and_items(self, topics: dict[str, typing.Any]) -> None:
+        # TODO DM-46835 Remove backward compatibility with XML 22.1.
+        if self.xml_language == Language.ENGLISH:
+            command_enum: enum.EnumType = CommandItemEnglish
+            telemetry_enum: enum.EnumType = TelemetryItemEnglish
+        else:
+            command_enum = CommandItem
+            telemetry_enum = TelemetryItem
+        # End TODO
+
         for topic_and_item in sorted(topics.keys()):
             if topic_and_item in EVENT_TOPICS:
                 continue
@@ -344,7 +378,7 @@ class MqttInfoReader:
                     unit,
                     limits,
                     self.telemetry_topics,
-                    TelemetryItem,
+                    telemetry_enum,
                 )
             if topic_type == TopicType.WRITE:
                 self._generic_collect_topics_and_items(
@@ -354,7 +388,7 @@ class MqttInfoReader:
                     unit,
                     limits,
                     self.command_topics,
-                    CommandItem,
+                    command_enum,
                 )
         for topic_and_item in EVENT_TOPICS:
             idl_type = topics[topic_and_item]["idl_type"]

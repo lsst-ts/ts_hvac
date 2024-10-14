@@ -6,6 +6,19 @@
 Version History
 ###############
 
+v0.17.0
+=======
+
+* Add OperatingMode and UnitState enums.
+* Translate all Spanish to English.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* ts_xml 22.1
+
 v0.16.0
 =======
 

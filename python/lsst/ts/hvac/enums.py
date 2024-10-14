@@ -21,24 +21,32 @@
 
 __all__ = [
     "DEVICE_GROUPS",
-    "DEVICE_GROUP_IDS",
+    "DEVICE_GROUPS_ENGLISH",
     "DYNALENE_COMMAND_ITEMS",
+    "DYNALENE_COMMAND_ITEMS_ENGLISH",
     "DYNALENE_EVENT_GROUP_DICT",
     "EVENT_TOPICS",
     "EVENT_TOPIC_DICT",
+    "EVENT_TOPIC_DICT_ENGLISH",
     "SPANISH_TO_ENGLISH_DICTIONARY",
     "STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON",
     "TOPICS_ALWAYS_ENABLED",
     "TOPICS_WITH_DATA_IN_BAR",
     "TOPICS_WITH_DATA_IN_PSI",
     "TOPICS_WITHOUT_COMANDO_ENCENDIDO",
+    "TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH",
     "TOPICS_WITHOUT_CONFIGURATION",
     "CommandItem",
+    "CommandItemEnglish",
     "DeviceIndex",
     "DynaleneDescription",
     "EventItem",
     "HvacTopic",
+    "HvacTopicEnglish",
+    "Language",
     "TelemetryItem",
+    "TelemetryItemDescription",
+    "TelemetryItemEnglish",
     "TopicType",
 ]
 
@@ -46,6 +54,7 @@ from enum import Enum
 
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
 SPANISH_TO_ENGLISH_DICTIONARY = {
     "ACTIVO": "Active",
     "AGUA": "Water",
@@ -171,7 +180,18 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
 )
 
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
+class Language(Enum):
+    """Language for which to create the XML."""
+
+    SPANISH = 0
+    ENGLISH = 1
+
+
+# TODO DM-46835 Remove once XML 22.2 has been released.
 class HvacTopic(Enum):
+    """MQTT topic names."""
+
     bombaAguaFriaP01 = "LSST/PISO01/BOMBA_AGUA_FRIA"
     chiller01P01 = "LSST/PISO01/CHILLER_01"
     chiller02P01 = "LSST/PISO01/CHILLER_02"
@@ -216,6 +236,55 @@ class HvacTopic(Enum):
     vin01P01 = "LSST/PISO01/VIN_01"
     vex03LowerP04 = "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL"
     vex04CargaP04 = "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL"
+
+
+class HvacTopicEnglish(Enum):
+    """English HVAC topic names."""
+
+    coldWaterPump01 = "LSST/PISO01/BOMBA_AGUA_FRIA"
+    chiller01P01 = "LSST/PISO01/CHILLER_01"
+    chiller02P01 = "LSST/PISO01/CHILLER_02"
+    chiller03P01 = "LSST/PISO01/CHILLER_03"
+    crac01P02 = "LSST/PISO02/CRACK01"
+    crac02P02 = "LSST/PISO02/CRACK02"
+    dynaleneP05 = "LSST/PISO05/DYNALENE"
+    fancoil01P02 = "LSST/PISO02/FANCOIL01"
+    fancoil02P02 = "LSST/PISO02/FANCOIL02"
+    fancoil03P02 = "LSST/PISO02/FANCOIL03"
+    fancoil04P02 = "LSST/PISO02/FANCOIL04"
+    fancoil05P02 = "LSST/PISO02/FANCOIL05"
+    fancoil06P02 = "LSST/PISO02/FANCOIL06"
+    fancoil07P02 = "LSST/PISO02/FANCOIL07"
+    fancoil08P02 = "LSST/PISO02/FANCOIL08"
+    fancoil09P02 = "LSST/PISO02/FANCOIL09"
+    fancoil10P02 = "LSST/PISO02/FANCOIL10"
+    fancoil11P02 = "LSST/PISO02/FANCOIL11"
+    fancoil12P02 = "LSST/PISO02/FANCOIL12"
+    generalP01 = "LSST/PISO01/GENERAL"
+    glycolSensor = "LSST/PISO01/SENSOR_GLYCOL"
+    lowerAHU01P05 = "LSST/PISO05/MANEJADORA/LOWER_01"
+    lowerAHU02P05 = "LSST/PISO05/MANEJADORA/LOWER_02"
+    lowerAHU03P05 = "LSST/PISO05/MANEJADORA/LOWER_03"
+    lowerAHU04P05 = "LSST/PISO05/MANEJADORA/LOWER_04"
+    whiteRoomAHU01P05 = "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA"
+    cleanRoomAHU01P05 = "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA"
+    valveP01 = "LSST/PISO01/VALVULA"
+    airInletFan01P01 = "LSST/PISO01/VEA_01"
+    airInletFan01P05 = "LSST/PISO05/VEA_01"
+    airInletFan08P05 = "LSST/PISO05/VEA_08"
+    airInletFan09P05 = "LSST/PISO05/VEA_09"
+    airInletFan10P05 = "LSST/PISO05/VEA_10"
+    airInletFan11P05 = "LSST/PISO05/VEA_11"
+    airInletFan12P05 = "LSST/PISO05/VEA_12"
+    airInletFan13P05 = "LSST/PISO05/VEA_13"
+    airInletFan14P05 = "LSST/PISO05/VEA_14"
+    airInletFan15P05 = "LSST/PISO05/VEA_15"
+    airInletFan16P05 = "LSST/PISO05/VEA_16"
+    airInletFan17P05 = "LSST/PISO05/VEA_17"
+    centrifugalExtractionFan01P01 = "LSST/PISO01/VEC_01"
+    centrifugalSupplyFan01P01 = "LSST/PISO01/VIN_01"
+    lowerDamperFan03P04 = "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL"
+    loadingBayFan04P04 = "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL"
 
 
 EVENT_TOPICS = [
@@ -627,6 +696,7 @@ EVENT_TOPICS = [
 ]
 
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
 class TelemetryItem(Enum):
     alarmaFiltro = "ALARMA_FILTRO"
     alarmaGeneral = "ALARMA_GENERAL"
@@ -776,6 +846,328 @@ class TelemetryItem(Enum):
     dynExhaustAirBackupModeStatus = "DynExhaustAirBackupModeStatus"
     dynRemoteLocalModeStatus = "DynRemoteLocalModeStatus"
     exhAirAvrgTemp = "ExhAirAvrgTemp"
+
+
+class TelemetryItemEnglish(Enum):
+    """English descriptions for telemetry items."""
+
+    activeSetpoint = "SETPOINT_ACTIVO"
+    alarmPresentState = "ESTADO_PRESENCIA_ALARMA"
+    alarmReset = "RESET_ALARMA"
+    ambientTemperature = "TEMPERATURA_AMBIENTE"
+    ambientTemperatureState = "ESTADO_TEMPERATURA_AMBIENTE"
+    antiFreezeTemperature = "TEMPERATURA_ANTICONGELANTE"
+    antiFreezeTemperatureState = "ESTADO_TEMPERATURA_ANTICONGELANTE"
+    availableChillerCapacity = "POTENCIA_DISPONIBLE_CHILLER"
+    averageCompressorHours = "HORAS_COMPRESOR_PROMEDIO"
+    coldValveOpening = "%_APERTURA_VALVULA_FRIO"
+    commanded = "COMANDO"
+    compressor01Alarm = "COMPRESOR_01_ALARMADO"
+    compressor01Hours = "HORAS_COMPRESOR_01"
+    compressor01Working = "COMPRESOR_01_FUNCIONANDO"
+    compressor02Alarm = "COMPRESOR_02_ALARMADO"
+    compressor02Hours = "HORAS_COMPRESOR_02"
+    compressor02Working = "COMPRESOR_02_FUNCIONANDO"
+    compressor03Alarm = "COMPRESOR_03_ALARMADO"
+    compressor03Hours = "HORAS_COMPRESOR_03"
+    compressor03Working = "COMPRESOR_03_FUNCIONANDO"
+    compressor04Alarm = "COMPRESOR_04_ALARMADO"
+    compressor04Hours = "HORAS_COMPRESOR_04"
+    compressor04Working = "COMPRESOR_04_FUNCIONANDO"
+    coolingSetpoint = "SETPOINT_COOLING"
+    cto1LowerPressure = "PRESION_BAJA_CTO1"
+    cto2LowerPressure = "PRESION_BAJA_CTO2"
+    damperstate = "ESTADO_DAMPER"
+    dayCoolingSetpoint = "SETPOINT_COOLING_DAY"
+    dayHeatingSetpoint = "SETPOINT_HEATING_DAY"
+    dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR"
+    exteriorAmbienteTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
+    externalTemperatureState = "ESTADO_TEMPERATURA_EXTERIOR"
+    fanState = "ESTADO_VENTILADOR"
+    filterAlarm = "ALARMA_FILTRO"
+    generalAlarm = "ALARMA_GENERAL"
+    heatingSetpoint = "SETPOINT_HEATING"
+    heatingState = "ESTADO_CALEFACTOR"
+    hourMeasure = "HOROMETRO"
+    humidifierRequirement = "REQUERIMIENTO_HUMIDIFICADOR"
+    humidifierSetpoint = "SETPOINT_HUMIDIFICADOR"
+    impulsionFanSetpoint = "SETPOINT_VENT_IMPULSION"
+    maxFanSetpoint = "SETPOINT_VENTILADOR_MAX"
+    minFanSetpoint = "SETPOINT_VENTILADOR_MIN"
+    nightCoolingSetpoint = "SETPOINT_COOLING_NIGHT"
+    nightHeatingSetpoint = "SETPOINT_HEATING_NIGHT"
+    numberOfCircuits = "NUMERO_CIRCUITOS"
+    operationalMode = "MODO_OPERACION"
+    operationalState = "ESTADO_OPERACION"
+    retPressChiller01 = "RET_PRESS_CHILLER_01"
+    retPressChiller02 = "RET_PRESS_CHILLER_02"
+    retPressChiller03 = "RET_PRESS_CHILLER_03"
+    retPressSlac = "RET_PRESS_SLAC"
+    retTempChiller01 = "RET_TEMP_CHILLER_01"
+    retTempChiller02 = "RET_TEMP_CHILLER_02"
+    retTempChiller03 = "RET_TEMP_CHILLER_03"
+    retTempSlac = "RET_TEMP_SLAC"
+    returnTemperature = "TEMPERATURA_RETORNO"
+    roomHumidity = "%_HUMEDAD_SALA"
+    roomSetpoint = "VALOR_CONSIGNA"
+    roomTemperature = "TEMPERATURA_SALA"
+    selectorState = "ESTADO_SELECTOR"
+    stageHeating01 = "CALEFACCION_ETAPA_01"
+    stageHeating02 = "CALEFACCION_ETAPA_02"
+    supplyFanCapacity = "CAUDAL_VENTILADOR_IMPULSION"
+    supplyFlowChiller01 = "INY_FLOW_CHILLER_01"
+    supplyFlowChiller02 = "INY_FLOW_CHILLER_02"
+    supplyFlowChiller03 = "INY_FLOW_CHILLER_03"
+    supplyFlowSlac = "INY_FLOW_SLAC"
+    supplyPressChiller01 = "INY_PRESS_CHILLER_01"
+    supplyPressChiller02 = "INY_PRESS_CHILLER_02"
+    supplyPressChiller03 = "INY_PRESS_CHILLER_03"
+    supplyPressSlac = "INY_PRESS_SLAC"
+    supplyTempChiller01 = "INY_TEMP_CHILLER_01"
+    supplyTempChiller02 = "INY_TEMP_CHILLER_02"
+    supplyTempChiller03 = "INY_TEMP_CHILLER_03"
+    supplyTempSlac = "INY_TEMP_SLAC"
+    supplyTemperature = "TEMPERATURA_INYECCION"
+    switchedOn = "COMANDO_ENCENDIDO"
+    thermalFault = "FALLA_TERMICA"
+    unitState = "ESTADO_UNIDAD"
+    valve03State = "ESTADO_VALVULA_03"
+    valve04State = "ESTADO_VALVULA_04"
+    valve05State = "ESTADO_VALVULA_05"
+    valve06State = "ESTADO_VALVULA_06"
+    valve12State = "ESTADO_VALVULA_1&2"
+    valveOpening = "%_APERTURA_VALVULA"
+    valveState = "ESTADO_VALVULA"
+    waterEvaporatorReturnTemp = "TEMPERATURA_AGUA_RETORNO_EVAPORADOR"
+    waterEvaporatorSupplyTemp = "TEMPERATURA_AGUA_IMPULSION_EVAPORADOR"
+    workingCapacity = "%_POTENCIA_TRABAJO"
+    workingSetpoint = "SETPOINT_TRABAJO"
+    workingState = "ESTADO_FUNCIONAMIENTO"
+
+    # Dynalene items.
+    dynCH01LS01 = "DCH01LS01"
+    dynCH01supFS01 = "DCH01supFS01"
+    dynCH01supPS11 = "DCH01supPS11"
+    dynCH01supTS05 = "DCH01supTS05"
+    dynCH02LS02 = "DCH02LS02"
+    dynCH02supFS02 = "DCH02supFS02"
+    dynCH02supPS13 = "DCH02supPS13"
+    dynCH02supTS07 = "DCH02supTS07"
+    dynMainGridAlarm = "DynMainGridAlarm"
+    dynMainGridAlarmCMD = "DynMainGridAlarmCMD"
+    dynMainGridFailureFlag = "DynMainGridFailureFlag"
+    dynSafetyResetFlag = "DynSafetyResetFlag"
+    dynState = "DynaleneState"
+    dynTAalarm = "DynTAalarm"
+    dynTAalarmCMD = "DynTAalarmCMD"
+    dynTAalarmMonitor = "DynTAalarmMonitor"
+    dynTankLevel = "DynTankLevel"
+    dynTankLevelAlarmCMD = "DynTankLevelAlarmCMD"
+    dynTMAalarm = "DynTMAalarm"
+    dynTMAalarmCMD = "DynTMAalarmCMD"
+    dynTMAalarmMonitor = "DynTMAalarmMonitor"
+    dynTAretPS04 = "DynTAretPS04"
+    dynTAretTS04 = "DynTAretTS04"
+    dynTAsupFS04 = "DynTAsupFS04"
+    dynTAsupPS03 = "DynTAsupPS03"
+    dynTAsupTS03 = "DynTAsupTS03"
+    dynTAtpd = "DynTAtpd"
+    dynTMAtpd = "DynTMAtpd"
+    dynTMAretPS02 = "DynTMAretPS02"
+    dynTMAretTS02 = "DynTMAretTS02"
+    dynTMAsupFS03 = "DynTMAsupFS03"
+    dynTMAsupPS01 = "DynTMAsupPS01"
+    dynTMAsupTS01 = "DynTMAsupTS01"
+
+    # Dynalene commands.
+    dynCH01retCGLYpres = "DynCH01retCGLYpres"
+    dynCH01retCGLYtemp = "DynCH01retCGLYtemp"
+    dynCH01supCGLYpres = "DynCH01supCGLYpres"
+    dynCH01supCGLYtemp = "DynCH01supCGLYtemp"
+    dynCH02retGPGLYpres = "DynCH02retGPGLYpres"
+    dynCH02retGPGLYtemp = "DynCH02retGPGLYtemp"
+    dynCH02supGPGLYpres = "DynCH02supGPGLYpres"
+    dynCH02supGPGLYtemp = "DynCH02supGPGLYtemp"
+    dynCH1CGLYtpd = "DynCH1CGLYtpd"
+    dynCH1supCGLYflow = "DynCH1supCGLYflow"
+    dynCH2GPGLYtpd = "DynCH2GPGLYtpd"
+    dynCH2supGPGLYflow = "DynCH2supGPGLYflow"
+    dynTMAcmv01pos = "DynTMAcmv01pos"
+    dynTMAcmv02pos = "DynTMAcmv02pos"
+    dynSysFault = "DynSysFault"
+    dynSysOK = "DynSysOK"
+    dynSysWarning = "DynSysWarning"
+    dynAmbientDeltaModeStatus = "DynAmbientDeltaModeStatus"
+    dynExhaustAirBackupModeStatus = "DynExhaustAirBackupModeStatus"
+    dynRemoteLocalModeStatus = "DynRemoteLocalModeStatus"
+    exhAirAvrgTemp = "ExhAirAvrgTemp"
+
+
+class TelemetryItemDescription(Enum):
+    """Descriptions for telemetry items."""
+
+    activeSetpoint = "Active Setpoint."
+    alarmPresentState = "Alarm Present State."
+    alarmReset = "Alarm Reset."
+    ambientTemperature = "Ambient Temperature."
+    ambientTemperatureState = "Ambient Temperature State."
+    antiFreezeTemperature = "Anti-Freeze Temperature."
+    antiFreezeTemperatureState = "Anti-Freeze Temperature State."
+    availableChillerCapacity = "Available Chiller Capacity."
+    averageCompressorHours = "Average Compressor Hours."
+    coldValveOpening = "Cold Valve Opening Percentage."
+    commanded = "Commanded."
+    compressor01Alarm = "Compresson 01 Alarm."
+    compressor01Hours = "Compressor 01 Hours."
+    compressor01Working = "Compresson 01 Working."
+    compressor02Alarm = "Compresson 02 Alarm."
+    compressor02Hours = "Compressor 02 Hours."
+    compressor02Working = "Compresson 02 Working."
+    compressor03Alarm = "Compresson 03 Alarm."
+    compressor03Hours = "Compressor 03 Hours."
+    compressor03Working = "Compresson 03 Working."
+    compressor04Alarm = "Compresson 04 Alarm."
+    compressor04Hours = "Compressor 04 Hours."
+    compressor04Working = "Compresson 04 Working."
+    coolingSetpoint = "Cooling Setpoint."
+    cto1LowerPressure = "CTO 1 Lower Pressure."
+    cto2LowerPressure = "CTO 2 Lower Pressure."
+    damperstate = "Damper State."
+    dayCoolingSetpoint = "Day Cooling Setpoint."
+    dayHeatingSetpoint = "Day Heating Setpoint."
+    dehumidifierSetpoint = "Dehumidifier Setpoint."
+    exteriorAmbienteTemperature = "Exterior Ambient Temperature."
+    externalTemperatureState = "External Temperature State."
+    fanState = "Fan State - a UnitState enum."
+    filterAlarm = "Filter Alarm."
+    generalAlarm = "General Alarm."
+    heatingSetpoint = "Heating Setpoint."
+    heatingState = "Heating State."
+    hourMeasure = "Hour Measure."
+    humidifierRequirement = "Humidifier Requirement."
+    humidifierSetpoint = "Humidifier Setpoint."
+    impulsionFanSetpoint = "Impulsion Fan Setpoint."
+    maxFanSetpoint = "Max Fan Setpoint."
+    minFanSetpoint = "Min Fan Setpoint."
+    nightCoolingSetpoint = "Night Cooling Setpoint."
+    nightHeatingSetpoint = "Night Heating Setpoint."
+    numberOfCircuits = "Number Of Circuits."
+    operationalMode = "Operational Mode; an OperatingMode enum."
+    operationalState = "Operational State."
+    retPressChiller01 = "Return Pressure Chiller 01."
+    retPressChiller02 = "Return Pressure Chiller 02."
+    retPressChiller03 = "Return Pressure Chiller 03."
+    retPressSlac = "Return Pressure Slac."
+    retTempChiller01 = "Return Temperature Chiller 01."
+    retTempChiller02 = "Return Temperature Chiller 02."
+    retTempChiller03 = "Return Temperature Chiller 03."
+    retTempSlac = "Return Temperature Slac."
+    returnTemperature = "Return Temperature."
+    roomHumidity = "Room Humidity.."
+    roomSetpoint = "Room Setpoint."
+    roomTemperature = "Room Temperature."
+    selectorState = "Selector State."
+    stageHeating01 = "Stage Heating 01."
+    stageHeating02 = "Stage HEating 02."
+    supplyFanCapacity = "Supply Fan Capacity."
+    supplyFlowChiller01 = "Supply Flow Chiller 01."
+    supplyFlowChiller02 = "Supply Flow Chiller 02."
+    supplyFlowChiller03 = "Supply Flow Chiller 03."
+    supplyFlowSlac = "Supply Flow Slac."
+    supplyPressChiller01 = "Supply Pressure Chiller 01."
+    supplyPressChiller02 = "Supply Pressure Chiller 02."
+    supplyPressChiller03 = "Supply Pressure Chiller 03."
+    supplyPressSlac = "Supply Pressure Slac."
+    supplyTempChiller01 = "Supply Temperature Chiller 01."
+    supplyTempChiller02 = "Supply Temperature Chiller 02."
+    supplyTempChiller03 = "Supply Temperature Chiller 03."
+    supplyTempSlac = "Supply Temperature Slac."
+    supplyTemperature = "Supply Temperature."
+    switchedOn = "Switched On."
+    thermalFault = "Thermal Fault."
+    unitState = "Unit State; a UnitState enum."
+    valve03State = "Valve 03 State; a UnitState enum."
+    valve04State = "Valve 04 State; a UnitState enum."
+    valve05State = "Valve 05 State; a UnitState enum."
+    valve06State = "Valve 06 State; a UnitState enum."
+    valve12State = "Valve 12 State; a UnitState enum."
+    valveOpening = "Valve Opening Percentage."
+    valveState = "Valve State; a UnitState enum."
+    waterEvaporatorReturnTemp = "Water Evaporator Return Temperature."
+    waterEvaporatorSupplyTemp = "Water Evaporator Supply Temperature."
+    workingCapacity = "Working Capacity."
+    workingSetpoint = "Working Setpoint."
+    workingState = "Working State."
+
+    # Commands
+    switchOn = "Switch On."
+    openColdValve = "Open Cold Valve."
+
+    # Dynalene items.
+    dynCH01LS01 = "Dynalene Tank Level on Chiller 01."
+    dynCH01supFS01 = "Dynalene Chiller 01 supply flowrate."
+    dynCH01supPS11 = "Dynalene Chiller 01 supply pressure."
+    dynCH01supTS05 = "Dynalene Chiller 01 supply temperature."
+    dynCH02LS02 = "Dynalene Tank Level on Chiller 02."
+    dynCH02supFS02 = "Dynalene Chiller 02 supply flowrate ."
+    dynCH02supPS13 = "Dynalene Chiller 02 supply pressure."
+    dynCH02supTS07 = "Dynalene Chiller 02 supply temperature."
+    dynMainGridAlarm = "Dynalene Main Grid Alarm State."
+    dynMainGridAlarmCMD = "Dynalene Main Grid Alarm Command State."
+    dynMainGridFailureFlag = "Dynalene Main Grid Failure Flag State."
+    dynSafetyResetFlag = "Dynalene Safety Reset Flag State."
+    dynTAalarm = "Dynalene TA Alarm State."
+    dynTAalarmCMD = "Dynalene TA Alarm Command State."
+    dynTAalarmMonitor = "Dynalene TA Alarm Monitor State."
+    dynTankLevel = "Dynalene Tank Level Alarm State."
+    dynTankLevelAlarmCMD = "Dynalene Tank Level Alarm Command State."
+    dynTMAalarm = "Dynalene TMA Alarm State."
+    dynTMAalarmCMD = "Dynalene TMA Alarm Command State."
+    dynTMAalarmMonitor = "Dynalene TMA Alarm Monitor State."
+    dynState = "Dynalene State."
+    dynTAretPS04 = "Test Area Dynalene manifold supply pressure."
+    dynTAretTS04 = "Test Area Dynalene manifold return temperature."
+    dynTAsupFS04 = "Test Area Dynalene flowrate to L3 Manifold."
+    dynTAsupPS03 = "Test Area Dynalene manifold supply pressure."
+    dynTAsupTS03 = "Test Area Dynalene manifold supply temperature."
+    dynTAtpd = "Thermal Power Dissipation on L3 Manifold."
+    dynTMAtpd = "Thermal Power Dissipation on L6 Manifold."
+    dynTMAretPS02 = "TMA Dynalene manifold supply pressure."
+    dynTMAretTS02 = "TMA Dynalene manifold return temperature."
+    dynTMAsupFS03 = "TMA Dynalene flowrate to L6 Manifold."
+    dynTMAsupPS01 = "TMA Dynalene manifold supply pressure."
+    dynTMAsupTS01 = "TMA Dynalene manifold supply temperature."
+    dynCH01retCGLYpres = "Dynalene return glycol channel 1 pressure."
+    dynCH01retCGLYtemp = "Dynalene return glycol channel 1 temperature."
+    dynCH01supCGLYpres = "Dynalene supplied glycol channel 1 pressure."
+    dynCH01supCGLYtemp = "Dynalene supplied glycol channel 1 temperature."
+    dynCH02retGPGLYpres = "Dynalene return glycol channel 2 pressure."
+    dynCH02retGPGLYtemp = "Dynalene return glycol channel 2 temperature."
+    dynCH02supGPGLYpres = "Dynalene supplied glycol channel 2 pressure."
+    dynCH02supGPGLYtemp = "Dynalene supplied glycol channel 2 temperature."
+    dynCH1CGLYtpd = "Dynalene glycol channel 1 tpd."
+    dynCH1supCGLYflow = "Dynalene supplied glycol channel 1 flow."
+    dynCH2GPGLYtpd = "Dynalene glycol channel 2 tpd."
+    dynCH2supGPGLYflow = "Dynalene supplied glycol channel 2 flow."
+    dynTMAcmv01pos = "TMA Dynalene cmv01 position."
+    dynTMAcmv02pos = "TMA Dynalene cmv02 position."
+    dynSysFault = "Dynalene System Fault."
+    dynSysOK = "Dynalene System OK."
+    dynSysWarning = "Dynalene System Warning."
+    dynAmbientDeltaModeStatus = "Dynalene Ambient Delta Mode Status."
+    dynExhaustAirBackupModeStatus = "Dynalene Exhaust Air Backup Mode Status."
+    dynRemoteLocalModeStatus = "Dynalene Remote Local Mode Status."
+    exhAirAvrgTemp = "Exhaust Air Average Temp."
+
+    # Dynalene commands.
+    dynTmaRemoteSP = "TMA setpoint."
+    dynTaRemoteSP = "TA setpoint."
+    dynExtAirRemoteSP = "Exit air setpoint."
+    dynCH1PressRemoteSP = "Chiller 1 pressure setpoint."
+    dynCH2PressRemoteSP = "Chiller 2 pressure setpoint."
+    dynSystOnOff = "Switch dynalene system on or off."
+    dynTelemetryEnable = "Enable telemetry."
+    dynPierFansOnOff = "Switch the pier fans on or off."
 
 
 class EventItem(Enum):
@@ -944,6 +1336,7 @@ class EventItem(Enum):
     )
 
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
 class DynaleneDescription(Enum):
     """Descriptions for the Dynalene telemetry items."""
 
@@ -1024,6 +1417,7 @@ DYNALENE_EVENT_GROUP_DICT = {
 }
 
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
 class CommandItem(Enum):
     comandoEncendido = "COMANDO_ENCENDIDO_LSST"
     aperturaValvulaFrio = "%_APERTURA_VALVULA_FRIO_LSST"
@@ -1051,11 +1445,39 @@ class CommandItem(Enum):
     valorConsigna = "VALOR_CONSIGNA_LSST"
 
 
+class CommandItemEnglish(Enum):
+    switchOn = "COMANDO_ENCENDIDO_LSST"
+    openColdValve = "%_APERTURA_VALVULA_FRIO_LSST"
+    dynCH1PressRemoteSP = "CH1PressRemoteSP"
+    dynCH2PressRemoteSP = "CH2PressRemoteSP"
+    dynSystOnOff = "DynSystOnOff"
+    dynTaRemoteSP = "DynTaRemoteSP"
+    dynTmaRemoteSP = "DynTmaRemoteSP"
+    dynExtAirRemoteSP = "ExtAirRemoteSP"
+    dynPierFansOnOff = "PierFansOnOff"
+    dynTelemetryEnable = "TelemetryEnable"
+    activeSetpoint = "SETPOINT_ACTIVO_LSST"
+    coolingSetpoint = "SETPOINT_COOLING_LSST"
+    dayCoolingSetpoint = "SETPOINT_COOLING_DAY_LSST"
+    nightCoolingSetpoint = "SETPOINT_COOLING_NIGHT_LSST"
+    dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR_LSST"
+    heatingSetpoint = "SETPOINT_HEATING_LSST"
+    dayHeatingSetpoint = "SETPOINT_HEATING_DAY_LSST"
+    nightHeatingSetpoint = "SETPOINT_HEATING_NIGHT_LSST"
+    humidifierSetpoint = "SETPOINT_HUMIDIFICADOR_LSST"
+    workingSetpoint = "SETPOINT_TRABAJO_LSST"
+    maxFanSetpoint = "SETPOINT_VENTILADOR_MAX_LSST"
+    minFanSetpoint = "SETPOINT_VENTILADOR_MIN_LSST"
+    antiFreezeTemperature = "TEMPERATURA_ANTICONGELANTE_LSST"
+    roomSetpoint = "VALOR_CONSIGNA_LSST"
+
+
 class TopicType(str, Enum):
     READ = "READ"
     WRITE = "WRITE"
 
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
 # These topics cannot be distinguished from telemetry topics in the CSV file,
 # so they get marked here to be emitted as events instead.
 EVENT_TOPIC_DICT = (
@@ -1124,11 +1546,84 @@ EVENT_TOPIC_DICT = (
     }
 )
 
+# These topics cannot be distinguished from telemetry topics in the CSV file,
+# so they get marked here to be emitted as events instead.
+EVENT_TOPIC_DICT_ENGLISH = (
+    {
+        "LSST/PISO05/DYNALENE/DynaleneState": {
+            "topic": HvacTopicEnglish.dynaleneP05.name,
+            "item": TelemetryItemDescription.dynState.name.replace("dyn", "dynalene"),
+            "event": f"evt_{TelemetryItemDescription.dynState.name.replace('dyn', 'dynalene')}",
+            "type": "enum",
+            "enum": DynaleneState,
+            "item_description": f"{TelemetryItemDescription.dynState.value.replace(' State.', ' state;')} "
+            f"a DynaleneState enum.",
+            "evt_description": f"{TelemetryItemDescription.dynState.value}",
+        },
+        "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
+            "topic": HvacTopicEnglish.dynaleneP05.name,
+            "item": TelemetryItemDescription.dynTankLevel.name.replace(
+                "dyn", "dynalene"
+            ),
+            "event": f"evt_{TelemetryItemDescription.dynTankLevel.name.replace('dyn', 'dynalene')}",
+            "type": "enum",
+            "enum": DynaleneTankLevel,
+            "item_description": (
+                f"{TelemetryItemDescription.dynTankLevel.value.replace(' State.', ' state;')} "
+                f"a DynaleneTankLevel enum."
+            ),
+            "evt_description": f"{TelemetryItemDescription.dynTankLevel.value}",
+        },
+    }
+    | {
+        f"LSST/PISO05/DYNALENE/Safeties/{dyn_enum.name.replace('dyn', 'Dyn')}": {
+            "topic": HvacTopicEnglish.dynaleneP05.name,
+            "item": dyn_enum.name,
+            "event": f"evt_{dyn_enum.name}",
+            "type": "boolean",
+            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
+            "evt_description": f"{dyn_enum.value}",
+        }
+        for dyn_enum in [
+            TelemetryItemDescription.dynTMAalarm,
+            TelemetryItemDescription.dynTMAalarmCMD,
+            TelemetryItemDescription.dynTMAalarmMonitor,
+            TelemetryItemDescription.dynTAalarm,
+            TelemetryItemDescription.dynTAalarmCMD,
+            TelemetryItemDescription.dynTAalarmMonitor,
+            TelemetryItemDescription.dynMainGridAlarm,
+            TelemetryItemDescription.dynMainGridAlarmCMD,
+            TelemetryItemDescription.dynMainGridFailureFlag,
+            TelemetryItemDescription.dynTankLevelAlarmCMD,
+            TelemetryItemDescription.dynSafetyResetFlag,
+            TelemetryItemDescription.dynSysFault,
+            TelemetryItemDescription.dynSysWarning,
+            TelemetryItemDescription.dynSysOK,
+        ]
+    }
+    | {
+        f"LSST/PISO05/DYNALENE/Status/{dyn_enum.name.replace('dyn', 'Dyn')}": {
+            "topic": HvacTopicEnglish.dynaleneP05.name,
+            "item": dyn_enum.name,
+            "event": f"evt_{dyn_enum.name}",
+            "type": "boolean",
+            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
+            "evt_description": f"{dyn_enum.value}",
+        }
+        for dyn_enum in [
+            TelemetryItemDescription.dynRemoteLocalModeStatus,
+            TelemetryItemDescription.dynAmbientDeltaModeStatus,
+            TelemetryItemDescription.dynExhaustAirBackupModeStatus,
+        ]
+    }
+)
+
 # Dict of index: DeviceId, where index is the index of the device in DeviceId.
 # Used to understand the bits in the device_ids field of the deviceEnabled
 # event.
 DeviceIndex = {i: dev_id for i, dev_id in enumerate(DeviceId)}
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
 # Dict grouping MQTT topics representing HVAC devices together.
 DEVICE_GROUPS = {
     "CHILLER": [
@@ -1189,20 +1684,67 @@ DEVICE_GROUPS = {
     ],
 }
 
-# Dict assigning an ID to each device group. This is used in dictionary
-# comprehension so it is better to keep it as a dict instead of an enum.
-DEVICE_GROUP_IDS = {
-    "CHILLER": 100,
-    "CRACK": 200,
-    "FANCOIL": 300,
-    "MANEJADORA_LOWER": 400,
-    "MANEJADORA": 500,
-    "VEA": 600,
-    "SALA_MAQUINAS": 700,
-    "VEX": 800,
-    "DYNALENE": 900,
+# Dict grouping MQTT topics representing HVAC devices together.
+DEVICE_GROUPS_ENGLISH = {
+    "CHILLER": [
+        "LSST/PISO01/CHILLER_01",
+        "LSST/PISO01/CHILLER_02",
+        "LSST/PISO01/CHILLER_03",
+    ],
+    "CRAC": [
+        "LSST/PISO02/CRACK01",
+        "LSST/PISO02/CRACK02",
+    ],
+    "DYNALENE": ["LSST/PISO05/DYNALENE"],
+    "FANCOIL": [
+        "LSST/PISO02/FANCOIL01",
+        "LSST/PISO02/FANCOIL02",
+        "LSST/PISO02/FANCOIL03",
+        "LSST/PISO02/FANCOIL04",
+        "LSST/PISO02/FANCOIL05",
+        "LSST/PISO02/FANCOIL06",
+        "LSST/PISO02/FANCOIL07",
+        "LSST/PISO02/FANCOIL08",
+        "LSST/PISO02/FANCOIL09",
+        "LSST/PISO02/FANCOIL10",
+        "LSST/PISO02/FANCOIL11",
+        "LSST/PISO02/FANCOIL12",
+    ],
+    "LOWER_AHU": [
+        "LSST/PISO05/MANEJADORA/LOWER_01",
+        "LSST/PISO05/MANEJADORA/LOWER_02",
+        "LSST/PISO05/MANEJADORA/LOWER_03",
+        "LSST/PISO05/MANEJADORA/LOWER_04",
+    ],
+    "AHU": [
+        "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA",
+        "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA",
+    ],
+    "AIR_INLET_FAN": [
+        "LSST/PISO05/VEA_01",
+        "LSST/PISO05/VEA_08",
+        "LSST/PISO05/VEA_09",
+        "LSST/PISO05/VEA_10",
+        "LSST/PISO05/VEA_11",
+        "LSST/PISO05/VEA_12",
+        "LSST/PISO05/VEA_13",
+        "LSST/PISO05/VEA_14",
+        "LSST/PISO05/VEA_15",
+        "LSST/PISO05/VEA_16",
+        "LSST/PISO05/VEA_17",
+    ],
+    "MACHINE_ROOM": [
+        "LSST/PISO01/VEA_01",
+        "LSST/PISO01/VIN_01",
+        "LSST/PISO01/VEC_01",
+    ],
+    "FAN": [
+        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
+        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+    ],
 }
 
+# TODO DM-46835 Remove once XML 22.2 has been released.
 # These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
 TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
     (
@@ -1211,6 +1753,17 @@ TOPICS_WITHOUT_COMANDO_ENCENDIDO = frozenset(
         "manejadoraLower02P05",
         "manejadoraLower03P05",
         "manejadoraLower04P05",
+    )
+)
+
+# These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
+TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH = frozenset(
+    (
+        "glycolSensor",
+        "lowerAHU01P05",
+        "lowerAHU02P05",
+        "lowerAHU03P05",
+        "lowerAHU04P05",
     )
 )
 
@@ -1245,10 +1798,16 @@ TOPICS_WITH_DATA_IN_PSI = frozenset(
     )
 )
 
-
 # Dynalene command items.
 DYNALENE_COMMAND_ITEMS = {
     command_item.name
     for command_item in CommandItem
+    if command_item.name.startswith("dyn")
+}
+
+# Dynalene command items.
+DYNALENE_COMMAND_ITEMS_ENGLISH = {
+    command_item.name
+    for command_item in CommandItemEnglish
     if command_item.name.startswith("dyn")
 }

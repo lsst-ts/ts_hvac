@@ -11,6 +11,7 @@ v0.17.0
 
 * Add OperatingMode and UnitState enums.
 * Translate all Spanish to English.
+* Stop computing means for float values.
 
 Requires:
 

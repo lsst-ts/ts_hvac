@@ -28,7 +28,6 @@ import traceback
 import typing
 from types import SimpleNamespace
 
-import numpy as np
 from lsst.ts import salobj, utils
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
@@ -128,21 +127,6 @@ class InternalItemState:
         most_recent_value = recent_values[-1]
         self.recent_values.append(most_recent_value)
         return most_recent_value
-
-    def compute_recent_median(self) -> None | float:
-        """Computes the median of the most recently acquired float values.
-
-        Returns
-        -------
-        recent_median: `float`
-            The median of the most recent values.
-        """
-        recent_values = self._get_and_reset_recent()
-        if not recent_values:
-            return None
-        median = float(np.median(recent_values))  # keep MyPy happy.
-        self.recent_values.append(median)
-        return median
 
     def _get_and_reset_recent(self) -> list[float | bool]:
         recent_values = self.recent_values
@@ -372,10 +356,7 @@ class HvacCsc(salobj.BaseCsc):
             data: dict[str, float | bool] = {}
             for item in self.hvac_state[topic]:
                 info = self.hvac_state[topic][item]
-                if info.is_float:
-                    value = info.compute_recent_median()
-                else:
-                    value = info.get_most_recent_value()
+                value = info.get_most_recent_value()
                 if value is not None:
                     # TODO DM-46835 Remove backward compatibility with XML
                     #  22.1.

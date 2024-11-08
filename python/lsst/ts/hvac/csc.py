@@ -63,8 +63,8 @@ from .simulator.sim_client import SimClient
 from .utils import bar_to_pa, psi_to_pa, to_camel_case
 
 # The number of seconds to collect the state of the HVAC system for before the
-# median is reported via SAL telemetry.
-HVAC_STATE_TRACK_PERIOD = 60
+#  telemetry is sent.
+HVAC_STATE_TRACK_PERIOD = 1
 
 
 def run_hvac() -> None:
@@ -107,10 +107,6 @@ class InternalItemState:
             f"data_type={self.data_type}, "
             f"]"
         )
-
-    @property
-    def is_float(self) -> bool:
-        return self.data_type == "float"
 
     def get_most_recent_value(self) -> None | float | bool:
         """Get the most recent boolean value.
@@ -343,11 +339,7 @@ class HvacCsc(salobj.BaseCsc):
 
         return device_id_index, enabled
 
-    async def _compute_statistics_and_send_telemetry(self) -> None:
-        self.log.debug(
-            f"{HVAC_STATE_TRACK_PERIOD} seconds have passed since the last "
-            f"computation of the medians, so computing now."
-        )
+    async def _send_telemetry(self) -> None:
         enabled_mask = 0b0
         for topic in self.hvac_state:
             device_id_index, enabled = self._get_topic_enabled_state(topic)
@@ -567,7 +559,7 @@ class HvacCsc(salobj.BaseCsc):
 
     async def publish_telemetry(self) -> None:
         await self._handle_mqtt_messages()
-        await self._compute_statistics_and_send_telemetry()
+        await self._send_telemetry()
 
     async def _publish_telemetry_regularly(self) -> None:
         try:

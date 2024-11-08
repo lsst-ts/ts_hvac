@@ -24,6 +24,7 @@ __all__ = ["HvacCsc", "run_hvac"]
 import asyncio
 import enum
 import json
+import math
 import traceback
 import typing
 from types import SimpleNamespace
@@ -710,10 +711,13 @@ class HvacCsc(salobj.BaseCsc):
         for item in items:
             if item not in ["COMANDO_ENCENDIDO_LSST"]:
                 command_item = command_enum(item)  # type: ignore
+                value = getattr(data, command_item.name)
+                if isinstance(value, float) and math.isnan(value):
+                    continue
                 was_published[command_item.name] = (
                     self.mqtt_client.publish_mqtt_message(
                         topic_value + "/" + command_item.value,
-                        json.dumps(getattr(data, command_item.name)),
+                        json.dumps(value),
                     )
                 )
                 if not was_published:

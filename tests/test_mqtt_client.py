@@ -27,7 +27,7 @@ import paho.mqtt.client as mqtt
 from lsst.ts.hvac import MqttClient
 
 
-class MqttInfoReaderTestCase(unittest.IsolatedAsyncioTestCase):
+class MqttClientTestCase(unittest.IsolatedAsyncioTestCase):
 
     @mock.patch("paho.mqtt.client.Client")
     async def test_mqtt_client(self, mock_client: mock.MagicMock) -> None:
@@ -43,7 +43,7 @@ class MqttInfoReaderTestCase(unittest.IsolatedAsyncioTestCase):
         mqtt_client.on_message(mqtt_client, "", msg)
         assert len(mqtt_client.msgs) == 1
 
-        assert not mqtt_client.publish_mqtt_message(topic="", payload="")
+        assert mqtt_client.publish_mqtt_message(topic="", payload="")
 
         await mqtt_client.disconnect()
         assert not mqtt_client.connected

@@ -12,6 +12,9 @@ v0.17.0
 * Add OperatingMode and UnitState enums.
 * Translate all Spanish to English.
 * Stop computing means for float values.
+* Enable sending of commands.
+* Set log level to DEBUG for local testing.
+* Improve logging.
 
 Requires:
 

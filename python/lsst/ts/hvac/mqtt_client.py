@@ -101,5 +101,6 @@ class MqttClient(BaseMqttClient):
         is_published: `bool`
             For now False gets returned since this functionality is disabled.
         """
+        self.log.debug(f"Sending messge with {topic=!r} and {payload=!r}.")
         msg_info = self.client.publish(topic=topic, payload=payload)
         return msg_info.is_published()

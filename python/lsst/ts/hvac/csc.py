@@ -429,6 +429,7 @@ class HvacCsc(salobj.BaseCsc):
         assert self.mqtt_client is not None
         while len(self.mqtt_client.msgs) != 0:
             msg = self.mqtt_client.msgs.popleft()
+            self.log.debug(f"Processing topic={msg.topic!r}, payload={msg.payload!r}.")
             topic_and_item: str = msg.topic
             if msg.payload in STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON:
                 payload = msg.payload.decode("utf-8")

@@ -24,11 +24,11 @@ __all__ = ["HvacCsc", "run_hvac"]
 import asyncio
 import enum
 import json
+import math
 import traceback
 import typing
 from types import SimpleNamespace
 
-import numpy as np
 from lsst.ts import salobj, utils
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
@@ -64,8 +64,8 @@ from .simulator.sim_client import SimClient
 from .utils import bar_to_pa, psi_to_pa, to_camel_case
 
 # The number of seconds to collect the state of the HVAC system for before the
-# median is reported via SAL telemetry.
-HVAC_STATE_TRACK_PERIOD = 60
+#  telemetry is sent.
+HVAC_STATE_TRACK_PERIOD = 1
 
 
 def run_hvac() -> None:
@@ -109,10 +109,6 @@ class InternalItemState:
             f"]"
         )
 
-    @property
-    def is_float(self) -> bool:
-        return self.data_type == "float"
-
     def get_most_recent_value(self) -> None | float | bool:
         """Get the most recent boolean value.
         values.
@@ -128,21 +124,6 @@ class InternalItemState:
         most_recent_value = recent_values[-1]
         self.recent_values.append(most_recent_value)
         return most_recent_value
-
-    def compute_recent_median(self) -> None | float:
-        """Computes the median of the most recently acquired float values.
-
-        Returns
-        -------
-        recent_median: `float`
-            The median of the most recent values.
-        """
-        recent_values = self._get_and_reset_recent()
-        if not recent_values:
-            return None
-        median = float(np.median(recent_values))  # keep MyPy happy.
-        self.recent_values.append(median)
-        return median
 
     def _get_and_reset_recent(self) -> list[float | bool]:
         recent_values = self.recent_values
@@ -359,11 +340,7 @@ class HvacCsc(salobj.BaseCsc):
 
         return device_id_index, enabled
 
-    async def _compute_statistics_and_send_telemetry(self) -> None:
-        self.log.debug(
-            f"{HVAC_STATE_TRACK_PERIOD} seconds have passed since the last "
-            f"computation of the medians, so computing now."
-        )
+    async def _send_telemetry(self) -> None:
         enabled_mask = 0b0
         for topic in self.hvac_state:
             device_id_index, enabled = self._get_topic_enabled_state(topic)
@@ -372,10 +349,7 @@ class HvacCsc(salobj.BaseCsc):
             data: dict[str, float | bool] = {}
             for item in self.hvac_state[topic]:
                 info = self.hvac_state[topic][item]
-                if info.is_float:
-                    value = info.compute_recent_median()
-                else:
-                    value = info.get_most_recent_value()
+                value = info.get_most_recent_value()
                 if value is not None:
                     # TODO DM-46835 Remove backward compatibility with XML
                     #  22.1.
@@ -455,6 +429,7 @@ class HvacCsc(salobj.BaseCsc):
         assert self.mqtt_client is not None
         while len(self.mqtt_client.msgs) != 0:
             msg = self.mqtt_client.msgs.popleft()
+            self.log.debug(f"Processing topic={msg.topic!r}, payload={msg.payload!r}.")
             topic_and_item: str = msg.topic
             if msg.payload in STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON:
                 payload = msg.payload.decode("utf-8")
@@ -586,7 +561,7 @@ class HvacCsc(salobj.BaseCsc):
 
     async def publish_telemetry(self) -> None:
         await self._handle_mqtt_messages()
-        await self._compute_statistics_and_send_telemetry()
+        await self._send_telemetry()
 
     async def _publish_telemetry_regularly(self) -> None:
         try:
@@ -737,10 +712,13 @@ class HvacCsc(salobj.BaseCsc):
         for item in items:
             if item not in ["COMANDO_ENCENDIDO_LSST"]:
                 command_item = command_enum(item)  # type: ignore
+                value = getattr(data, command_item.name)
+                if isinstance(value, float) and math.isnan(value):
+                    continue
                 was_published[command_item.name] = (
                     self.mqtt_client.publish_mqtt_message(
                         topic_value + "/" + command_item.value,
-                        json.dumps(getattr(data, command_item.name)),
+                        json.dumps(value),
                     )
                 )
                 if not was_published:

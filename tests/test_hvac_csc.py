@@ -282,7 +282,10 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 if key == "openColdValve":
                     telemetry_key = "coldValveOpening"
                 telemetry_item = getattr(telemetry, telemetry_key)
-                self.assertAlmostEqual(telemetry_item, config_data[key], 3)
+                if math.isnan(config_data[key]):
+                    assert not math.isnan(telemetry_item)
+                else:
+                    self.assertAlmostEqual(telemetry_item, config_data[key], 3)
 
     async def _verify_config_event(
         self, hvac_topic: HvacTopicEnglish, config_data: dict[str, float]
@@ -318,7 +321,10 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 "minFanSetpoint",
             ]:
                 command_item = getattr(data, command_topic)
-                self.assertAlmostEqual(command_item, config_data[command_topic], 3)
+                if math.isnan(config_data[command_topic]):
+                    assert not math.isnan(command_item)
+                else:
+                    self.assertAlmostEqual(command_item, config_data[command_topic], 3)
 
     async def test_config(self) -> None:
         async with self.make_csc(
@@ -399,3 +405,71 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             )
             evt = await self.remote.evt_dynCH1PressRemoteSP.next(flush=False)
             assert math.isclose(evt.dynCH1PressRemoteSP, value)
+
+    async def test_config_with_nan(self) -> None:
+        async with self.make_csc(
+            initial_state=salobj.State.STANDBY,
+            simulation_mode=1,
+        ):
+            await salobj.set_summary_state(
+                remote=self.remote, state=salobj.State.ENABLED
+            )
+
+            # TODO DM-46835 Remove backward compatibility with XML 22.1.
+            if self.csc.xml.xml_language == Language.ENGLISH:
+                topic_enum = HvacTopicEnglish
+            else:
+                topic_enum = HvacTopic
+
+            # Only consider one HVAC device here and assume this also works
+            # for all other devices that can be configured.
+            hvac_topic = topic_enum("LSST/PISO05/MANEJADORA/LOWER_01")
+            subsystem = hvac_topic.name
+
+            # Retrieve the DeviceId.
+            device_id = DeviceId[subsystem]
+            enable_data = {"device_id": device_id}
+            # Enable the subsystem.
+            await self.remote.cmd_enableDevice.set_start(
+                **enable_data, timeout=STD_TIMEOUT
+            )
+
+            # TODO DM-46835 Remove backward compatibility with XML 22.1.
+            if self.csc.xml.xml_language == Language.ENGLISH:
+                command_group = "LowerAhu"
+            else:
+                command_group = "ManejadoraLowers"
+            config_method = getattr(self.remote, f"cmd_config{command_group}")
+
+            config_data = hvac_test_utils.get_random_config_data(hvac_topic)
+            config_data["device_id"] = device_id
+
+            # Introduce NaN values.
+            # TODO DM-46835 Remove backward compatibility with XML 22.1.
+            if self.csc.xml.xml_language == Language.ENGLISH:
+                config_data["maxFanSetpoint"] = math.nan
+                config_data["minFanSetpoint"] = math.nan
+                config_data["antiFreezeTemperature"] = math.nan
+            else:
+                config_data["setpointVentiladorMax"] = math.nan
+                config_data["setpointVentiladorMin"] = math.nan
+                config_data["temperaturaAnticongelante"] = math.nan
+
+            # Invoke the config command.
+            await config_method.set_start(**config_data)
+
+            # Make sure that the SimClient publishes telemetry.
+            self.csc.mqtt_client.publish_telemetry()
+            # Make sure that the CSC publishes the telemetry.
+            await self.csc.publish_telemetry()
+            # Check deviceEnabled event.
+            await self._verify_evt_deviceEnabled(subsystem)
+            # Check all configuration telemetry.
+            await self._verify_config_telemetry(subsystem, config_data)
+            # Check the config event.
+            await self._verify_config_event(hvac_topic, config_data)
+
+            # Disable the subsystem.
+            await self.remote.cmd_disableDevice.set_start(
+                **enable_data, timeout=STD_TIMEOUT
+            )

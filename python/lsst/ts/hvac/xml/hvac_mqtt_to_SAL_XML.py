@@ -23,12 +23,17 @@ import enum
 import re
 import typing
 
+from lsst.ts.hvac import EVENT_TOPIC_DICT_ENGLISH
 from lsst.ts.hvac.enums import (
     DEVICE_GROUPS,
+    DEVICE_GROUPS_ENGLISH,
     EVENT_TOPIC_DICT,
     SPANISH_TO_ENGLISH_DICTIONARY,
     DynaleneDescription,
     HvacTopic,
+    HvacTopicEnglish,
+    Language,
+    TelemetryItemDescription,
 )
 from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
@@ -98,6 +103,24 @@ def _translate_item(item: str) -> str:
         A string containing a crude English translation of the Spanish words.
 
     """
+    translation_addition = ""
+    if item in [
+        "estadoUnidad",
+        "estadoDeUnidad",
+        "estadoValvula",
+        "estadoValvula03",
+        "estadoValvula04",
+        "estadoValvula05",
+        "estadoValvula06",
+        "estadoValvula12",
+        "estadoVentilador",
+    ]:
+        translation_addition = " - a UnitState enum"
+    if item in [
+        "modoOperacion",
+        "modoOperacionUnidad",
+    ]:
+        translation_addition = " - an OperatingMode enum"
     if item.startswith("dyn"):
         translated_item = DynaleneDescription[item].value
     else:
@@ -108,7 +131,7 @@ def _translate_item(item: str) -> str:
             translated_item = re.sub(
                 rf"{key}", rf"{SPANISH_TO_ENGLISH_DICTIONARY[key]}", translated_item
             )
-    return translated_item
+    return translated_item + translation_addition
 
 
 def _split_event_description(item: str) -> str:
@@ -202,9 +225,14 @@ def collect_unique_command_items_per_group(
 ) -> dict[str, typing.Any]:
     command_items_per_group: dict[str, typing.Any] = {}
     for command_topic in command_topics:
-        hvac_topic = HvacTopic[command_topic].value
+        if xml.xml_language == Language.ENGLISH:
+            hvac_topic = HvacTopicEnglish[command_topic].value
+            device_groups = DEVICE_GROUPS_ENGLISH
+        else:
+            hvac_topic = HvacTopic[command_topic].value
+            device_groups = DEVICE_GROUPS
         command_group = next(
-            (group for group, topic in DEVICE_GROUPS.items() if hvac_topic in topic),
+            (group for group, topic in device_groups.items() if hvac_topic in topic),
             None,
         )
         if not command_group:
@@ -223,8 +251,12 @@ def collect_unique_command_items_per_group(
     # Remove "comandoEncendido" command item
     for command_group in unique_command_items_per_group:
         command_items = unique_command_items_per_group[command_group]
+        # TODO DM-46835 Remove backward compatibility with XML 22.1.
         if "comandoEncendido" in command_items:
             del command_items["comandoEncendido"]
+        # End TODO
+        if "switchOn" in command_items:
+            del command_items["switchOn"]
     # Remove empty command_groups
     unique_command_items_per_group = {
         group: items for group, items in unique_command_items_per_group.items() if items
@@ -234,10 +266,14 @@ def collect_unique_command_items_per_group(
 
 def _create_telemetry_xml() -> None:
     """Create the Telemetry XML file."""
+    # TODO DM-46835 Remove backward compatibility with XML 22.1.
+    event_topic_dict = EVENT_TOPIC_DICT_ENGLISH
+    if xml.xml_language == Language.SPANISH:
+        event_topic_dict = EVENT_TOPIC_DICT
     # Create a list of topic items that should be events.
     topic_items_that_should_be_events = [
         val["item"].replace("dynalene", "dyn")
-        for topic, val in EVENT_TOPIC_DICT.items()
+        for topic, val in event_topic_dict.items()
     ]
     for telemetry_topic in xml.telemetry_topics:
         st = etree.SubElement(telemetry_root, "SALTelemetry")
@@ -254,13 +290,19 @@ def _create_telemetry_xml() -> None:
             # Skip if a topic item should be an event.
             if telemetry_item in topic_items_that_should_be_events:
                 continue
+            # TODO DM-46835 Remove backward compatibility with XML 22.1.
+            if xml.xml_language == Language.ENGLISH:
+                description = TelemetryItemDescription[telemetry_item].value
+            else:
+                description = _translate_item(telemetry_item)
+            # End TODO
             _create_item_element(
                 st,
                 telemetry_topic,
                 telemetry_item,
                 xml.telemetry_topics[telemetry_topic][telemetry_item]["idl_type"],
                 xml.telemetry_topics[telemetry_topic][telemetry_item]["unit"],
-                _translate_item(telemetry_item),
+                description,
                 1,
             )
     _write_tree_to_file(telemetry_root, telemetry_filename)
@@ -295,14 +337,21 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
         )
 
     # Create configuration commands for the devices grouped by similar
-    # functionality
+    # functionality.
     for command_group in command_items_per_group:
         if command_group == "DYNALENE":
             # Dynalene commands are treated separately below.
             continue
-        description_text = f"Configure a {command_group} device."
+        command_group_for_description = command_group
+        if command_group not in ["CRAC", "AHU"]:
+            command_group_for_description = to_camel_case(command_group, False)
+        elif command_group == "AHU":
+            command_group_for_description = "AHU (Air Handling Unit)"
+        elif command_group == "CRAC":
+            command_group_for_description = "CRAC (Computer Room Air Conditioning)"
+        description_text = f"Configure a {command_group_for_description} device."
         st = _create_command_sub_element(
-            f"config{to_camel_case(command_group)}s", description_text
+            f"config{to_camel_case(command_group)}", description_text
         )
 
         command_items = command_items_per_group[command_group]
@@ -311,13 +360,19 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             st, command_group, "device_id", "int", "unitless", description_text, 1
         )
         for command_item in command_items:
+            # TODO DM-46835 Remove backward compatibility with XML 22.1.
+            if xml.xml_language == Language.ENGLISH:
+                description = TelemetryItemDescription[command_item].value
+            else:
+                description = _translate_item(command_item)
+            # End TODO
             _create_item_element(
                 st,
                 command_group,
                 command_item,
                 command_items[command_item]["idl_type"],
                 command_items[command_item]["unit"],
-                _translate_item(command_item),
+                description,
                 1,
             )
 
@@ -326,13 +381,19 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     for dynalene_item in dynalene_group:
         description_text = f"Set Dynalene {dynalene_item}."
         st = _create_command_sub_element(f"{dynalene_item}", description_text)
+        # TODO DM-46835 Remove backward compatibility with XML 22.1.
+        if xml.xml_language == Language.ENGLISH:
+            description = TelemetryItemDescription[dynalene_item].value
+        else:
+            description = _translate_item(dynalene_item)
+        # End TODO
         _create_item_element(
             st,
             dynalene_item,
             dynalene_item,
             dynalene_group[dynalene_item]["idl_type"],
             dynalene_group[dynalene_item]["unit"],
-            _translate_item(dynalene_item),
+            description,
             1,
         )
 
@@ -356,6 +417,12 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     _create_enumeration_element_from_enum(DeviceId)
     _create_enumeration_element_from_enum(DynaleneState)
     _create_enumeration_element_from_enum(DynaleneTankLevel)
+
+    if xml.xml_language == Language.ENGLISH:
+        from lsst.ts.xml.enums.HVAC import OperatingMode, UnitState
+
+        _create_enumeration_element_from_enum(OperatingMode)
+        _create_enumeration_element_from_enum(UnitState)
 
     # Create the events. In order to add events, simply add dictionary
     # elements as follows:
@@ -403,7 +470,14 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             f"HVAC_logevent_{to_camel_case(command_group, True)}Configuration"
         )
         description = etree.SubElement(st, "Description")
-        description.text = f"Configuration of a {command_group} device."
+        command_group_for_description = command_group
+        if command_group not in ["CRAC", "AHU"]:
+            command_group_for_description = to_camel_case(command_group, False)
+        elif command_group == "AHU":
+            command_group_for_description = "AHU (Air Handling Unit)"
+        elif command_group == "CRAC":
+            command_group_for_description = "CRAC (Computer Room Air Conditioning)"
+        description.text = f"Configuration of a {command_group_for_description} device."
 
         command_items = command_items_per_group[command_group]
         description_text = f"Device ID; one of the DeviceId_{to_camel_case(command_group, True)} enums."
@@ -411,13 +485,19 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             st, command_group, "device_id", "int", "unitless", description_text, 1
         )
         for command_item in command_items:
+            # TODO DM-46835 Remove backward compatibility with XML 22.1.
+            if xml.xml_language == Language.ENGLISH:
+                description = TelemetryItemDescription[command_item].value
+            else:
+                description = _translate_item(command_item)
+            # End TODO
             _create_item_element(
                 st,
                 command_group,
                 command_item,
                 command_items[command_item]["idl_type"],
                 command_items[command_item]["unit"],
-                _translate_item(command_item),
+                description,
                 1,
             )
 
@@ -431,36 +511,46 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
         efdb_topic.text = f"HVAC_logevent_{dynalene_item}"
         description = etree.SubElement(st, "Description")
         description.text = f"Set Dynalene {dynalene_item}."
+        # TODO DM-46835 Remove backward compatibility with XML 22.1.
+        if xml.xml_language == Language.ENGLISH:
+            description = TelemetryItemDescription[dynalene_item].value
+        else:
+            description = _translate_item(dynalene_item)
+        # End TODO
         _create_item_element(
             st,
             dynalene_item,
             dynalene_item,
             dynalene_group[dynalene_item]["idl_type"],
             dynalene_group[dynalene_item]["unit"],
-            _translate_item(dynalene_item),
+            description,
             1,
         )
 
     # Add Dynalene State and Dynalene Safety State events.
-    for event_topic in EVENT_TOPIC_DICT:
+    # TODO DM-46835 Remove backward compatibility with XML 22.1.
+    event_topic_dict = EVENT_TOPIC_DICT_ENGLISH
+    if xml.xml_language == Language.SPANISH:
+        event_topic_dict = EVENT_TOPIC_DICT
+    for event_topic in event_topic_dict:
         st = etree.SubElement(events_root, "SALEvent")
         sub_system = etree.SubElement(st, "Subsystem")
         sub_system.text = "HVAC"
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
-        efdb_topic.text = f"HVAC_logevent_{EVENT_TOPIC_DICT[event_topic]['item']}"
+        efdb_topic.text = f"HVAC_logevent_{event_topic_dict[event_topic]['item']}"
         description = etree.SubElement(st, "Description")
-        description.text = EVENT_TOPIC_DICT[event_topic]["evt_description"]
+        description.text = event_topic_dict[event_topic]["evt_description"]
         _create_item_element(
             st,
             event_topic,
             "state",
             (
                 "int"
-                if EVENT_TOPIC_DICT[event_topic]["type"] == "enum"
-                else EVENT_TOPIC_DICT[event_topic]["type"]
+                if event_topic_dict[event_topic]["type"] == "enum"
+                else event_topic_dict[event_topic]["type"]
             ),
             "unitless",
-            EVENT_TOPIC_DICT[event_topic]["item_description"],
+            event_topic_dict[event_topic]["item_description"],
             1,
         )
 

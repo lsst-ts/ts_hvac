@@ -101,12 +101,6 @@ class MqttClient(BaseMqttClient):
         is_published: `bool`
             For now False gets returned since this functionality is disabled.
         """
-        self.log.error(
-            "This functionality is not enabled yet since it is unclear "
-            "whether this CSC will be responsible for this or if this will be "
-            "done via the HVAC software user interface."
-        )
-        return False
-        # Future improvement.
-        # msg_info = self.client.publish(topic=topic, payload=payload)
-        # return msg_info.is_published()
+        self.log.debug(f"Sending messge with {topic=!r} and {payload=!r}.")
+        msg_info = self.client.publish(topic=topic, payload=payload)
+        return msg_info.is_published()

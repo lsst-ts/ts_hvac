@@ -6,6 +6,23 @@
 Version History
 ###############
 
+v0.17.0
+=======
+
+* Add OperatingMode and UnitState enums.
+* Translate all Spanish to English.
+* Stop computing means for float values.
+* Enable sending of commands.
+* Set log level to DEBUG for local testing.
+* Improve logging.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* ts_xml 22.1
+
 v0.16.0
 =======
 

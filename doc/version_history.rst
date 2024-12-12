@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.17.1
+=======
+
+* Use the new AlmaLinux 9 Niagara host.
+
+Requires:
+
+* ts_salobj 7
+* ts_idl 4.6
+* ts_utils
+* ts_xml 22.1
+
 v0.17.0
 =======
 

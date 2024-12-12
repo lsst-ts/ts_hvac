@@ -188,7 +188,7 @@ class HvacCsc(salobj.BaseCsc):
         self.hvac_state: dict[str, typing.Any] = {}
 
         # The host and port to connect to.
-        self.host = "hvac01.cp.lsst.org"
+        self.host = "hvac.cp.lsst.org"
         self.port = 1883
 
         # Keep track of the device indices for the device mask

@@ -1770,6 +1770,7 @@ TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH = frozenset(
 # These strings cannot be decoded by JSON and need to be treated separately.
 STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON = {
     b"AUTOMATICO {ok} @ 10",
+    b"ENCENDIDO {ok} @ 10",
 }
 
 # For these topics, the data are in bar which need to be converted to Pa.

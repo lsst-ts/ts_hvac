@@ -6,6 +6,18 @@
 Version History
 ###############
 
+v0.17.3
+=======
+
+* Work around unknown topics.
+* Add support for Chiller04 and modified Dynalene alarms.
+
+Requires:
+
+* ts_salobj 8
+* ts_utils
+* ts_xml 22.2
+
 v0.17.2
 =======
 

@@ -255,6 +255,7 @@ class MqttInfoReader:
         if (
             topic == "LSST/PISO05/DYNALENE/Safeties"
             or topic == "LSST/PISO05/DYNALENE/Status"
+            or topic == "LSST/PISO05/DYNALENE/DynaleneState"
         ):
             topic = "LSST/PISO05/DYNALENE"
         # Some Dynalene event items need to be grouped together.

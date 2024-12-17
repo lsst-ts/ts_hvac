@@ -451,10 +451,15 @@ class HvacCsc(salobj.BaseCsc):
             ]
             if len(event_items) > 0:
                 # TODO DM-46835 Remove backward compatibility with XML 22.1.
-                if self.xml.xml_language == Language.ENGLISH:
-                    hvac_topic = HvacTopicEnglish(topic).name
-                else:
-                    hvac_topic = HvacTopic(topic).name
+                try:
+                    if self.xml.xml_language == Language.ENGLISH:
+                        hvac_topic = HvacTopicEnglish(topic).name
+                    else:
+                        hvac_topic = HvacTopic(topic).name
+                except ValueError:
+                    self.log.warning(
+                        f"Ignoring unknown {topic=} for {topic_and_item=}."
+                    )
                 event_item = event_items[0]
                 event = getattr(self, f"evt_{hvac_topic}")
                 setattr(event.data, event_item.name, payload)
@@ -463,7 +468,9 @@ class HvacCsc(salobj.BaseCsc):
             # DM-39103 Workaround for unknown or misspelled topic and item
             # names.
             if topic not in self.hvac_state or item not in self.hvac_state[topic]:
-                self.log.warning(f"Ignoring unknown {topic=} and {item=}.")
+                self.log.warning(
+                    f"Ignoring unknown {topic=} and {item=} for {topic_and_item=}."
+                )
                 continue
 
             # Some Dynalene event topics need to be grouped together, which is

@@ -36,10 +36,6 @@ from lsst.ts.hvac.enums import (
 )
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
-logging.basicConfig(
-    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
-)
-
 expected_units = frozenset(
     ("deg_C", "unitless", "bar", "%", "h", "m3/h", "l/min", "Pa", "kW")
 )

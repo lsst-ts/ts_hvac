@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
 import unittest
 
 from lsst.ts.hvac.enums import (
@@ -31,10 +30,6 @@ from lsst.ts.hvac.enums import (
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML
 from lsst.ts.xml.enums.HVAC import DeviceId
-
-logging.basicConfig(
-    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
-)
 
 
 class MqttToSalTestCase(unittest.TestCase):

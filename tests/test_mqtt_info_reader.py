@@ -19,14 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
 import unittest
 
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
-
-logging.basicConfig(
-    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s", level=logging.DEBUG
-)
 
 
 class MqttInfoReaderTestCase(unittest.TestCase):
@@ -42,4 +37,4 @@ class MqttInfoReaderTestCase(unittest.TestCase):
             topic, item = mir.extract_topic_and_item(topic_and_item)
             self.fail("A ValueError was expected here.")
         except ValueError as e:
-            self.assertTrue(e is not None)
+            self.assertIsNot(e, None)

@@ -52,7 +52,7 @@ __all__ = [
 
 from enum import Enum
 
-from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
+from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
 # TODO DM-46835 Remove once XML 22.2 has been released.
 SPANISH_TO_ENGLISH_DICTIONARY = {
@@ -245,6 +245,7 @@ class HvacTopicEnglish(Enum):
     chiller01P01 = "LSST/PISO01/CHILLER_01"
     chiller02P01 = "LSST/PISO01/CHILLER_02"
     chiller03P01 = "LSST/PISO01/CHILLER_03"
+    chiller04P01 = "LSST/PISO01/CHILLER_04"
     crac01P02 = "LSST/PISO02/CRACK01"
     crac02P02 = "LSST/PISO02/CRACK02"
     dynaleneP05 = "LSST/PISO05/DYNALENE"
@@ -633,6 +634,118 @@ EVENT_TOPICS = [
     "LSST/PISO01/CHILLER_03/UNIT_CONFIGURATION_STATUS_2_SEQUENCER_ENABLED",
     "LSST/PISO01/CHILLER_03/UNIT_CONFIGURATION_STATUS_2_SETPOINT_MODIFICATION_ENABLED",
     "LSST/PISO01/CHILLER_03/UNIT_CONFIGURATION_STATUS_2_TIME_BANDS_ENABLED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_CONFIGURED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_ENABLED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_ON",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_ALARM_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_PLUS2P_ENABLED_WHOLE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_CHILLER",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_HEATPUMP",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_RECOVERY",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_DEFROSTING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_FREE_COOLING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_DRIPPING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_1_STATUS_REQUEST",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_CONFIGURED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_ENABLED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_ON",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_ALARM_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_PLUS2P_ENABLED_WHOLE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_CHILLER",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_HEATPUMP",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_RECOVERY",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_DEFROSTING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_FREE_COOLING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_DRIPPING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_2_STATUS_REQUEST",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_CONFIGURED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_ENABLED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_ON",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_ALARM_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_PLUS2P_ENABLED_WHOLE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_CHILLER",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_HEATPUMP",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_RECOVERY",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_DEFROSTING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_FREE_COOLING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_DRIPPING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_3_STATUS_REQUEST",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_CONFIGURED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_ENABLED",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_ON",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_ALARM_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_PLUS2P_ENABLED_WHOLE",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_CHILLER",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_HEATPUMP",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_RECOVERY",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_DEFROSTING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_FREE_COOLING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_DRIPPING",
+    "LSST/PISO01/CHILLER_04/COMPRESSOR_4_STATUS_REQUEST",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_ENABLE_PUMP_1",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_ENABLE_PUMP_2",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_ENABLE_RECOVERY_PUMP",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_BIT3_UNUSED",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_ENABLE_CONSENSER_PUMP",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_BIT5_UNUSED",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_PUMPS_1_2_STOPPED",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_RECOVERY_PUMP_STOPPED",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_PUMP_1_ALARM",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_PUMP_2_ALARM",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_RECOVERY_PUMP_ALARM",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_BIT11_UNUSED",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_CONDENSER_PUMP_ALARM",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_CONDENSER_PUMP_FLOW_ALARM",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_STOP_BY_ALARM",
+    "LSST/PISO01/CHILLER_04/PUMP_CODES_GENERAL_ALARM",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_HEAT_PUMP_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_QUICK_MIND_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_INLET_OUTLET",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_FREE_COOLING_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT4_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT5_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT6_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT7_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT8_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT9_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT10_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_RECOVERY_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT12_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT13_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT14_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_1_BIT15_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_TIME_BANDS_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_PUMPDOWN_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_SETPOINT_MODIFICATION_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_SEQUENCER_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_DHW_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT5_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT6_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT7_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT8_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT9_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT10_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_PLUS2P_ENABLED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT12_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT13_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT14_UNUSED",
+    "LSST/PISO01/CHILLER_04/UNIT_CONFIGURATION_STATUS_2_BIT15_UNUSED",
     "LSST/PISO02/CRACK01/ALARM_DEVICE",
     "LSST/PISO02/CRACK01/DOWN_DEVICE",
     "LSST/PISO02/CRACK01/FAULT_DEVICE",
@@ -681,6 +794,37 @@ EVENT_TOPICS = [
     "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA/ALARM_DEVICE",
     "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA/DOWN_DEVICE",
     "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA/FAULT_DEVICE",
+    "LSST/PISO05/DYNALENE/DynaleneState/Initialized",
+    "LSST/PISO05/DYNALENE/DynaleneState/Shutting Down",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powering ON",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powered ON",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powering OFF",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powered OFF",
+    "LSST/PISO05/DYNALENE/DynaleneState/Warning",
+    "LSST/PISO05/DYNALENE/DynaleneState/Alarm",
+    "LSST/PISO05/DYNALENE/DynaleneState/Shutted OFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorON",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorOFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorON",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorOFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynMainGridAlarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynMainGridAlarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynMainGridFailureFlag",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelWarning",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelOK",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynSafetyResetFlag",
+    "LSST/PISO05/DYNALENE/Safeties/DynSysFault",
+    "LSST/PISO05/DYNALENE/Safeties/DynSysWarning",
+    "LSST/PISO05/DYNALENE/Safeties/DynSysOK",
+    "LSST/PISO05/DYNALENE/Status/DynRemoteLocalModeStatus",
+    "LSST/PISO05/DYNALENE/Status/DynAmbientDeltaModeStatus",
+    "LSST/PISO05/DYNALENE/Status/DynExhaustAirBackupModeStatus",
     "LSST/PISO05/MANEJADORA/LOWER_01/ALARM_DEVICE",
     "LSST/PISO05/MANEJADORA/LOWER_01/DOWN_DEVICE",
     "LSST/PISO05/MANEJADORA/LOWER_01/FAULT_DEVICE",
@@ -723,19 +867,6 @@ class TelemetryItem(Enum):
     dynCH02supFS02 = "DCH02supFS02"
     dynCH02supPS13 = "DCH02supPS13"
     dynCH02supTS07 = "DCH02supTS07"
-    dynMainGridAlarm = "DynMainGridAlarm"
-    dynMainGridAlarmCMD = "DynMainGridAlarmCMD"
-    dynMainGridFailureFlag = "DynMainGridFailureFlag"
-    dynSafetyResetFlag = "DynSafetyResetFlag"
-    dynState = "DynaleneState"
-    dynTAalarm = "DynTAalarm"
-    dynTAalarmCMD = "DynTAalarmCMD"
-    dynTAalarmMonitor = "DynTAalarmMonitor"
-    dynTankLevel = "DynTankLevel"
-    dynTankLevelAlarmCMD = "DynTankLevelAlarmCMD"
-    dynTMAalarm = "DynTMAalarm"
-    dynTMAalarmCMD = "DynTMAalarmCMD"
-    dynTMAalarmMonitor = "DynTMAalarmMonitor"
     dynTAretPS04 = "DynTAretPS04"
     dynTAretTS04 = "DynTAretTS04"
     dynTAsupFS04 = "DynTAsupFS04"
@@ -839,12 +970,6 @@ class TelemetryItem(Enum):
     dynCH2supGPGLYflow = "DynCH2supGPGLYflow"
     dynTMAcmv01pos = "DynTMAcmv01pos"
     dynTMAcmv02pos = "DynTMAcmv02pos"
-    dynSysFault = "DynSysFault"
-    dynSysOK = "DynSysOK"
-    dynSysWarning = "DynSysWarning"
-    dynAmbientDeltaModeStatus = "DynAmbientDeltaModeStatus"
-    dynExhaustAirBackupModeStatus = "DynExhaustAirBackupModeStatus"
-    dynRemoteLocalModeStatus = "DynRemoteLocalModeStatus"
     exhAirAvrgTemp = "ExhAirAvrgTemp"
 
 
@@ -852,6 +977,7 @@ class TelemetryItemEnglish(Enum):
     """English descriptions for telemetry items."""
 
     activeSetpoint = "SETPOINT_ACTIVO"
+    alarmDevice = "ALARM_DEVICE"
     alarmPresentState = "ESTADO_PRESENCIA_ALARMA"
     alarmReset = "RESET_ALARMA"
     ambientTemperature = "TEMPERATURA_AMBIENTE"
@@ -864,15 +990,111 @@ class TelemetryItemEnglish(Enum):
     commanded = "COMANDO"
     compressor01Alarm = "COMPRESOR_01_ALARMADO"
     compressor01Hours = "HORAS_COMPRESOR_01"
+    compressor01Plus2pEnabledWhole = "COMPRESSOR_1_PLUS2P_ENABLED_WHOLE"
+    compressor01Plus2pEnabledWith_1StepActive = (
+        "COMPRESSOR_1_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE"
+    )
+    compressor01Plus2pEnabledWith_2StepsActive = (
+        "COMPRESSOR_1_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE"
+    )
+    compressor01Plus2pEnabledWith_3StepsActive = (
+        "COMPRESSOR_1_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE"
+    )
+    compressor01StatusAlarmActive = "COMPRESSOR_1_STATUS_ALARM_ACTIVE"
+    compressor01StatusChiller = "COMPRESSOR_1_STATUS_CHILLER"
+    compressor01StatusConfigured = "COMPRESSOR_1_STATUS_CONFIGURED"
+    compressor01StatusDefrosting = "COMPRESSOR_1_STATUS_DEFROSTING"
+    compressor01StatusDripping = "COMPRESSOR_1_STATUS_DRIPPING"
+    compressor01StatusEnabled = "COMPRESSOR_1_STATUS_ENABLED"
+    compressor01StatusEnabledStatusPumpDownActive = (
+        "COMPRESSOR_1_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE"
+    )
+    compressor01StatusFreeCooling = "COMPRESSOR_1_STATUS_FREE_COOLING"
+    compressor01StatusHeatpump = "COMPRESSOR_1_STATUS_HEATPUMP"
+    compressor01StatusOn = "COMPRESSOR_1_STATUS_ON"
+    compressor01StatusRecovery = "COMPRESSOR_1_STATUS_RECOVERY"
+    compressor01StatusRequest = "COMPRESSOR_1_STATUS_REQUEST"
     compressor01Working = "COMPRESOR_01_FUNCIONANDO"
     compressor02Alarm = "COMPRESOR_02_ALARMADO"
     compressor02Hours = "HORAS_COMPRESOR_02"
+    compressor02Plus2pEnabledWhole = "COMPRESSOR_2_PLUS2P_ENABLED_WHOLE"
+    compressor02Plus2pEnabledWith_1StepActive = (
+        "COMPRESSOR_2_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE"
+    )
+    compressor02Plus2pEnabledWith_2StepsActive = (
+        "COMPRESSOR_2_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE"
+    )
+    compressor02Plus2pEnabledWith_3StepsActive = (
+        "COMPRESSOR_2_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE"
+    )
+    compressor02StatusAlarmActive = "COMPRESSOR_2_STATUS_ALARM_ACTIVE"
+    compressor02StatusChiller = "COMPRESSOR_2_STATUS_CHILLER"
+    compressor02StatusConfigured = "COMPRESSOR_2_STATUS_CONFIGURED"
+    compressor02StatusDefrosting = "COMPRESSOR_2_STATUS_DEFROSTING"
+    compressor02StatusDripping = "COMPRESSOR_2_STATUS_DRIPPING"
+    compressor02StatusEnabled = "COMPRESSOR_2_STATUS_ENABLED"
+    compressor02StatusEnabledStatusPumpDownActive = (
+        "COMPRESSOR_2_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE"
+    )
+    compressor02StatusFreeCooling = "COMPRESSOR_2_STATUS_FREE_COOLING"
+    compressor02StatusHeatpump = "COMPRESSOR_2_STATUS_HEATPUMP"
+    compressor02StatusOn = "COMPRESSOR_2_STATUS_ON"
+    compressor02StatusRecovery = "COMPRESSOR_2_STATUS_RECOVERY"
+    compressor02StatusRequest = "COMPRESSOR_2_STATUS_REQUEST"
     compressor02Working = "COMPRESOR_02_FUNCIONANDO"
     compressor03Alarm = "COMPRESOR_03_ALARMADO"
     compressor03Hours = "HORAS_COMPRESOR_03"
+    compressor03Plus2pEnabledWhole = "COMPRESSOR_3_PLUS2P_ENABLED_WHOLE"
+    compressor03Plus2pEnabledWith_1StepActive = (
+        "COMPRESSOR_3_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE"
+    )
+    compressor03Plus2pEnabledWith_2StepsActive = (
+        "COMPRESSOR_3_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE"
+    )
+    compressor03Plus2pEnabledWith_3StepsActive = (
+        "COMPRESSOR_3_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE"
+    )
+    compressor03StatusAlarmActive = "COMPRESSOR_3_STATUS_ALARM_ACTIVE"
+    compressor03StatusChiller = "COMPRESSOR_3_STATUS_CHILLER"
+    compressor03StatusConfigured = "COMPRESSOR_3_STATUS_CONFIGURED"
+    compressor03StatusDefrosting = "COMPRESSOR_3_STATUS_DEFROSTING"
+    compressor03StatusDripping = "COMPRESSOR_3_STATUS_DRIPPING"
+    compressor03StatusEnabled = "COMPRESSOR_3_STATUS_ENABLED"
+    compressor03StatusEnabledStatusPumpDownActive = (
+        "COMPRESSOR_3_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE"
+    )
+    compressor03StatusFreeCooling = "COMPRESSOR_3_STATUS_FREE_COOLING"
+    compressor03StatusHeatpump = "COMPRESSOR_3_STATUS_HEATPUMP"
+    compressor03StatusOn = "COMPRESSOR_3_STATUS_ON"
+    compressor03StatusRecovery = "COMPRESSOR_3_STATUS_RECOVERY"
+    compressor03StatusRequest = "COMPRESSOR_3_STATUS_REQUEST"
     compressor03Working = "COMPRESOR_03_FUNCIONANDO"
     compressor04Alarm = "COMPRESOR_04_ALARMADO"
     compressor04Hours = "HORAS_COMPRESOR_04"
+    compressor04Plus2pEnabledWhole = "COMPRESSOR_4_PLUS2P_ENABLED_WHOLE"
+    compressor04Plus2pEnabledWith_1StepActive = (
+        "COMPRESSOR_4_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE"
+    )
+    compressor04Plus2pEnabledWith_2StepsActive = (
+        "COMPRESSOR_4_PLUS2P_ENABLED_WITH_2_STEPS_ACTIVE"
+    )
+    compressor04Plus2pEnabledWith_3StepsActive = (
+        "COMPRESSOR_4_PLUS2P_ENABLED_WITH_3_STEPS_ACTIVE"
+    )
+    compressor04StatusAlarmActive = "COMPRESSOR_4_STATUS_ALARM_ACTIVE"
+    compressor04StatusChiller = "COMPRESSOR_4_STATUS_CHILLER"
+    compressor04StatusConfigured = "COMPRESSOR_4_STATUS_CONFIGURED"
+    compressor04StatusDefrosting = "COMPRESSOR_4_STATUS_DEFROSTING"
+    compressor04StatusDripping = "COMPRESSOR_4_STATUS_DRIPPING"
+    compressor04StatusEnabled = "COMPRESSOR_4_STATUS_ENABLED"
+    compressor04StatusEnabledStatusPumpDownActive = (
+        "COMPRESSOR_4_STATUS_ENABLED_STATUS_PUMP_DOWN_ACTIVE"
+    )
+    compressor04StatusFreeCooling = "COMPRESSOR_4_STATUS_FREE_COOLING"
+    compressor04StatusHeatpump = "COMPRESSOR_4_STATUS_HEATPUMP"
+    compressor04StatusOn = "COMPRESSOR_4_STATUS_ON"
+    compressor04StatusRecovery = "COMPRESSOR_4_STATUS_RECOVERY"
+    compressor04StatusRequest = "COMPRESSOR_4_STATUS_REQUEST"
     compressor04Working = "COMPRESOR_04_FUNCIONANDO"
     coolingSetpoint = "SETPOINT_COOLING"
     cto1LowerPressure = "PRESION_BAJA_CTO1"
@@ -881,9 +1103,11 @@ class TelemetryItemEnglish(Enum):
     dayCoolingSetpoint = "SETPOINT_COOLING_DAY"
     dayHeatingSetpoint = "SETPOINT_HEATING_DAY"
     dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR"
+    downDevice = "DOWN_DEVICE"
     exteriorAmbienteTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
     externalTemperatureState = "ESTADO_TEMPERATURA_EXTERIOR"
     fanState = "ESTADO_VENTILADOR"
+    faultDevice = "FAULT_DEVICE"
     filterAlarm = "ALARMA_FILTRO"
     generalAlarm = "ALARMA_GENERAL"
     heatingSetpoint = "SETPOINT_HEATING"
@@ -899,6 +1123,22 @@ class TelemetryItemEnglish(Enum):
     numberOfCircuits = "NUMERO_CIRCUITOS"
     operationalMode = "MODO_OPERACION"
     operationalState = "ESTADO_OPERACION"
+    pumpCodesBit11Unused = "PUMP_CODES_BIT11_UNUSED"
+    pumpCodesBit3Unused = "PUMP_CODES_BIT3_UNUSED"
+    pumpCodesBit5Unused = "PUMP_CODES_BIT5_UNUSED"
+    pumpCodesCondenserPumpAlarm = "PUMP_CODES_CONDENSER_PUMP_ALARM"
+    pumpCodesCondenserPumpFlowAlarm = "PUMP_CODES_CONDENSER_PUMP_FLOW_ALARM"
+    pumpCodesEnableConsenserPump = "PUMP_CODES_ENABLE_CONSENSER_PUMP"
+    pumpCodesEnablePump_1 = "PUMP_CODES_ENABLE_PUMP_1"
+    pumpCodesEnablePump_2 = "PUMP_CODES_ENABLE_PUMP_2"
+    pumpCodesEnableRecoveryPump = "PUMP_CODES_ENABLE_RECOVERY_PUMP"
+    pumpCodesGeneralAlarm = "PUMP_CODES_GENERAL_ALARM"
+    pumpCodesPump_1Alarm = "PUMP_CODES_PUMP_1_ALARM"
+    pumpCodesPump_2Alarm = "PUMP_CODES_PUMP_2_ALARM"
+    pumpCodesPumps_1_2Stopped = "PUMP_CODES_PUMPS_1_2_STOPPED"
+    pumpCodesRecoveryPumpAlarm = "PUMP_CODES_RECOVERY_PUMP_ALARM"
+    pumpCodesRecoveryPumpStopped = "PUMP_CODES_RECOVERY_PUMP_STOPPED"
+    pumpCodesStopByAlarm = "PUMP_CODES_STOP_BY_ALARM"
     retPressChiller01 = "RET_PRESS_CHILLER_01"
     retPressChiller02 = "RET_PRESS_CHILLER_02"
     retPressChiller03 = "RET_PRESS_CHILLER_03"
@@ -930,6 +1170,56 @@ class TelemetryItemEnglish(Enum):
     supplyTemperature = "TEMPERATURA_INYECCION"
     switchedOn = "COMANDO_ENCENDIDO"
     thermalFault = "FALLA_TERMICA"
+    unitConfigurationStatus_1Bit10Unused = "UNIT_CONFIGURATION_STATUS_1_BIT10_UNUSED"
+    unitConfigurationStatus_1Bit12Unused = "UNIT_CONFIGURATION_STATUS_1_BIT12_UNUSED"
+    unitConfigurationStatus_1Bit13Unused = "UNIT_CONFIGURATION_STATUS_1_BIT13_UNUSED"
+    unitConfigurationStatus_1Bit14Unused = "UNIT_CONFIGURATION_STATUS_1_BIT14_UNUSED"
+    unitConfigurationStatus_1Bit15Unused = "UNIT_CONFIGURATION_STATUS_1_BIT15_UNUSED"
+    unitConfigurationStatus_1Bit4Unused = "UNIT_CONFIGURATION_STATUS_1_BIT4_UNUSED"
+    unitConfigurationStatus_1Bit5Unused = "UNIT_CONFIGURATION_STATUS_1_BIT5_UNUSED"
+    unitConfigurationStatus_1Bit6Unused = "UNIT_CONFIGURATION_STATUS_1_BIT6_UNUSED"
+    unitConfigurationStatus_1Bit7Unused = "UNIT_CONFIGURATION_STATUS_1_BIT7_UNUSED"
+    unitConfigurationStatus_1Bit8Unused = "UNIT_CONFIGURATION_STATUS_1_BIT8_UNUSED"
+    unitConfigurationStatus_1Bit9Unused = "UNIT_CONFIGURATION_STATUS_1_BIT9_UNUSED"
+    unitConfigurationStatus_1FreeCoolingEnabled = (
+        "UNIT_CONFIGURATION_STATUS_1_FREE_COOLING_ENABLED"
+    )
+    unitConfigurationStatus_1HeatPumpEnabled = (
+        "UNIT_CONFIGURATION_STATUS_1_HEAT_PUMP_ENABLED"
+    )
+    unitConfigurationStatus_1InletOutlet = "UNIT_CONFIGURATION_STATUS_1_INLET_OUTLET"
+    unitConfigurationStatus_1QuickMindEnabled = (
+        "UNIT_CONFIGURATION_STATUS_1_QUICK_MIND_ENABLED"
+    )
+    unitConfigurationStatus_1RecoveryEnabled = (
+        "UNIT_CONFIGURATION_STATUS_1_RECOVERY_ENABLED"
+    )
+    unitConfigurationStatus_2Bit10Unused = "UNIT_CONFIGURATION_STATUS_2_BIT10_UNUSED"
+    unitConfigurationStatus_2Bit12Unused = "UNIT_CONFIGURATION_STATUS_2_BIT12_UNUSED"
+    unitConfigurationStatus_2Bit13Unused = "UNIT_CONFIGURATION_STATUS_2_BIT13_UNUSED"
+    unitConfigurationStatus_2Bit14Unused = "UNIT_CONFIGURATION_STATUS_2_BIT14_UNUSED"
+    unitConfigurationStatus_2Bit15Unused = "UNIT_CONFIGURATION_STATUS_2_BIT15_UNUSED"
+    unitConfigurationStatus_2Bit5Unused = "UNIT_CONFIGURATION_STATUS_2_BIT5_UNUSED"
+    unitConfigurationStatus_2Bit6Unused = "UNIT_CONFIGURATION_STATUS_2_BIT6_UNUSED"
+    unitConfigurationStatus_2Bit7Unused = "UNIT_CONFIGURATION_STATUS_2_BIT7_UNUSED"
+    unitConfigurationStatus_2Bit8Unused = "UNIT_CONFIGURATION_STATUS_2_BIT8_UNUSED"
+    unitConfigurationStatus_2Bit9Unused = "UNIT_CONFIGURATION_STATUS_2_BIT9_UNUSED"
+    unitConfigurationStatus_2DhwEnabled = "UNIT_CONFIGURATION_STATUS_2_DHW_ENABLED"
+    unitConfigurationStatus_2Plus2pEnabled = (
+        "UNIT_CONFIGURATION_STATUS_2_PLUS2P_ENABLED"
+    )
+    unitConfigurationStatus_2PumpdownEnabled = (
+        "UNIT_CONFIGURATION_STATUS_2_PUMPDOWN_ENABLED"
+    )
+    unitConfigurationStatus_2SequencerEnabled = (
+        "UNIT_CONFIGURATION_STATUS_2_SEQUENCER_ENABLED"
+    )
+    unitConfigurationStatus_2SetpointModificationEnabled = (
+        "UNIT_CONFIGURATION_STATUS_2_SETPOINT_MODIFICATION_ENABLED"
+    )
+    unitConfigurationStatus_2TimeBandsEnabled = (
+        "UNIT_CONFIGURATION_STATUS_2_TIME_BANDS_ENABLED"
+    )
     unitState = "ESTADO_UNIDAD"
     valve03State = "ESTADO_VALVULA_03"
     valve04State = "ESTADO_VALVULA_04"
@@ -957,7 +1247,6 @@ class TelemetryItemEnglish(Enum):
     dynMainGridAlarmCMD = "DynMainGridAlarmCMD"
     dynMainGridFailureFlag = "DynMainGridFailureFlag"
     dynSafetyResetFlag = "DynSafetyResetFlag"
-    dynState = "DynaleneState"
     dynTAalarm = "DynTAalarm"
     dynTAalarmCMD = "DynTAalarmCMD"
     dynTAalarmMonitor = "DynTAalarmMonitor"
@@ -1007,6 +1296,7 @@ class TelemetryItemDescription(Enum):
     """Descriptions for telemetry items."""
 
     activeSetpoint = "Active Setpoint."
+    alarmDevice = "Device Alarm."
     alarmPresentState = "Alarm Present State."
     alarmReset = "Alarm Reset."
     ambientTemperature = "Ambient Temperature."
@@ -1019,15 +1309,111 @@ class TelemetryItemDescription(Enum):
     commanded = "Commanded."
     compressor01Alarm = "Compresson 01 Alarm."
     compressor01Hours = "Compressor 01 Hours."
+    compressor01Plus2pEnabledWhole = "Compressor 1 Plus2p Enabled Whole."
+    compressor01Plus2pEnabledWith_1StepActive = (
+        "Compressor 1 Plus2p Enabled With 1 Step Active."
+    )
+    compressor01Plus2pEnabledWith_2StepsActive = (
+        "Compressor 1 Plus2p Enabled With 2 Steps Active."
+    )
+    compressor01Plus2pEnabledWith_3StepsActive = (
+        "Compressor 1 Plus2p Enabled With 3 Steps Active."
+    )
+    compressor01StatusAlarmActive = "Compressor 1 Status Alarm Active."
+    compressor01StatusChiller = "Compressor 1 Status Chiller."
+    compressor01StatusConfigured = "Compressor 1 Status Configured."
+    compressor01StatusDefrosting = "Compressor 1 Status Defrosting."
+    compressor01StatusDripping = "Compressor 1 Status Dripping."
+    compressor01StatusEnabled = "Compressor 1 Status Enabled."
+    compressor01StatusEnabledStatusPumpDownActive = (
+        "Compressor 1 Status Enabled Status Pump Down Active."
+    )
+    compressor01StatusFreeCooling = "Compressor 1 Status Free Cooling."
+    compressor01StatusHeatpump = "Compressor 1 Status Heatpump."
+    compressor01StatusOn = "Compressor 1 Status On."
+    compressor01StatusRecovery = "Compressor 1 Status Recovery."
+    compressor01StatusRequest = "Compressor 1 Status Request."
     compressor01Working = "Compresson 01 Working."
     compressor02Alarm = "Compresson 02 Alarm."
     compressor02Hours = "Compressor 02 Hours."
+    compressor02Plus2pEnabledWhole = "Compressor 2 Plus2p Enabled Whole."
+    compressor02Plus2pEnabledWith_1StepActive = (
+        "Compressor 2 Plus2p Enabled With 1 Step Active."
+    )
+    compressor02Plus2pEnabledWith_2StepsActive = (
+        "Compressor 2 Plus2p Enabled With 2 Steps Active."
+    )
+    compressor02Plus2pEnabledWith_3StepsActive = (
+        "Compressor 2 Plus2p Enabled With 3 Steps Active."
+    )
+    compressor02StatusAlarmActive = "Compressor 2 Status Alarm Active."
+    compressor02StatusChiller = "Compressor 2 Status Chiller."
+    compressor02StatusConfigured = "Compressor 2 Status Configured."
+    compressor02StatusDefrosting = "Compressor 2 Status Defrosting."
+    compressor02StatusDripping = "Compressor 2 Status Dripping."
+    compressor02StatusEnabled = "Compressor 2 Status Enabled."
+    compressor02StatusEnabledStatusPumpDownActive = (
+        "Compressor 2 Status Enabled Status Pump Down Active."
+    )
+    compressor02StatusFreeCooling = "Compressor 2 Status Free Cooling."
+    compressor02StatusHeatpump = "Compressor 2 Status Heatpump."
+    compressor02StatusOn = "Compressor 2 Status On."
+    compressor02StatusRecovery = "Compressor 2 Status Recovery."
+    compressor02StatusRequest = "Compressor 2 Status Request."
     compressor02Working = "Compresson 02 Working."
     compressor03Alarm = "Compresson 03 Alarm."
     compressor03Hours = "Compressor 03 Hours."
+    compressor03Plus2pEnabledWhole = "Compressor 3 Plus2p Enabled Whole."
+    compressor03Plus2pEnabledWith_1StepActive = (
+        "Compressor 3 Plus2p Enabled With 1 Step Active."
+    )
+    compressor03Plus2pEnabledWith_2StepsActive = (
+        "Compressor 3 Plus2p Enabled With 2 Steps Active."
+    )
+    compressor03Plus2pEnabledWith_3StepsActive = (
+        "Compressor 3 Plus2p Enabled With 3 Steps Active."
+    )
+    compressor03StatusAlarmActive = "Compressor 3 Status Alarm Active."
+    compressor03StatusChiller = "Compressor 3 Status Chiller."
+    compressor03StatusConfigured = "Compressor 3 Status Configured."
+    compressor03StatusDefrosting = "Compressor 3 Status Defrosting."
+    compressor03StatusDripping = "Compressor 3 Status Dripping."
+    compressor03StatusEnabled = "Compressor 3 Status Enabled."
+    compressor03StatusEnabledStatusPumpDownActive = (
+        "Compressor 3 Status Enabled Status Pump Down Active."
+    )
+    compressor03StatusFreeCooling = "Compressor 3 Status Free Cooling."
+    compressor03StatusHeatpump = "Compressor 3 Status Heatpump."
+    compressor03StatusOn = "Compressor 3 Status On."
+    compressor03StatusRecovery = "Compressor 3 Status Recovery."
+    compressor03StatusRequest = "Compressor 3 Status Request."
     compressor03Working = "Compresson 03 Working."
     compressor04Alarm = "Compresson 04 Alarm."
     compressor04Hours = "Compressor 04 Hours."
+    compressor04Plus2pEnabledWhole = "Compressor 4 Plus2p Enabled Whole."
+    compressor04Plus2pEnabledWith_1StepActive = (
+        "Compressor 4 Plus2p Enabled With 1 Step Active."
+    )
+    compressor04Plus2pEnabledWith_2StepsActive = (
+        "Compressor 4 Plus2p Enabled With 2 Steps Active."
+    )
+    compressor04Plus2pEnabledWith_3StepsActive = (
+        "Compressor 4 Plus2p Enabled With 3 Steps Active."
+    )
+    compressor04StatusAlarmActive = "Compressor 4 Status Alarm Active."
+    compressor04StatusChiller = "Compressor 4 Status Chiller."
+    compressor04StatusConfigured = "Compressor 4 Status Configured."
+    compressor04StatusDefrosting = "Compressor 4 Status Defrosting."
+    compressor04StatusDripping = "Compressor 4 Status Dripping."
+    compressor04StatusEnabled = "Compressor 4 Status Enabled."
+    compressor04StatusEnabledStatusPumpDownActive = (
+        "Compressor 4 Status Enabled Status Pump Down Active."
+    )
+    compressor04StatusFreeCooling = "Compressor 4 Status Free Cooling."
+    compressor04StatusHeatpump = "Compressor 4 Status Heatpump."
+    compressor04StatusOn = "Compressor 4 Status On."
+    compressor04StatusRecovery = "Compressor 4 Status Recovery."
+    compressor04StatusRequest = "Compressor 4 Status Request."
     compressor04Working = "Compresson 04 Working."
     coolingSetpoint = "Cooling Setpoint."
     cto1LowerPressure = "CTO 1 Lower Pressure."
@@ -1036,9 +1422,11 @@ class TelemetryItemDescription(Enum):
     dayCoolingSetpoint = "Day Cooling Setpoint."
     dayHeatingSetpoint = "Day Heating Setpoint."
     dehumidifierSetpoint = "Dehumidifier Setpoint."
+    downDevice = "Device Down."
     exteriorAmbienteTemperature = "Exterior Ambient Temperature."
     externalTemperatureState = "External Temperature State."
     fanState = "Fan State - a UnitState enum."
+    faultDevice = "Device Fault."
     filterAlarm = "Filter Alarm."
     generalAlarm = "General Alarm."
     heatingSetpoint = "Heating Setpoint."
@@ -1054,6 +1442,22 @@ class TelemetryItemDescription(Enum):
     numberOfCircuits = "Number Of Circuits."
     operationalMode = "Operational Mode; an OperatingMode enum."
     operationalState = "Operational State."
+    pumpCodesBit11Unused = "Pump Codes Bit11 Unused."
+    pumpCodesBit3Unused = "Pump Codes Bit3 Unused."
+    pumpCodesBit5Unused = "Pump Codes Bit5 Unused."
+    pumpCodesCondenserPumpAlarm = "Pump Codes Condenser Pump Alarm."
+    pumpCodesCondenserPumpFlowAlarm = "Pump Codes Condenser Pump Flow Alarm."
+    pumpCodesEnableConsenserPump = "Pump Codes Enable Consenser Pump."
+    pumpCodesEnablePump_1 = "Pump Codes Enable Pump 1."
+    pumpCodesEnablePump_2 = "Pump Codes Enable Pump 2."
+    pumpCodesEnableRecoveryPump = "Pump Codes Enable Recovery Pump."
+    pumpCodesGeneralAlarm = "Pump Codes General Alarm."
+    pumpCodesPump_1Alarm = "Pump Codes Pump 1 Alarm."
+    pumpCodesPump_2Alarm = "Pump Codes Pump 2 Alarm."
+    pumpCodesPumps_1_2Stopped = "Pump Codes Pumps 1 2 Stopped."
+    pumpCodesRecoveryPumpAlarm = "Pump Codes Recovery Pump Alarm."
+    pumpCodesRecoveryPumpStopped = "Pump Codes Recovery Pump Stopped."
+    pumpCodesStopByAlarm = "Pump Codes Stop By Alarm."
     retPressChiller01 = "Return Pressure Chiller 01."
     retPressChiller02 = "Return Pressure Chiller 02."
     retPressChiller03 = "Return Pressure Chiller 03."
@@ -1085,6 +1489,56 @@ class TelemetryItemDescription(Enum):
     supplyTemperature = "Supply Temperature."
     switchedOn = "Switched On."
     thermalFault = "Thermal Fault."
+    unitConfigurationStatus_1Bit10Unused = "Unit Configuration Status 1 Bit10 Unused."
+    unitConfigurationStatus_1Bit12Unused = "Unit Configuration Status 1 Bit12 Unused."
+    unitConfigurationStatus_1Bit13Unused = "Unit Configuration Status 1 Bit13 Unused."
+    unitConfigurationStatus_1Bit14Unused = "Unit Configuration Status 1 Bit14 Unused."
+    unitConfigurationStatus_1Bit15Unused = "Unit Configuration Status 1 Bit15 Unused."
+    unitConfigurationStatus_1Bit4Unused = "Unit Configuration Status 1 Bit4 Unused."
+    unitConfigurationStatus_1Bit5Unused = "Unit Configuration Status 1 Bit5 Unused."
+    unitConfigurationStatus_1Bit6Unused = "Unit Configuration Status 1 Bit6 Unused."
+    unitConfigurationStatus_1Bit7Unused = "Unit Configuration Status 1 Bit7 Unused."
+    unitConfigurationStatus_1Bit8Unused = "Unit Configuration Status 1 Bit8 Unused."
+    unitConfigurationStatus_1Bit9Unused = "Unit Configuration Status 1 Bit9 Unused."
+    unitConfigurationStatus_1FreeCoolingEnabled = (
+        "Unit Configuration Status 1 Free Cooling Enabled."
+    )
+    unitConfigurationStatus_1HeatPumpEnabled = (
+        "Unit Configuration Status 1 Heat Pump Enabled."
+    )
+    unitConfigurationStatus_1InletOutlet = "Unit Configuration Status 1 Inlet Outlet."
+    unitConfigurationStatus_1QuickMindEnabled = (
+        "Unit Configuration Status 1 Quick Mind Enabled."
+    )
+    unitConfigurationStatus_1RecoveryEnabled = (
+        "Unit Configuration Status 1 Recovery Enabled."
+    )
+    unitConfigurationStatus_2Bit10Unused = "Unit Configuration Status 2 Bit10 Unused."
+    unitConfigurationStatus_2Bit12Unused = "Unit Configuration Status 2 Bit12 Unused."
+    unitConfigurationStatus_2Bit13Unused = "Unit Configuration Status 2 Bit13 Unused."
+    unitConfigurationStatus_2Bit14Unused = "Unit Configuration Status 2 Bit14 Unused."
+    unitConfigurationStatus_2Bit15Unused = "Unit Configuration Status 2 Bit15 Unused."
+    unitConfigurationStatus_2Bit5Unused = "Unit Configuration Status 2 Bit5 Unused."
+    unitConfigurationStatus_2Bit6Unused = "Unit Configuration Status 2 Bit6 Unused."
+    unitConfigurationStatus_2Bit7Unused = "Unit Configuration Status 2 Bit7 Unused."
+    unitConfigurationStatus_2Bit8Unused = "Unit Configuration Status 2 Bit8 Unused."
+    unitConfigurationStatus_2Bit9Unused = "Unit Configuration Status 2 Bit9 Unused."
+    unitConfigurationStatus_2DhwEnabled = "Unit Configuration Status 2 Dhw Enabled."
+    unitConfigurationStatus_2Plus2pEnabled = (
+        "Unit Configuration Status 2 Plus2p Enabled."
+    )
+    unitConfigurationStatus_2PumpdownEnabled = (
+        "Unit Configuration Status 2 Pumpdown Enabled."
+    )
+    unitConfigurationStatus_2SequencerEnabled = (
+        "Unit Configuration Status 2 Sequencer Enabled."
+    )
+    unitConfigurationStatus_2SetpointModificationEnabled = (
+        "Unit Configuration Status 2 Setpoint Modification Enabled."
+    )
+    unitConfigurationStatus_2TimeBandsEnabled = (
+        "Unit Configuration Status 2 Time Bands Enabled."
+    )
     unitState = "Unit State; a UnitState enum."
     valve03State = "Valve 03 State; a UnitState enum."
     valve04State = "Valve 04 State; a UnitState enum."
@@ -1158,6 +1612,17 @@ class TelemetryItemDescription(Enum):
     dynExhaustAirBackupModeStatus = "Dynalene Exhaust Air Backup Mode Status."
     dynRemoteLocalModeStatus = "Dynalene Remote Local Mode Status."
     exhAirAvrgTemp = "Exhaust Air Average Temp."
+
+    # Dynalene state items
+    dynAlarm = "Alarm"
+    dynInitialized = "Initialized"
+    dynPoweredOff = "Powered Off"
+    dynPoweredOn = "Powered On"
+    dynPoweringOff = "Powering Off"
+    dynPoweringOn = "Powering On"
+    dynShutOff = "Shut Off"
+    dynShuttingDown = "Shutting Down"
+    dynWarning = "Warning"
 
     # Dynalene commands.
     dynTmaRemoteSP = "TMA setpoint."
@@ -1269,6 +1734,33 @@ class EventItem(Enum):
     compressor4StatusRecovery = "COMPRESSOR_4_STATUS_RECOVERY"
     compressor4StatusRequest = "COMPRESSOR_4_STATUS_REQUEST"
     downDevice = "DOWN_DEVICE"
+    dynAlarm = "Alarm"
+    dynInitialized = "Initialized"
+    dynPoweredOff = "Powered OFF"
+    dynPoweredOn = "Powered ON"
+    dynPoweringOff = "Powering OFF"
+    dynPoweringOn = "Powering ON"
+    dynShutOff = "Shutted OFF"
+    dynShuttingDown = "Shutting Down"
+    dynWarning = "Warning"
+    dynMainGridAlarm = "DynMainGridAlarm"
+    dynMainGridAlarmCMD = "DynMainGridAlarmCMD"
+    dynMainGridFailureFlag = "DynMainGridFailureFlag"
+    dynSafetyResetFlag = "DynSafetyResetFlag"
+    dynTAalarm = "DynTAalarm"
+    dynTAalarmCMD = "DynTAalarmCMD"
+    dynTAalarmMonitor = "DynTAalarmMonitor"
+    dynTankLevel = "DynTankLevel"
+    dynTankLevelAlarmCMD = "DynTankLevelAlarmCMD"
+    dynTMAalarm = "DynTMAalarm"
+    dynTMAalarmCMD = "DynTMAalarmCMD"
+    dynTMAalarmMonitor = "DynTMAalarmMonitor"
+    dynSysFault = "DynSysFault"
+    dynSysOK = "DynSysOK"
+    dynSysWarning = "DynSysWarning"
+    dynAmbientDeltaModeStatus = "DynAmbientDeltaModeStatus"
+    dynExhaustAirBackupModeStatus = "DynExhaustAirBackupModeStatus"
+    dynRemoteLocalModeStatus = "DynRemoteLocalModeStatus"
     faultDevice = "FAULT_DEVICE"
     pumpCodesBit11Unused = "PUMP_CODES_BIT11_UNUSED"
     pumpCodesBit3Unused = "PUMP_CODES_BIT3_UNUSED"
@@ -1482,16 +1974,6 @@ class TopicType(str, Enum):
 # so they get marked here to be emitted as events instead.
 EVENT_TOPIC_DICT = (
     {
-        "LSST/PISO05/DYNALENE/DynaleneState": {
-            "topic": HvacTopic.dynaleneP05.name,
-            "item": DynaleneDescription.dynState.name.replace("dyn", "dynalene"),
-            "event": f"evt_{DynaleneDescription.dynState.name.replace('dyn', 'dynalene')}",
-            "type": "enum",
-            "enum": DynaleneState,
-            "item_description": f"{DynaleneDescription.dynState.value.replace(' State.', ' state;')} "
-            f"a DynaleneState enum.",
-            "evt_description": f"{DynaleneDescription.dynState.value}",
-        },
         "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
             "topic": HvacTopic.dynaleneP05.name,
             "item": DynaleneDescription.dynTankLevel.name.replace("dyn", "dynalene"),
@@ -1550,16 +2032,6 @@ EVENT_TOPIC_DICT = (
 # so they get marked here to be emitted as events instead.
 EVENT_TOPIC_DICT_ENGLISH = (
     {
-        "LSST/PISO05/DYNALENE/DynaleneState": {
-            "topic": HvacTopicEnglish.dynaleneP05.name,
-            "item": TelemetryItemDescription.dynState.name.replace("dyn", "dynalene"),
-            "event": f"evt_{TelemetryItemDescription.dynState.name.replace('dyn', 'dynalene')}",
-            "type": "enum",
-            "enum": DynaleneState,
-            "item_description": f"{TelemetryItemDescription.dynState.value.replace(' State.', ' state;')} "
-            f"a DynaleneState enum.",
-            "evt_description": f"{TelemetryItemDescription.dynState.value}",
-        },
         "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
             "topic": HvacTopicEnglish.dynaleneP05.name,
             "item": TelemetryItemDescription.dynTankLevel.name.replace(
@@ -1599,6 +2071,27 @@ EVENT_TOPIC_DICT_ENGLISH = (
             TelemetryItemDescription.dynSysFault,
             TelemetryItemDescription.dynSysWarning,
             TelemetryItemDescription.dynSysOK,
+        ]
+    }
+    | {
+        f"LSST/PISO05/DYNALENE/DynaleneState/{dyn_enum.name.replace('dyn', 'Dyn')}": {
+            "topic": HvacTopicEnglish.dynaleneP05.name,
+            "item": dyn_enum.name,
+            "event": f"evt_{dyn_enum.name}",
+            "type": "boolean",
+            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
+            "evt_description": f"{dyn_enum.value}",
+        }
+        for dyn_enum in [
+            TelemetryItemDescription.dynInitialized,
+            TelemetryItemDescription.dynShuttingDown,
+            TelemetryItemDescription.dynPoweringOn,
+            TelemetryItemDescription.dynPoweredOn,
+            TelemetryItemDescription.dynPoweringOff,
+            TelemetryItemDescription.dynPoweredOff,
+            TelemetryItemDescription.dynWarning,
+            TelemetryItemDescription.dynAlarm,
+            TelemetryItemDescription.dynShutOff,
         ]
     }
     | {
@@ -1690,6 +2183,7 @@ DEVICE_GROUPS_ENGLISH = {
         "LSST/PISO01/CHILLER_01",
         "LSST/PISO01/CHILLER_02",
         "LSST/PISO01/CHILLER_03",
+        "LSST/PISO01/CHILLER_04",
     ],
     "CRAC": [
         "LSST/PISO02/CRACK01",

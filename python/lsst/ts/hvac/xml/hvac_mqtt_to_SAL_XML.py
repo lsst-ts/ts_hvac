@@ -23,11 +23,11 @@ import enum
 import re
 import typing
 
-from lsst.ts.hvac import EVENT_TOPIC_DICT_ENGLISH
 from lsst.ts.hvac.enums import (
     DEVICE_GROUPS,
     DEVICE_GROUPS_ENGLISH,
     EVENT_TOPIC_DICT,
+    EVENT_TOPIC_DICT_ENGLISH,
     SPANISH_TO_ENGLISH_DICTIONARY,
     DynaleneDescription,
     HvacTopic,
@@ -37,7 +37,7 @@ from lsst.ts.hvac.enums import (
 )
 from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
-from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneState, DynaleneTankLevel
+from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"
@@ -415,7 +415,6 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
     """Create the Events XML file."""
     # Create the Enumerations.
     _create_enumeration_element_from_enum(DeviceId)
-    _create_enumeration_element_from_enum(DynaleneState)
     _create_enumeration_element_from_enum(DynaleneTankLevel)
 
     if xml.xml_language == Language.ENGLISH:

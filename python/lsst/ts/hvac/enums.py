@@ -1167,6 +1167,34 @@ class TelemetryItemEnglish(Enum):
     supplyTempChiller02 = "INY_TEMP_CHILLER_02"
     supplyTempChiller03 = "INY_TEMP_CHILLER_03"
     supplyTempSlac = "INY_TEMP_SLAC"
+    supplyFlowOss = "INY_FLOW_OSS"
+    supplyPressOss = "INY_PRESS_OSS"
+    supplyTempOss = "INY_TEMP_OSS"
+    retPressOss = "RET_PRESS_OSS"
+    retTempOss = "RET_TEMP_OSS"
+    supplyFlowFloor2 = "INY_FLOW_PISO_2"
+    supplyPressFloor2 = "INY_PRESS_PISO_2"
+    supplyTempFloor2 = "INY_TEMP_PISO_2"
+    supplyFlowAhuLower1 = "INY_FLOW_UMA_LOWER_1"
+    supplyFlowAhuLower2 = "INY_FLOW_UMA_LOWER_2"
+    supplyFlowAhuLower3 = "INY_FLOW_UMA_LOWER_3"
+    supplyFlowAhuLower4 = "INY_FLOW_UMA_LOWER_4"
+    supplyPressAhuLower1 = "INY_PRESS_UMA_LOWER_1"
+    supplyPressAhuLower2 = "INY_PRESS_UMA_LOWER_2"
+    supplyPressAhuLower3 = "INY_PRESS_UMA_LOWER_3"
+    supplyPressAhuLower4 = "INY_PRESS_UMA_LOWER_4"
+    supplyTempAhuLower1 = "INY_TEMP_UMA_LOWER_1"
+    supplyTempAhuLower2 = "INY_TEMP_UMA_LOWER_2"
+    supplyTempAhuLower3 = "INY_TEMP_UMA_LOWER_3"
+    supplyTempAhuLower4 = "INY_TEMP_UMA_LOWER_4"
+    returnPressAhuLower1 = "RET_PRESS_UMA_LOWER_1"
+    returnPressAhuLower2 = "RET_PRESS_UMA_LOWER_2"
+    returnPressAhuLower3 = "RET_PRESS_UMA_LOWER_3"
+    returnPressAhuLower4 = "RET_PRESS_UMA_LOWER_4"
+    returnTempAhuLower1 = "RET_TEMP_UMA_LOWER_1"
+    returnTempAhuLower2 = "RET_TEMP_UMA_LOWER_2"
+    returnTempAhuLower3 = "RET_TEMP_UMA_LOWER_3"
+    returnTempAhuLower4 = "RET_TEMP_UMA_LOWER_4"
     supplyTemperature = "TEMPERATURA_INYECCION"
     switchedOn = "COMANDO_ENCENDIDO"
     thermalFault = "FALLA_TERMICA"
@@ -1467,7 +1495,7 @@ class TelemetryItemDescription(Enum):
     retTempChiller03 = "Return Temperature Chiller 03."
     retTempSlac = "Return Temperature Slac."
     returnTemperature = "Return Temperature."
-    roomHumidity = "Room Humidity.."
+    roomHumidity = "Room Humidity."
     roomSetpoint = "Room Setpoint."
     roomTemperature = "Room Temperature."
     selectorState = "Selector State."
@@ -1486,6 +1514,34 @@ class TelemetryItemDescription(Enum):
     supplyTempChiller02 = "Supply Temperature Chiller 02."
     supplyTempChiller03 = "Supply Temperature Chiller 03."
     supplyTempSlac = "Supply Temperature Slac."
+    supplyFlowOss = "Supply Flow OSS."
+    supplyPressOss = "Supply Pressure OSS."
+    supplyTempOss = "Supply Temperature OSS."
+    retPressOss = "Return Pressure OSS."
+    retTempOss = "Return Temperature OSS."
+    supplyFlowFloor2 = "Supply Flow Floor 2."
+    supplyPressFloor2 = "Supply Pressure Floor 2."
+    supplyTempFloor2 = "Supply Temperature Floor 2."
+    supplyFlowAhuLower1 = "Supply Flow AHU Lower 1."
+    supplyFlowAhuLower2 = "Supply Flow AHU Lower 2."
+    supplyFlowAhuLower3 = "Supply Flow AHU Lower 3."
+    supplyFlowAhuLower4 = "Supply Flow AHU Lower 4."
+    supplyPressAhuLower1 = "Supply Pressure AHU Lower 1."
+    supplyPressAhuLower2 = "Supply Pressure AHU Lower 2."
+    supplyPressAhuLower3 = "Supply Pressure AHU Lower 3."
+    supplyPressAhuLower4 = "Supply Pressure AHU Lower 4."
+    supplyTempAhuLower1 = "Supply Temperature AHU Lower 1."
+    supplyTempAhuLower2 = "Supply Temperature AHU Lower 2."
+    supplyTempAhuLower3 = "Supply Temperature AHU Lower 3."
+    supplyTempAhuLower4 = "Supply Temperature AHU Lower 4."
+    returnPressAhuLower1 = "Return Pressure AHU Lower 1."
+    returnPressAhuLower2 = "Return Pressure AHU Lower 2."
+    returnPressAhuLower3 = "Return Pressure AHU Lower 3."
+    returnPressAhuLower4 = "Return Pressure AHU Lower 4."
+    returnTempAhuLower1 = "Return Temperature AHU Lower 1."
+    returnTempAhuLower2 = "Return Temperature AHU Lower 2."
+    returnTempAhuLower3 = "Return Temperature AHU Lower 3."
+    returnTempAhuLower4 = "Return Temperature AHU Lower 4."
     supplyTemperature = "Supply Temperature."
     switchedOn = "Switched On."
     thermalFault = "Thermal Fault."
@@ -2278,6 +2334,27 @@ TOPICS_WITH_DATA_IN_BAR = frozenset(
         "LSST/PISO01/CHILLER_03/PRESION_BAJA_CTO2",
         "LSST/PISO01/SENSOR_GLYCOL/INY_PRESS_CHILLER_03",
         "LSST/PISO01/SENSOR_GLYCOL/RET_PRESS_CHILLER_03",
+        "LSST/PISO01/SENSOR_GLYCOL/INY_PRESS_CHILLER_02",
+        "LSST/PISO01/SENSOR_GLYCOL/RET_PRESS_CHILLER_02",
+        "LSST/PISO01/SENSOR_GLYCOL/INY_PRESS_CHILLER_01",
+        "LSST/PISO01/SENSOR_GLYCOL/RET_PRESS_CHILLER_01",
+        "LSST/PISO01/SENSOR_GLYCOL/INY_PRESS_SLAC",
+        "LSST/PISO01/SENSOR_GLYCOL/RET_PRESS_SLAC",
+        "LSST/PISO01/SENSOR_GLYCOL/INY_PRESS_OSS",
+        "LSST/PISO01/SENSOR_GLYCOL/RET_PRESS_OSS",
+        "LSST/PISO02/SENSOR_GLYCOL/INY_PRESS_PISO_2",
+        "LSST/PISO04/SENSOR_GLYCOL/INY_PRESS_SALA_BLANCA",
+        "LSST/PISO04/SENSOR_GLYCOL/RET_PRESS_SALA_BLANCA",
+        "LSST/PISO04/SENSOR_GLYCOL/INY_PRESS_SALA_LIMPIA",
+        "LSST/PISO04/SENSOR_GLYCOL/RET_PRESS_SALA_LIMPIA",
+        "LSST/PISO05/SENSOR_GLYCOL/INY_PRESS_UMA_LOWER_1",
+        "LSST/PISO05/SENSOR_GLYCOL/RET_PRESS_UMA_LOWER_1",
+        "LSST/PISO05/SENSOR_GLYCOL/INY_PRESS_UMA_LOWER_2",
+        "LSST/PISO05/SENSOR_GLYCOL/RET_PRESS_UMA_LOWER_2",
+        "LSST/PISO05/SENSOR_GLYCOL/INY_PRESS_UMA_LOWER_3",
+        "LSST/PISO05/SENSOR_GLYCOL/RET_PRESS_UMA_LOWER_3",
+        "LSST/PISO05/SENSOR_GLYCOL/INY_PRESS_UMA_LOWER_4",
+        "LSST/PISO05/SENSOR_GLYCOL/RET_PRESS_UMA_LOWER_4",
     )
 )
 

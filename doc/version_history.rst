@@ -6,6 +6,17 @@
 Version History
 ###############
 
+v0.17.4
+=======
+
+* Add glycol sensor telemetry.
+
+Requires:
+
+* ts_salobj 8
+* ts_utils
+* ts_xml 22.2
+
 v0.17.3
 =======
 

@@ -252,12 +252,14 @@ class MqttInfoReader:
         # This throws a ValueError in case no forward slash is found.
         topic, item = topic_and_item.rsplit("/", 1)
         # Treat the Dynelane Safety and Status topics in a special way.
-        if (
-            topic == "LSST/PISO05/DYNALENE/Safeties"
-            or topic == "LSST/PISO05/DYNALENE/Status"
-            or topic == "LSST/PISO05/DYNALENE/DynaleneState"
-        ):
+        if topic in [
+            "LSST/PISO05/DYNALENE/Safeties",
+            "LSST/PISO05/DYNALENE/Status",
+            "LSST/PISO05/DYNALENE/DynaleneState",
+        ]:
             topic = "LSST/PISO05/DYNALENE"
+        if topic in ["LSST/PISO02/SENSOR_GLYCOL", "LSST/PISO05/SENSOR_GLYCOL"]:
+            topic = "LSST/PISO01/SENSOR_GLYCOL"
         # Some Dynalene event items need to be grouped together.
         if item in DYNALENE_EVENT_GROUP_DICT:
             item = DYNALENE_EVENT_GROUP_DICT[item]

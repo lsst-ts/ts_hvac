@@ -35,6 +35,7 @@ from lsst.ts.xml.component_info import ComponentInfo
 from .enums import (
     DYNALENE_EVENT_GROUP_DICT,
     EVENT_TOPICS,
+    GLYCOL_SENSORS_LEVELS,
     TOPICS_ALWAYS_ENABLED,
     CommandItem,
     CommandItemEnglish,
@@ -258,7 +259,7 @@ class MqttInfoReader:
             "LSST/PISO05/DYNALENE/DynaleneState",
         ]:
             topic = "LSST/PISO05/DYNALENE"
-        if topic in ["LSST/PISO02/SENSOR_GLYCOL", "LSST/PISO05/SENSOR_GLYCOL"]:
+        if topic in GLYCOL_SENSORS_LEVELS:
             topic = "LSST/PISO01/SENSOR_GLYCOL"
         # Some Dynalene event items need to be grouped together.
         if item in DYNALENE_EVENT_GROUP_DICT:

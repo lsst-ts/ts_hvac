@@ -1175,6 +1175,16 @@ class TelemetryItemEnglish(Enum):
     supplyFlowFloor2 = "INY_FLOW_PISO_2"
     supplyPressFloor2 = "INY_PRESS_PISO_2"
     supplyTempFloor2 = "INY_TEMP_PISO_2"
+    supplyFlowWhiteRoom = "INY_FLOW_SALA_BLANCA"
+    supplyPressWhiteRoom = "INY_PRESS_SALA_BLANCA"
+    supplyTempWhiteRoom = "INY_TEMP_SALA_BLANCA"
+    returnPressWhiteRoom = "RET_PRESS_SALA_BLANCA"
+    returnTempWhiteRoom = "RET_TEMP_SALA_BLANCA"
+    supplyFlowCleanRoom = "INY_FLOW_SALA_LIMPIA"
+    supplyPressCleanRoom = "INY_PRESS_SALA_LIMPIA"
+    supplyTempCleanRoom = "INY_TEMP_SALA_LIMPIA"
+    returnPressCleanRoom = "RET_PRESS_SALA_LIMPIA"
+    returnTempCleanRoom = "RET_TEMP_SALA_LIMPIA"
     supplyFlowAhuLower1 = "INY_FLOW_UMA_LOWER_1"
     supplyFlowAhuLower2 = "INY_FLOW_UMA_LOWER_2"
     supplyFlowAhuLower3 = "INY_FLOW_UMA_LOWER_3"
@@ -1522,6 +1532,16 @@ class TelemetryItemDescription(Enum):
     supplyFlowFloor2 = "Supply Flow Floor 2."
     supplyPressFloor2 = "Supply Pressure Floor 2."
     supplyTempFloor2 = "Supply Temperature Floor 2."
+    supplyFlowWhiteRoom = "Supply Flow White Room."
+    supplyPressWhiteRoom = "Supply Pressure White Room."
+    supplyTempWhiteRoom = "Supply Temperature White Room."
+    returnPressWhiteRoom = "Return Pressure White Room."
+    returnTempWhiteRoom = "Return Temperature White Room."
+    supplyFlowCleanRoom = "Supply Flow Clean Room."
+    supplyPressCleanRoom = "Supply Pressure Clean Room."
+    supplyTempCleanRoom = "Supply Temperature Clean Room."
+    returnPressCleanRoom = "Return Pressure Clean Room."
+    returnTempCleanRoom = "Return Temperature Clean Room."
     supplyFlowAhuLower1 = "Supply Flow AHU Lower 1."
     supplyFlowAhuLower2 = "Supply Flow AHU Lower 2."
     supplyFlowAhuLower3 = "Supply Flow AHU Lower 3."
@@ -2293,6 +2313,13 @@ DEVICE_GROUPS_ENGLISH = {
         "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
     ],
 }
+
+# Glycol Sensors levels
+GLYCOL_SENSORS_LEVELS = [
+    "LSST/PISO02/SENSOR_GLYCOL",
+    "LSST/PISO04/SENSOR_GLYCOL",
+    "LSST/PISO05/SENSOR_GLYCOL",
+]
 
 # TODO DM-46835 Remove once XML 22.2 has been released.
 # These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO

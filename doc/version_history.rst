@@ -6,6 +6,17 @@
 Version History
 ###############
 
+v0.17.5
+=======
+
+* Add white room and clean room glycolSensor fields.
+
+Requires:
+
+* ts_salobj 8
+* ts_utils
+* ts_xml 23.1
+
 v0.17.4
 =======
 

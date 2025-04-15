@@ -6,6 +6,17 @@
 Version History
 ###############
 
+v0.17.6
+=======
+
+* Remove ts_idl dependency from conda recipe and add ts_xml.
+
+Requires:
+
+* ts_salobj 8
+* ts_utils
+* ts_xml 23.1
+
 v0.17.5
 =======
 

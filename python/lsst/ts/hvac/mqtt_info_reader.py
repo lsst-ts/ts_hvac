@@ -30,20 +30,15 @@ import re
 import typing
 
 import pandas
-from lsst.ts.xml.component_info import ComponentInfo
 
 from .enums import (
     DYNALENE_EVENT_GROUP_DICT,
     EVENT_TOPICS,
     GLYCOL_SENSORS_LEVELS,
     TOPICS_ALWAYS_ENABLED,
-    CommandItem,
     CommandItemEnglish,
     EventItem,
-    HvacTopic,
     HvacTopicEnglish,
-    Language,
-    TelemetryItem,
     TelemetryItemEnglish,
     TopicType,
 )
@@ -127,13 +122,6 @@ class MqttInfoReader:
         #     }
         # }
         self.event_topics: dict[str, typing.Any] = {}
-
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        component_info = ComponentInfo(name="HVAC", topic_subname="")
-        if "tel_coldWaterPump01" in component_info.topics:
-            self.xml_language = Language.ENGLISH
-        else:
-            self.xml_language = Language.SPANISH
 
         self._collect_hvac_topics_and_items_from_csv()
 
@@ -320,18 +308,13 @@ class MqttInfoReader:
         """
         topic, item = self.extract_topic_and_item(topic_and_item)
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
         # Work around inconsistent telmetry item names.
-        if self.xml_language == Language.ENGLISH:
-            if item == "ESTADO_DE_UNIDAD":
-                item = "ESTADO_UNIDAD"
-            if item == "MODO_OPERACION_UNIDAD":
-                item = "MODO_OPERACION"
+        if item == "ESTADO_DE_UNIDAD":
+            item = "ESTADO_UNIDAD"
+        if item == "MODO_OPERACION_UNIDAD":
+            item = "MODO_OPERACION"
 
-            topic_enum: enum.EnumType = HvacTopicEnglish
-        else:
-            topic_enum = HvacTopic
-        # End TODO
+        topic_enum: enum.EnumType = HvacTopicEnglish
 
         for hvac_topic in topic_enum:  # type: ignore
             if hvac_topic.value in topic:
@@ -358,14 +341,8 @@ class MqttInfoReader:
                     )
 
     def _collect_topics_and_items(self, topics: dict[str, typing.Any]) -> None:
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.xml_language == Language.ENGLISH:
-            command_enum: enum.EnumType = CommandItemEnglish
-            telemetry_enum: enum.EnumType = TelemetryItemEnglish
-        else:
-            command_enum = CommandItem
-            telemetry_enum = TelemetryItem
-        # End TODO
+        command_enum: enum.EnumType = CommandItemEnglish
+        telemetry_enum: enum.EnumType = TelemetryItemEnglish
 
         for topic_and_item in sorted(topics.keys()):
             if topic_and_item in EVENT_TOPICS:

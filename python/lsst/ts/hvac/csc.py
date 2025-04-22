@@ -36,27 +36,19 @@ from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 from . import __version__
 from .base_mqtt_client import BaseMqttClient
 from .enums import (
-    DEVICE_GROUPS,
     DEVICE_GROUPS_ENGLISH,
-    DYNALENE_COMMAND_ITEMS,
     DYNALENE_COMMAND_ITEMS_ENGLISH,
     DYNALENE_EVENT_GROUP_DICT,
-    EVENT_TOPIC_DICT,
     EVENT_TOPIC_DICT_ENGLISH,
     STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITH_DATA_IN_BAR,
     TOPICS_WITH_DATA_IN_PSI,
-    TOPICS_WITHOUT_COMANDO_ENCENDIDO,
     TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH,
     TOPICS_WITHOUT_CONFIGURATION,
-    CommandItem,
     CommandItemEnglish,
     EventItem,
-    HvacTopic,
     HvacTopicEnglish,
-    Language,
-    TelemetryItem,
     TelemetryItemEnglish,
 )
 from .mqtt_client import MqttClient
@@ -322,18 +314,12 @@ class HvacCsc(salobj.BaseCsc):
         """
         enabled = False
         device_id_index = 0
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.xml.xml_language == Language.ENGLISH:
-            hvac_topic = HvacTopicEnglish(topic).name
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH
-        else:
-            hvac_topic = HvacTopic(topic).name
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO
+        hvac_topic = HvacTopicEnglish(topic).name
         device_id = DeviceId[hvac_topic]
         device_id_index = self.device_id_index[device_id]
 
         item = "COMANDO_ENCENDIDO"
-        if hvac_topic in twce:
+        if hvac_topic in TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH:
             item = "ESTADO_FUNCIONAMIENTO"
         if topic in TOPICS_ALWAYS_ENABLED:
             enabled = True
@@ -355,28 +341,17 @@ class HvacCsc(salobj.BaseCsc):
                 info = self.hvac_state[topic][item]
                 value = info.get_most_recent_value()
                 if value is not None:
-                    # TODO DM-46835 Remove backward compatibility with XML
-                    #  22.1.
-                    if self.xml.xml_language == Language.ENGLISH:
-                        if item == "ESTADO_DE_UNIDAD":
-                            item_name = TelemetryItemEnglish("ESTADO_UNIDAD").name
-                        elif item == "MODO_OPERACION_UNIDAD":
-                            item_name = TelemetryItemEnglish("MODO_OPERACION").name
-                        else:
-                            item_name = TelemetryItemEnglish(item).name
+                    if item == "ESTADO_DE_UNIDAD":
+                        item_name = TelemetryItemEnglish("ESTADO_UNIDAD").name
+                    elif item == "MODO_OPERACION_UNIDAD":
+                        item_name = TelemetryItemEnglish("MODO_OPERACION").name
                     else:
-                        item_name = TelemetryItem(item).name
+                        item_name = TelemetryItemEnglish(item).name
                     data[item_name] = value
 
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.xml.xml_language == Language.ENGLISH:
-                telemetry_method = getattr(self, "tel_" + HvacTopicEnglish(topic).name)
-                hvac_topic_name = HvacTopicEnglish(topic).name
-                hvac_topic_value = HvacTopicEnglish(topic).value
-            else:
-                telemetry_method = getattr(self, "tel_" + HvacTopic(topic).name)
-                hvac_topic_name = HvacTopic(topic).name
-                hvac_topic_value = HvacTopic(topic).value
+            telemetry_method = getattr(self, "tel_" + HvacTopicEnglish(topic).name)
+            hvac_topic_name = HvacTopicEnglish(topic).name
+            hvac_topic_value = HvacTopicEnglish(topic).value
             if data:
                 await telemetry_method.set_write(**data)
             device_id = DeviceId[hvac_topic_name]
@@ -397,13 +372,8 @@ class HvacCsc(salobj.BaseCsc):
         data: dict[str, float | bool],
     ) -> None:
         if topic not in TOPICS_WITHOUT_CONFIGURATION and enabled:
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.xml.xml_language == Language.ENGLISH:
-                device_groups = DEVICE_GROUPS_ENGLISH
-            else:
-                device_groups = DEVICE_GROUPS
             command_group = [
-                k for k, v in device_groups.items() if hvac_topic_value in v
+                k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic_value in v
             ][0]
             command_group_coro = getattr(
                 self, f"evt_{to_camel_case(command_group, True)}Configuration"
@@ -413,10 +383,6 @@ class HvacCsc(salobj.BaseCsc):
             for command_topic in command_topics:
                 # skip topics that are not reported
                 if command_topic not in [
-                    # TODO DM-46835 Remove first three items.
-                    "comandoEncendido",
-                    "setpointVentiladorMax",
-                    "setpointVentiladorMin",
                     "switchOn",
                     "maxFanSetpoint",
                     "minFanSetpoint",
@@ -454,15 +420,9 @@ class HvacCsc(salobj.BaseCsc):
                 event_item for event_item in EventItem if event_item.value == item
             ]
             if len(event_items) > 0:
-                # TODO DM-46835 Remove backward compatibility with XML 22.1.
                 try:
-                    hvac_topic: HvacTopic | HvacTopicEnglish
-                    if self.xml.xml_language == Language.ENGLISH:
-                        hvac_topic = HvacTopicEnglish(topic)
-                    else:
-                        hvac_topic = HvacTopic(topic)
                     event_item = event_items[0]
-                    event_name = f"evt_{hvac_topic.name}"
+                    event_name = f"evt_{HvacTopicEnglish(topic).name}"
                     event = getattr(self, event_name)
                     if event_item.name in event.topic_info.fields:
                         if event_name not in self.event_data:
@@ -533,13 +493,8 @@ class HvacCsc(salobj.BaseCsc):
 
             # Some Dynalene topics need to be emitted as events rather than as
             # telemetry. This next if statement takes care of that.
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.xml.xml_language == Language.ENGLISH:
-                etd = EVENT_TOPIC_DICT_ENGLISH
-            else:
-                etd = EVENT_TOPIC_DICT
-            if topic_and_item in etd:
-                event_name = etd[topic_and_item]["event"]
+            if topic_and_item in EVENT_TOPIC_DICT_ENGLISH:
+                event_name = EVENT_TOPIC_DICT_ENGLISH[topic_and_item]["event"]
                 event = getattr(self, event_name)
                 await event.set_write(state=int(payload))
                 continue
@@ -561,15 +516,7 @@ class HvacCsc(salobj.BaseCsc):
 
             item_state.recent_values.append(payload)
 
-        # Now send the events. SalObj will only really emit an event if the
-        # data has changed so this is a safe operation.
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        topic_enum: type[HvacTopic] | type[HvacTopicEnglish]
-        if self.xml.xml_language == Language.ENGLISH:
-            topic_enum = HvacTopicEnglish
-        else:
-            topic_enum = HvacTopic
-        for hvac_topic in topic_enum:  # type: ignore
+        for hvac_topic in HvacTopicEnglish:  # type: ignore
             event_name = f"evt_{hvac_topic.name}"
             event = getattr(self, event_name, None)  # type: ignore
             if event:
@@ -608,15 +555,9 @@ class HvacCsc(salobj.BaseCsc):
         return self.mqtt_client.connected
 
     def _add_config_commands(self) -> None:
-        # Find all device groups that can be commanded.
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.xml.xml_language == Language.ENGLISH:
-            device_groups = DEVICE_GROUPS_ENGLISH
-        else:
-            device_groups = DEVICE_GROUPS
         command_groups = set(
             k
-            for k, v in device_groups.items()
+            for k, v in DEVICE_GROUPS_ENGLISH.items()
             for i in v
             if i not in TOPICS_WITHOUT_CONFIGURATION
         )
@@ -624,20 +565,11 @@ class HvacCsc(salobj.BaseCsc):
         for command_group in command_groups:
             if command_group == "DYNALENE":
                 continue
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.xml.xml_language == Language.ENGLISH:
-                function_name = f"do_config{to_camel_case(command_group)}"
-            else:
-                function_name = f"do_config{to_camel_case(command_group)}s"
+            function_name = f"do_config{to_camel_case(command_group)}"
             setattr(self, function_name, self._do_config)
 
     def _add_dynalene_commands(self) -> None:
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.xml.xml_language == Language.ENGLISH:
-            dci = DYNALENE_COMMAND_ITEMS_ENGLISH
-        else:
-            dci = DYNALENE_COMMAND_ITEMS
-        for command in dci:
+        for command in DYNALENE_COMMAND_ITEMS_ENGLISH:
             function_name = f"do_{command}"
             setattr(self, function_name, self._do_dynalene_command)
 
@@ -674,17 +606,9 @@ class HvacCsc(salobj.BaseCsc):
         self.assert_enabled()
         device_id = DeviceId(data.device_id)
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.xml.xml_language == Language.ENGLISH:
-            hvac_topic_name = HvacTopicEnglish[device_id.name].name
-            hvac_topic_value = HvacTopicEnglish[device_id.name].value
-            command_item = CommandItemEnglish.switchOn.value
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH
-        else:
-            hvac_topic_name = HvacTopic[device_id.name].name
-            hvac_topic_value = HvacTopic[device_id.name].value
-            command_item = CommandItem.comandoEncendido.value
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO
+        hvac_topic_name = HvacTopicEnglish[device_id.name].name
+        hvac_topic_value = HvacTopicEnglish[device_id.name].value
+        command_item = CommandItemEnglish.switchOn.value
 
         # Publish the data to the MQTT topic and receive confirmation whether
         # the publication was done correctly.
@@ -697,7 +621,7 @@ class HvacCsc(salobj.BaseCsc):
         # Do some housekeeping if the message was sent correctly.
         if was_published:
             telemetry_item = TelemetryItemEnglish.switchedOn.value
-            if hvac_topic_name in twce:
+            if hvac_topic_name in TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH:
                 telemetry_item = TelemetryItemEnglish.workingState.value
             self.hvac_state[hvac_topic_value][telemetry_item].initial_value = enabled
         else:
@@ -719,13 +643,8 @@ class HvacCsc(salobj.BaseCsc):
         self.assert_enabled()
         device_id = DeviceId(data.device_id)
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.xml.xml_language == Language.ENGLISH:
-            topic_value = HvacTopicEnglish[device_id.name].value
-            command_enum: enum.EnumType = CommandItemEnglish
-        else:
-            topic_value = HvacTopic[device_id.name].value
-            command_enum = CommandItem
+        topic_value = HvacTopicEnglish[device_id.name].value
+        command_enum: enum.EnumType = CommandItemEnglish
 
         # Publish the data to the MQTT topics and receive confirmation whether
         # the publications were done correctly.
@@ -754,15 +673,9 @@ class HvacCsc(salobj.BaseCsc):
         self.assert_enabled()
         data_dict = data.get_vars() if hasattr(data, "get_vars") else vars(data)
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.xml.xml_language == Language.ENGLISH:
-            dci_dict = DYNALENE_COMMAND_ITEMS_ENGLISH
-            device_groups = DEVICE_GROUPS_ENGLISH
-            command_enum: enum.EnumType = CommandItemEnglish
-        else:
-            dci_dict = DYNALENE_COMMAND_ITEMS
-            device_groups = DEVICE_GROUPS
-            command_enum = CommandItem
+        dci_dict = DYNALENE_COMMAND_ITEMS_ENGLISH
+        device_groups = DEVICE_GROUPS_ENGLISH
+        command_enum: enum.EnumType = CommandItemEnglish
 
         command_item = [dci for dci in dci_dict if dci in data_dict][0]
         topic = device_groups["DYNALENE"][0] + "/" + command_enum[command_item].value  # type: ignore

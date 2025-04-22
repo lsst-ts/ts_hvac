@@ -24,6 +24,7 @@ __all__ = ["HvacCsc", "run_hvac"]
 import asyncio
 import enum
 import json
+import logging
 import math
 import traceback
 import typing
@@ -193,6 +194,9 @@ class HvacCsc(salobj.BaseCsc):
 
         # Keep track of the device indices for the device mask
         self.device_id_index = {dev_id: i for i, dev_id in enumerate(DeviceId)}
+
+        # Keep track of event data to suppress superfluous events.
+        self.event_data: dict[str, dict[str, typing.Any]] = {}
 
     async def connect(self) -> None:
         """Start the HVAC MQTT client or start the mock client, if in
@@ -452,18 +456,23 @@ class HvacCsc(salobj.BaseCsc):
             if len(event_items) > 0:
                 # TODO DM-46835 Remove backward compatibility with XML 22.1.
                 try:
+                    hvac_topic: HvacTopic | HvacTopicEnglish
                     if self.xml.xml_language == Language.ENGLISH:
-                        hvac_topic = HvacTopicEnglish(topic).name
+                        hvac_topic = HvacTopicEnglish(topic)
                     else:
-                        hvac_topic = HvacTopic(topic).name
+                        hvac_topic = HvacTopic(topic)
+                    event_item = event_items[0]
+                    event_name = f"evt_{hvac_topic.name}"
+                    event = getattr(self, event_name)
+                    if event_item.name in event.topic_info.fields:
+                        if event_name not in self.event_data:
+                            self.event_data[event_name] = {}
+                        self.event_data[event_name][event_item.name] = payload
+                        continue
                 except ValueError:
                     self.log.warning(
                         f"Ignoring unknown {topic=} for {topic_and_item=}."
                     )
-                event_item = event_items[0]
-                event = getattr(self, f"evt_{hvac_topic}")
-                setattr(event.data, event_item.name, payload)
-                continue
 
             # DM-39103 Workaround for unknown or misspelled topic and item
             # names.
@@ -555,14 +564,22 @@ class HvacCsc(salobj.BaseCsc):
         # Now send the events. SalObj will only really emit an event if the
         # data has changed so this is a safe operation.
         # TODO DM-46835 Remove backward compatibility with XML 22.1.
+        topic_enum: type[HvacTopic] | type[HvacTopicEnglish]
         if self.xml.xml_language == Language.ENGLISH:
-            topic_enum: enum.EnumType = HvacTopicEnglish
+            topic_enum = HvacTopicEnglish
         else:
             topic_enum = HvacTopic
         for hvac_topic in topic_enum:  # type: ignore
-            event = getattr(self, f"evt_{hvac_topic.name}", None)  # type: ignore
+            event_name = f"evt_{hvac_topic.name}"
+            event = getattr(self, event_name, None)  # type: ignore
             if event:
-                await event.write()
+                if event_name in self.event_data:
+                    self.log.debug(
+                        f"Writing {event_name=} with data {self.event_data[event_name]}."
+                    )
+                    await event.set_write(**self.event_data[event_name])
+                else:
+                    logging.warning(f"No data for {event_name=}.")
 
         self.log.debug("Done.")
 

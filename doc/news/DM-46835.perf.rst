@@ -1,1 +1,0 @@
-Suppressed Kafka log messages.

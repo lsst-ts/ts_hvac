@@ -6,6 +6,37 @@
 Version History
 ###############
 
+.. towncrier release notes start
+
+
+v0.17.7 (2025-04-24)
+====================
+
+New Features
+------------
+
+- Switched to towncrier. (`DM-46835 <https://rubinobs.atlassian.net//browse/DM-46835>`_)
+
+
+Bug Fixes
+---------
+
+- Fixed package version module generation. (`DM-46835 <https://rubinobs.atlassian.net//browse/DM-46835>`_)
+- Made sure that events are only sent if the data has changed. (`DM-46835 <https://rubinobs.atlassian.net//browse/DM-46835>`_)
+
+
+Performance Enhancement
+-----------------------
+
+- Suppressed Kafka log messages. (`DM-46835 <https://rubinobs.atlassian.net//browse/DM-46835>`_)
+
+
+API Removal or Deprecation
+--------------------------
+
+- Removed backward compatibility with XML 22.1. (`DM-46835 <https://rubinobs.atlassian.net//browse/DM-46835>`_)
+
+
 v0.17.6
 =======
 

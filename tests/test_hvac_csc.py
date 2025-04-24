@@ -27,15 +27,11 @@ import unittest
 import hvac_test_utils
 from lsst.ts import hvac, salobj
 from lsst.ts.hvac.enums import (
-    DEVICE_GROUPS,
     DEVICE_GROUPS_ENGLISH,
     TOPICS_ALWAYS_ENABLED,
-    TOPICS_WITHOUT_COMANDO_ENCENDIDO,
     TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH,
     TOPICS_WITHOUT_CONFIGURATION,
-    HvacTopic,
     HvacTopicEnglish,
-    Language,
 )
 from lsst.ts.hvac.utils import to_camel_case
 from lsst.ts.xml.enums.HVAC import DeviceId
@@ -114,13 +110,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
     async def _retrieve_all_telemetry(self) -> dict[str, typing.Any]:
         all_telemetry: dict[str, typing.Any] = {}
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.csc.xml.xml_language == hvac.Language.ENGLISH:
-            hvac_topic: enum.EnumType = HvacTopicEnglish
-        else:
-            hvac_topic = HvacTopic
-
-        for topic in hvac_topic:  # type: ignore
+        for topic in HvacTopicEnglish:  # type: ignore
             telemetry_topic = getattr(self.remote, "tel_" + topic.name)
             all_telemetry[topic.name] = await telemetry_topic.next(flush=False)
         return all_telemetry
@@ -129,26 +119,13 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         # Loop over all telemetry topics and verify the status
         all_telemetry = await self._retrieve_all_telemetry()
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.csc.xml.xml_language == hvac.Language.ENGLISH:
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH
-            comando_encendido = hvac.TelemetryItemEnglish.switchedOn.name
-            valve_name = "valveP01"
-            valve_state = "valve12State"
-            working_state = hvac.TelemetryItemEnglish.workingState.name
-        else:
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO
-            comando_encendido = hvac.TelemetryItem.comandoEncendido.name
-            valve_name = "valvulaP01"
-            valve_state = "estadoValvula12"
-            working_state = hvac.TelemetryItem.estadoFuncionamiento.name
+        comando_encendido = hvac.TelemetryItemEnglish.switchedOn.name
+        valve_name = "valveP01"
+        valve_state = "valve12State"
+        working_state = hvac.TelemetryItemEnglish.workingState.name
 
         for name, telemetry in all_telemetry.items():
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.csc.xml.xml_language == hvac.Language.ENGLISH:
-                topic_value = HvacTopicEnglish[name].value
-            else:
-                topic_value = HvacTopic[name].value
+            topic_value = HvacTopicEnglish[name].value
             if name in TOPICS_NOT_REPORT_SWITCHED_ON:
                 continue
             if topic_value in TOPICS_ALWAYS_ENABLED or name == subsystem:
@@ -163,7 +140,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             elif name == "glycolSensor":
                 # No status to check.
                 pass
-            elif name not in twce:
+            elif name not in TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH:
                 item = getattr(telemetry, comando_encendido)
                 self.assertEqual(item, status_to_check)
             else:
@@ -178,12 +155,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             await salobj.set_summary_state(
                 remote=self.remote, state=salobj.State.ENABLED
             )
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.csc.xml.xml_language == hvac.Language.ENGLISH:
-                topic_enum: enum.EnumType = HvacTopicEnglish
-            else:
-                topic_enum = HvacTopic
-            for topic in topic_enum:  # type: ignore
+            for topic in HvacTopicEnglish:  # type: ignore
                 if topic.value not in TOPICS_ALWAYS_ENABLED:
                     # Retrieve the DeviceId.
                     device_id = DeviceId[topic.name]
@@ -216,21 +188,11 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         # Loop over all telemetry topics and verify the status
         all_telemetry = await self._retrieve_all_telemetry()
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.csc.xml.xml_language == hvac.Language.ENGLISH:
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH
-            comando_encendido = hvac.TelemetryItemEnglish.switchedOn.name
-            valve_name = "valveP01"
-            attr_name = "valve12State"
-            topic_enum: enum.EnumType = HvacTopicEnglish
-            working_state = hvac.TelemetryItemEnglish.workingState.name
-        else:
-            twce = TOPICS_WITHOUT_COMANDO_ENCENDIDO
-            comando_encendido = hvac.TelemetryItem.comandoEncendido.name
-            valve_name = "valvulaP01"
-            attr_name = "estadoValvula12"
-            topic_enum = HvacTopic
-            working_state = hvac.TelemetryItem.estadoFuncionamiento.name
+        comando_encendido = hvac.TelemetryItemEnglish.switchedOn.name
+        valve_name = "valveP01"
+        attr_name = "valve12State"
+        topic_enum: enum.EnumType = HvacTopicEnglish
+        working_state = hvac.TelemetryItemEnglish.workingState.name
 
         for name, telemetry in all_telemetry.items():
             topic = topic_enum[name]  # type: ignore
@@ -248,7 +210,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             elif name == "glycolSensor":
                 # No status to check.
                 pass
-            elif name not in twce:
+            elif name not in TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH:
                 item = getattr(telemetry, comando_encendido)
                 self.assertEqual(item, status_to_check)
             else:
@@ -286,15 +248,9 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         self, hvac_topic: HvacTopicEnglish, config_data: dict[str, float]
     ) -> None:
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
-        if self.csc.xml.xml_language == Language.ENGLISH:
-            device_groups = DEVICE_GROUPS_ENGLISH
-        else:
-            device_groups = DEVICE_GROUPS
-
-        command_group = [k for k, v in device_groups.items() if hvac_topic.value in v][
-            0
-        ]
+        command_group = [
+            k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic.value in v
+        ][0]
         command_group_coro = getattr(
             self.remote,
             f"evt_{to_camel_case(command_group, True)}Configuration",
@@ -307,10 +263,6 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         for command_topic in command_topics:
             # skip topics that are not reported
             if command_topic not in [
-                # TODO DM-46835 Remove first three items.
-                "comandoEncendido",
-                "setpointVentiladorMax",
-                "setpointVentiladorMin",
                 "switchOn",
                 "maxFanSetpoint",
                 "minFanSetpoint",
@@ -330,13 +282,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 remote=self.remote, state=salobj.State.ENABLED
             )
 
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.csc.xml.xml_language == Language.ENGLISH:
-                topic_enum = HvacTopicEnglish
-            else:
-                topic_enum = HvacTopic
-
-            for hvac_topic in topic_enum:  # type: ignore
+            for hvac_topic in HvacTopicEnglish:  # type: ignore
                 if hvac_topic.value not in TOPICS_WITHOUT_CONFIGURATION:
                     subsystem = hvac_topic.name
                     # Retrieve the DeviceId.
@@ -349,22 +295,11 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     # Retrieve the config command of the subsystem.
                     command_group = re.sub(r"\d{0,2}P\d{2}$", r"", device_id.name)
                     command_group = command_group[0].upper() + command_group[1:]
-                    # TODO DM-46835 Remove backward compatibility with XML
-                    #  22.1.
-                    if self.csc.xml.xml_language == Language.ENGLISH:
-                        if "AHU" in command_group:
-                            command_group = command_group.replace("AHU", "Ahu")
-                        if "White" in command_group or "Clean" in command_group:
-                            command_group = "Ahu"
-                        config_method = getattr(
-                            self.remote, f"cmd_config{command_group}"
-                        )
-                    else:
-                        if "Sblanca" in command_group or "Slimpia" in command_group:
-                            command_group = "Manejadora"
-                        config_method = getattr(
-                            self.remote, f"cmd_config{command_group}s"
-                        )
+                    if "AHU" in command_group:
+                        command_group = command_group.replace("AHU", "Ahu")
+                    if "White" in command_group or "Clean" in command_group:
+                        command_group = "Ahu"
+                    config_method = getattr(self.remote, f"cmd_config{command_group}")
 
                     # Invoke the config command.
                     config_data = hvac_test_utils.get_random_config_data(hvac_topic)
@@ -410,15 +345,9 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 remote=self.remote, state=salobj.State.ENABLED
             )
 
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.csc.xml.xml_language == Language.ENGLISH:
-                topic_enum = HvacTopicEnglish
-            else:
-                topic_enum = HvacTopic
-
             # Only consider one HVAC device here and assume this also works
             # for all other devices that can be configured.
-            hvac_topic = topic_enum("LSST/PISO05/MANEJADORA/LOWER_01")
+            hvac_topic = HvacTopicEnglish("LSST/PISO05/MANEJADORA/LOWER_01")
             subsystem = hvac_topic.name
 
             # Retrieve the DeviceId.
@@ -429,26 +358,15 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 **enable_data, timeout=STD_TIMEOUT
             )
 
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.csc.xml.xml_language == Language.ENGLISH:
-                command_group = "LowerAhu"
-            else:
-                command_group = "ManejadoraLowers"
+            command_group = "LowerAhu"
             config_method = getattr(self.remote, f"cmd_config{command_group}")
 
             config_data = hvac_test_utils.get_random_config_data(hvac_topic)
             config_data["device_id"] = device_id
 
-            # Introduce NaN values.
-            # TODO DM-46835 Remove backward compatibility with XML 22.1.
-            if self.csc.xml.xml_language == Language.ENGLISH:
-                config_data["maxFanSetpoint"] = math.nan
-                config_data["minFanSetpoint"] = math.nan
-                config_data["antiFreezeTemperature"] = math.nan
-            else:
-                config_data["setpointVentiladorMax"] = math.nan
-                config_data["setpointVentiladorMin"] = math.nan
-                config_data["temperaturaAnticongelante"] = math.nan
+            config_data["maxFanSetpoint"] = math.nan
+            config_data["minFanSetpoint"] = math.nan
+            config_data["antiFreezeTemperature"] = math.nan
 
             # Invoke the config command.
             await config_method.set_start(**config_data)

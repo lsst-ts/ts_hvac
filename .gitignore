@@ -29,3 +29,4 @@ python/lsst/ts/hvac/data/output/
 .flake8
 .isort.cfg
 .mypy.ini
+towncrier.toml

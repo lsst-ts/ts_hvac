@@ -21,12 +21,7 @@
 
 import unittest
 
-from lsst.ts.hvac.enums import (
-    DEVICE_GROUPS,
-    DEVICE_GROUPS_ENGLISH,
-    TOPICS_ALWAYS_ENABLED,
-    Language,
-)
+from lsst.ts.hvac.enums import DEVICE_GROUPS_ENGLISH, TOPICS_ALWAYS_ENABLED
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 from lsst.ts.hvac.xml import hvac_mqtt_to_SAL_XML
 from lsst.ts.xml.enums.HVAC import DeviceId
@@ -48,10 +43,7 @@ class MqttToSalTestCase(unittest.TestCase):
     def test_hvac_command_groups(self) -> None:
         xml = MqttInfoReader()
 
-        # TODO DM-46835 Remove backward compatibility with XML 22.1.
         device_groups = DEVICE_GROUPS_ENGLISH
-        if xml.xml_language == Language.SPANISH:
-            device_groups = DEVICE_GROUPS
 
         command_topic_counts = {}
         for hvac_topic in xml.get_generic_hvac_topics():

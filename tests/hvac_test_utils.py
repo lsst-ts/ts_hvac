@@ -22,16 +22,10 @@
 import enum
 import random
 
-from lsst.ts.hvac.enums import (
-    CommandItem,
-    CommandItemEnglish,
-    HvacTopic,
-    HvacTopicEnglish,
-)
+from lsst.ts.hvac.enums import CommandItemEnglish
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 
-# TODO DM-46835 Remove all backward compatibility with XML 22.1.
 def get_random_config_data(topic: enum.Enum) -> dict[str, float]:
     """Generates random values for all command items of the given topic.
 
@@ -56,12 +50,7 @@ def get_random_config_data(topic: enum.Enum) -> dict[str, float]:
         if item not in [
             "COMANDO_ENCENDIDO_LSST",
         ]:
-            if isinstance(topic, HvacTopic):
-                data_item = CommandItem(item)
-            elif isinstance(topic, HvacTopicEnglish):
-                data_item = CommandItemEnglish(item)
-            else:
-                raise ValueError(f"Unknown enum {topic}.")
+            data_item = CommandItemEnglish(item)
             idl_type = items[item]["idl_type"]
             limits = items[item]["limits"]
             if idl_type == "float":

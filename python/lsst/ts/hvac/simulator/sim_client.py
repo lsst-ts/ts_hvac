@@ -29,7 +29,7 @@ import typing
 from collections import deque
 
 import paho.mqtt.client as mqtt
-from lsst.ts.hvac.enums import EVENT_TOPIC_DICT, TOPICS_ALWAYS_ENABLED
+from lsst.ts.hvac.enums import EVENT_TOPIC_DICT_ENGLISH, TOPICS_ALWAYS_ENABLED
 
 from ..base_mqtt_client import BaseMqttClient
 from ..mqtt_info_reader import MqttInfoReader
@@ -201,11 +201,11 @@ class SimClient(BaseMqttClient):
             idl_type = self.hvac_topics[hvac_topic]["idl_type"]
             limits = self.hvac_topics[hvac_topic]["limits"]
             value = None
-            if hvac_topic in EVENT_TOPIC_DICT:
+            if hvac_topic in EVENT_TOPIC_DICT_ENGLISH:
                 # Some Dynalene topics need to be emitted as events instead of
                 # telemetry. Some have an enum value, others a boolean value.
-                if EVENT_TOPIC_DICT[hvac_topic]["type"] == "enum":
-                    enum = EVENT_TOPIC_DICT[hvac_topic]["enum"]
+                if EVENT_TOPIC_DICT_ENGLISH[hvac_topic]["type"] == "enum":
+                    enum = EVENT_TOPIC_DICT_ENGLISH[hvac_topic]["enum"]
                     value = random.choice(list(enum))
                 else:
                     value = True

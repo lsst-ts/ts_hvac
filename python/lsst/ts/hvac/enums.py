@@ -85,6 +85,8 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
     )
 )
 
+# TODO: remove backwards compatibility when XML 23.2 is released.
+# See DM-50781.
 component_info = ComponentInfo(name="HVAC", topic_subname="")
 HAS_EXTERIOR = (
     "exteriorAmbienteTemperature" in component_info.topics["tel_lowerAHU01P05"].fields
@@ -824,6 +826,8 @@ class TelemetryItemEnglish(Enum):
     dayHeatingSetpoint = "SETPOINT_HEATING_DAY"
     dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR"
     downDevice = "DOWN_DEVICE"
+    # TODO: remove backwards compatibility when XML 23.2 is released.
+    # See DM-50781.
     if HAS_EXTERIOR:
         exteriorAmbienteTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
     else:
@@ -1184,6 +1188,8 @@ class TelemetryItemDescription(Enum):
     dayHeatingSetpoint = "Day Heating Setpoint."
     dehumidifierSetpoint = "Dehumidifier Setpoint."
     downDevice = "Device Down."
+    # TODO: remove backwards compatibility when XML 23.2 is released.
+    # See DM-50781.
     if HAS_EXTERIOR:
         exteriorAmbienteTemperature = "Exterior Ambient Temperature."
     else:

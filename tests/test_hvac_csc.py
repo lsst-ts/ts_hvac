@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import enum
 import math
+import random
 import re
 import typing
 import unittest
@@ -273,6 +274,16 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 else:
                     self.assertAlmostEqual(command_item, config_data[command_topic], 3)
 
+    async def _verify_no_more_config_events(self) -> None:
+        event_name_pattern = re.compile(r"^evt_.*Configuration$")
+        config_events = [
+            getattr(self.remote, attr)
+            for attr in dir(self.remote)
+            if event_name_pattern.match(attr)
+        ]
+        for config_event in config_events:
+            self.assertIsNone(config_event.get_oldest(), "Extra config event")
+
     async def test_config(self) -> None:
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
@@ -282,44 +293,52 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 remote=self.remote, state=salobj.State.ENABLED
             )
 
-            for hvac_topic in HvacTopicEnglish:  # type: ignore
-                if hvac_topic.value not in TOPICS_WITHOUT_CONFIGURATION:
-                    subsystem = hvac_topic.name
-                    # Retrieve the DeviceId.
-                    device_id = DeviceId[subsystem]
-                    enable_data = {"device_id": device_id}
-                    # Enable the subsystem.
-                    await self.remote.cmd_enableDevice.set_start(
-                        **enable_data, timeout=STD_TIMEOUT
-                    )
-                    # Retrieve the config command of the subsystem.
-                    command_group = re.sub(r"\d{0,2}P\d{2}$", r"", device_id.name)
-                    command_group = command_group[0].upper() + command_group[1:]
-                    if "AHU" in command_group:
-                        command_group = command_group.replace("AHU", "Ahu")
-                    if "White" in command_group or "Clean" in command_group:
-                        command_group = "Ahu"
-                    config_method = getattr(self.remote, f"cmd_config{command_group}")
+            random_seed = 12345
+            for run_count in range(2):
+                random.seed(random_seed)
+                for hvac_topic in HvacTopicEnglish:  # type: ignore
+                    if hvac_topic.value not in TOPICS_WITHOUT_CONFIGURATION:
+                        subsystem = hvac_topic.name
+                        # Retrieve the DeviceId.
+                        device_id = DeviceId[subsystem]
+                        enable_data = {"device_id": device_id}
+                        # Enable the subsystem.
+                        await self.remote.cmd_enableDevice.set_start(
+                            **enable_data, timeout=STD_TIMEOUT
+                        )
+                        # Retrieve the config command of the subsystem.
+                        command_group = re.sub(r"\d{0,2}P\d{2}$", r"", device_id.name)
+                        command_group = command_group[0].upper() + command_group[1:]
+                        if "AHU" in command_group:
+                            command_group = command_group.replace("AHU", "Ahu")
+                        if "White" in command_group or "Clean" in command_group:
+                            command_group = "Ahu"
+                        config_method = getattr(
+                            self.remote, f"cmd_config{command_group}"
+                        )
 
-                    # Invoke the config command.
-                    config_data = hvac_test_utils.get_random_config_data(hvac_topic)
-                    config_data["device_id"] = device_id
-                    await config_method.set_start(**config_data)
-                    # Make sure that the SimClient publishes telemetry.
-                    self.csc.mqtt_client.publish_telemetry()
-                    # Make sure that the CSC publishes the telemetry.
-                    await self.csc.publish_telemetry()
-                    # Check deviceEnabled event.
-                    await self._verify_evt_deviceEnabled(subsystem)
-                    # Check all configuration telemetry.
-                    await self._verify_config_telemetry(subsystem, config_data)
-                    # Check the config event.
-                    await self._verify_config_event(hvac_topic, config_data)
+                        # Invoke the config command.
+                        config_data = hvac_test_utils.get_random_config_data(hvac_topic)
+                        config_data["device_id"] = device_id
+                        await config_method.set_start(**config_data)
+                        # Make sure that the SimClient publishes telemetry.
+                        self.csc.mqtt_client.publish_telemetry()
+                        # Make sure that the CSC publishes the telemetry.
+                        await self.csc.publish_telemetry()
+                        # Check deviceEnabled event.
+                        await self._verify_evt_deviceEnabled(subsystem)
+                        # Check all configuration telemetry.
+                        await self._verify_config_telemetry(subsystem, config_data)
+                        # Check the config event.
+                        if run_count == 0:
+                            await self._verify_config_event(hvac_topic, config_data)
 
-                    # Disable the subsystem.
-                    await self.remote.cmd_disableDevice.set_start(
-                        **enable_data, timeout=STD_TIMEOUT
-                    )
+                        # Disable the subsystem.
+                        await self.remote.cmd_disableDevice.set_start(
+                            **enable_data, timeout=STD_TIMEOUT
+                        )
+
+            await self._verify_no_more_config_events()
 
     async def test_dynalene_set_chiller1_pressure_setpoint(self) -> None:
         async with self.make_csc(

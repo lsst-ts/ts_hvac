@@ -43,6 +43,7 @@ __all__ = [
 
 from enum import Enum
 
+from lsst.ts.xml.component_info import ComponentInfo
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
 # These topics are always enabled because there are no MQTT commands to enable
@@ -82,6 +83,13 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
         "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
     )
+)
+
+# TODO: remove backwards compatibility when XML 23.2 is released.
+# See DM-50781.
+component_info = ComponentInfo(name="HVAC", topic_subname="")
+HAS_EXTERIOR = (
+    "exteriorAmbienteTemperature" in component_info.topics["tel_lowerAHU01P05"].fields
 )
 
 
@@ -818,7 +826,12 @@ class TelemetryItemEnglish(Enum):
     dayHeatingSetpoint = "SETPOINT_HEATING_DAY"
     dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR"
     downDevice = "DOWN_DEVICE"
-    exteriorAmbienteTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
+    # TODO: remove backwards compatibility when XML 23.2 is released.
+    # See DM-50781.
+    if HAS_EXTERIOR:
+        exteriorAmbienteTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
+    else:
+        externalAmbientTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
     externalTemperatureState = "ESTADO_TEMPERATURA_EXTERIOR"
     fanState = "ESTADO_VENTILADOR"
     faultDevice = "FAULT_DEVICE"
@@ -1175,7 +1188,12 @@ class TelemetryItemDescription(Enum):
     dayHeatingSetpoint = "Day Heating Setpoint."
     dehumidifierSetpoint = "Dehumidifier Setpoint."
     downDevice = "Device Down."
-    exteriorAmbienteTemperature = "Exterior Ambient Temperature."
+    # TODO: remove backwards compatibility when XML 23.2 is released.
+    # See DM-50781.
+    if HAS_EXTERIOR:
+        exteriorAmbienteTemperature = "Exterior Ambient Temperature."
+    else:
+        externalAmbientTemperature = "External Ambient Temperature."
     externalTemperatureState = "External Temperature State."
     fanState = "Fan State - a UnitState enum."
     faultDevice = "Device Fault."

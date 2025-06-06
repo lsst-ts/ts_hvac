@@ -8,6 +8,21 @@ Version History
 
 .. towncrier release notes start
 
+v0.17.8 (2025-06-06)
+====================
+
+Bug Fixes
+---------
+
+- Prevented publication of duplicate configuration events. (`DM-50772 <https://rubinobs.atlassian.net//browse/DM-50772>`_)
+- Hot fix for unknown configuration event items. (`OSW-515 <https://rubinobs.atlassian.net//browse/OSW-515>`_)
+
+
+Other Changes and Additions
+---------------------------
+
+- Find a better name for external and ambient temperature topic parameter used in HVAC_lowerAHU0XP05 topics. (`DM-49940 <https://rubinobs.atlassian.net//browse/DM-49940>`_)
+
 
 v0.17.7 (2025-04-24)
 ====================

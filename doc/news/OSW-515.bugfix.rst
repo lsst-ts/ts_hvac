@@ -1,0 +1,1 @@
+Hot fix for unknown configuration event items.

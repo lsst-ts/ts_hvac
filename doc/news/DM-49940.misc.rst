@@ -1,1 +1,0 @@
-Find a better name for external and ambient temperature topic parameter used in HVAC_lowerAHU0XP05 topics.

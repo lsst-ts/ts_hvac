@@ -67,8 +67,8 @@ def run_hvac() -> None:
 
 class InternalItemState:
     """Container for the state of the item of a general MQTT topic. A general
-    topic represents an MQTT subsystem (chiller, fan, pump, etc) and an item a
-    value reported by the subsystem (temperature, pressure, etc).
+    topic represents an MQTT subsystem (chiller, fan, pump, etc.) and an item
+    a value reported by the subsystem (temperature, pressure, etc.).
 
     Parameters
     ----------
@@ -375,9 +375,8 @@ class HvacCsc(salobj.BaseCsc):
             command_group = [
                 k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic_value in v
             ][0]
-            command_group_coro = getattr(
-                self, f"evt_{to_camel_case(command_group, True)}Configuration"
-            )
+            event_name = f"evt_{to_camel_case(command_group, True)}Configuration"
+            command_group_coro = getattr(self, event_name)
             event_data = {"device_id": device_id}
             command_topics = self.xml.command_topics[hvac_topic_name]
             for command_topic in command_topics:
@@ -391,8 +390,15 @@ class HvacCsc(salobj.BaseCsc):
                         data_item = "coldValveOpening"
                     else:
                         data_item = command_topic
-                    event_data[command_topic] = data[data_item]
-            await command_group_coro.set_write(**event_data)
+                    if data_item in data:
+                        event_data[command_topic] = data[data_item]
+                    else:
+                        self.log.warning(f"{event_name=} has no {data_item=}.")
+            event_data_key = f"{event_name}:{device_id}"
+            cached_event_data = self.event_data.get(event_data_key)
+            if event_data != cached_event_data:
+                await command_group_coro.set_write(**event_data)
+            self.event_data[event_data_key] = event_data
 
     async def _handle_mqtt_messages(self) -> None:
         self.log.debug("Handling MQTT messages.")

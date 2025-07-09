@@ -1,0 +1,1 @@
+Log at info level which commands are sent with which payload.

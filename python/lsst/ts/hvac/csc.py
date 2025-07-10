@@ -587,7 +587,7 @@ class HvacCsc(salobj.BaseCsc):
         data: Any
             The data to send. This is the data received via SAL.
         """
-        self._set_enabled_state(data, False)
+        await self._set_enabled_state(data, False)
 
     async def do_enableDevice(self, data: SimpleNamespace) -> None:
         """Enable the specified device.
@@ -597,9 +597,9 @@ class HvacCsc(salobj.BaseCsc):
         data: Any
             The data to send. This is the data received via SAL.
         """
-        self._set_enabled_state(data, True)
+        await self._set_enabled_state(data, True)
 
-    def _set_enabled_state(self, data: SimpleNamespace, enabled: bool) -> None:
+    async def _set_enabled_state(self, data: SimpleNamespace, enabled: bool) -> None:
         """Send an MQTT message to enable or disable a system.
 
         Parameters
@@ -618,11 +618,9 @@ class HvacCsc(salobj.BaseCsc):
 
         # Publish the data to the MQTT topic and receive confirmation whether
         # the publication was done correctly.
-        assert self.mqtt_client is not None
-        was_published = self.mqtt_client.publish_mqtt_message(
-            hvac_topic_value + "/" + command_item,
-            json.dumps(enabled),
-        )
+        topic = hvac_topic_value + "/" + command_item
+        payload = json.dumps(enabled)
+        was_published = await self._send_command(topic, payload)
 
         # Do some housekeeping if the message was sent correctly.
         if was_published:
@@ -657,20 +655,20 @@ class HvacCsc(salobj.BaseCsc):
         mqtt_topics_and_items = self.xml.get_command_mqtt_topics_and_items()
         items = mqtt_topics_and_items[topic_value]
         was_published = {}
-        assert self.mqtt_client is not None
         for item in items:
             if item not in ["COMANDO_ENCENDIDO_LSST"]:
                 command_item = command_enum(item)  # type: ignore
                 value = getattr(data, command_item.name)
                 if isinstance(value, float) and math.isnan(value):
                     continue
-                was_published[command_item.name] = (
-                    self.mqtt_client.publish_mqtt_message(
-                        topic_value + "/" + command_item.value,
-                        json.dumps(value),
-                    )
+
+                topic = topic_value + "/" + command_item.value
+                payload = json.dumps(value)
+                was_published[command_item.name] = await self._send_command(
+                    topic, payload
                 )
-                if not was_published:
+
+                if not was_published[command_item.name]:
                     # TODO: DM-28028: Handling of was_published == False will
                     #  come at a later point.
                     pass
@@ -685,12 +683,8 @@ class HvacCsc(salobj.BaseCsc):
 
         command_item = [dci for dci in dci_dict if dci in data_dict][0]
         topic = device_groups["DYNALENE"][0] + "/" + command_enum[command_item].value  # type: ignore
-        value = getattr(data, command_item)
-        assert self.mqtt_client is not None
-        was_published = self.mqtt_client.publish_mqtt_message(
-            topic,
-            json.dumps(value),
-        )
+        payload = json.dumps(getattr(data, command_item))
+        was_published = await self._send_command(topic, payload)
 
         if was_published:
             log_event = getattr(self, f"evt_{command_item}")
@@ -701,3 +695,9 @@ class HvacCsc(salobj.BaseCsc):
             # TODO: DM-28028: Handling of was_published == False will come at
             #  a later point.
             pass
+
+    async def _send_command(self, topic: str, payload: typing.Any) -> bool:
+        assert self.mqtt_client is not None
+        was_published = self.mqtt_client.publish_mqtt_message(topic, payload)
+        self.log.info(f"{topic=} with {payload=} was published? {was_published}")
+        return was_published

@@ -35,6 +35,7 @@ from lsst.ts.hvac.enums import (
     HvacTopicEnglish,
 )
 from lsst.ts.hvac.utils import to_camel_case
+from lsst.ts.xml.component_info import ComponentInfo
 from lsst.ts.xml.enums.HVAC import DeviceId
 
 STD_TIMEOUT = 2  # standard command timeout (sec)
@@ -283,6 +284,29 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         ]
         for config_event in config_events:
             self.assertIsNone(config_event.get_oldest(), "Extra config event")
+
+    async def test_config_using_xml(self) -> None:
+        """Test to prove that the command arguments in ts_xml correspond to
+        what the CSC expects."""
+        ci = ComponentInfo(name="HVAC", topic_subname="")
+        config_commands = [
+            topic for topic in ci.topics if topic.startswith("cmd_config")
+        ]
+        device_ids_to_use = {
+            "cmd_configAhu": DeviceId.cleanRoomAHU01P05,
+            "cmd_configChiller": DeviceId.chiller01P01,
+            "cmd_configCrac": DeviceId.crac01P02,
+            "cmd_configFancoil": DeviceId.fancoil01P02,
+            "cmd_configLowerAhu": DeviceId.lowerAHU01P05,
+        }
+        async with self.make_csc(
+            initial_state=salobj.State.ENABLED,
+            simulation_mode=1,
+        ):
+            for config_command in config_commands:
+                config_data = {"device_id": device_ids_to_use[config_command].value}
+                config_method = getattr(self.remote, config_command)
+                await config_method.set_start(**config_data)
 
     async def test_config(self) -> None:
         async with self.make_csc(

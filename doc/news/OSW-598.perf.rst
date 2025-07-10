@@ -1,0 +1,1 @@
+Added unit test to test ts_xml config command arguments.

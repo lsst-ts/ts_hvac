@@ -8,6 +8,16 @@ Version History
 
 .. towncrier release notes start
 
+v0.17.9 (2025-07-10)
+====================
+
+Performance Enhancement
+-----------------------
+
+- Added unit test to test ts_xml config command arguments. (`OSW-598 <https://rubinobs.atlassian.net//browse/OSW-598>`_)
+- Log at info level which commands are sent with which payload. (`OSW-673 <https://rubinobs.atlassian.net//browse/OSW-673>`_)
+
+
 v0.17.8 (2025-06-06)
 ====================
 

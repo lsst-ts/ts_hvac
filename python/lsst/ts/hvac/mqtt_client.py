@@ -21,6 +21,7 @@
 
 __all__ = ["MqttClient"]
 
+import asyncio
 import logging
 import typing
 
@@ -45,15 +46,18 @@ class MqttClient(BaseMqttClient):
 
     def __init__(self, host: str, port: int, log: logging.Logger) -> None:
         super().__init__(log)
+        self.running_loop = asyncio.get_running_loop()
         self.host = host
         self.port = port
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(callback_api_version=2)
+        self.pub_ack_events: dict[int, asyncio.Event] = dict()
         self.log.debug("MqttClient constructed.")
 
     async def connect(self) -> None:
         """Connect the client to the MQTT server."""
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(callback_api_version=2)
         self.client.on_message = self.on_message
+        self.client.on_publish = self.on_publish
         self.client.connect(self.host, self.port)
         self.client.loop_start()
         self.client.subscribe(LSST_GENERAL_TOPIC)
@@ -85,7 +89,40 @@ class MqttClient(BaseMqttClient):
         """
         self.msgs.append(msg)
 
-    def publish_mqtt_message(self, topic: str, payload: str) -> bool:
+    def on_publish(
+        self,
+        client: mqtt.Client,
+        userdata: typing.Any,
+        mid: int,
+        reason_code: mqtt.ReasonCode,
+        properties: mqtt.Properties,
+    ) -> None:
+        """Callback for when an MQTT message is published.
+
+        This function sets the event for the corresponding mid, if one exists.
+
+        Parameters
+        ----------
+        client: `mqtt.Client`
+            The client instance for this callback.
+        userdata:
+            The private user data as set in Client() or with user_data_set().
+        mid: `int`
+            The message ID that matches the mid returned from the
+            corresponding publish() call. Useful for tracking which
+            message was acknowledged.
+        reason_code: `mqtt.ReasonCode`
+            The reason code returned by the broker.
+        properties: `mqtt.Properties`
+            MQTT v5.0 properties returned by the broker.
+        """
+        event = self.pub_ack_events.pop(mid, None)
+        if event:
+            self.running_loop.call_soon_threadsafe(event.set)
+
+    async def publish_mqtt_message(
+        self, topic: str, payload: str, qos: int = 1, timeout: float = 5.0
+    ) -> bool:
         """Publishes the specified payload to the specified topic on the MQTT
         server.
 
@@ -95,12 +132,32 @@ class MqttClient(BaseMqttClient):
             The topic to publish to.
         payload: `str`
             The payload to publish.
+        qos: `int`
+            The MQTT QoS parameter to be used in sending the message:
+             * 0 = at most once
+             * 1 = at least once
+             * 2 = exactly once
+        timeout: `float`
+            Time after which to return a failure, in seconds.
 
         Returns
         -------
         is_published: `bool`
-            For now False gets returned since this functionality is disabled.
+            True if the message was published successfully.
         """
-        self.log.debug(f"Sending messge with {topic=!r} and {payload=!r}.")
+        self.log.debug(f"Sending message with {topic=!r} and {payload=!r}.")
         msg_info = self.client.publish(topic=topic, payload=payload)
+        mid = msg_info.mid
+        event = asyncio.Event()
+        self.pub_ack_events[mid] = event
+
+        try:
+            await asyncio.wait_for(event.wait(), timeout)
+        except asyncio.TimeoutError:
+            self.log.debug(
+                f"Timeout while sending message with {topic=!r} and {payload=!r}."
+            )
+        finally:
+            self.pub_ack_events.pop(mid, None)
+
         return msg_info.is_published()

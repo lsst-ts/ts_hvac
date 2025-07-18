@@ -100,13 +100,11 @@ class SimClient(BaseMqttClient):
         for topic in TOPICS_ALWAYS_ENABLED:
             self.topics_enabled[topic] = True
 
-    def publish_mqtt_message(self, topic: str, payload: str) -> bool:
-        """Publish the specified payload to the specified topic.
-
-        A topic represents an MQTT topic including the command to execute.
-        Two types of commands exist in the real MQTT server: enable commands
-        and configuration commands. The enable commands accept a boolean and
-        the configuration commands accept a float.
+    async def publish_mqtt_message(
+        self, topic: str, payload: str, qos: int = 1, timeout: float = 5.0
+    ) -> bool:
+        """Publishes the specified payload to the specified topic on the MQTT
+        server.
 
         Parameters
         ----------
@@ -115,6 +113,13 @@ class SimClient(BaseMqttClient):
         payload: `str`
             The payload to publish. This corresponds to a boolean for the
             enable commands and a float for the configuration commands.
+        qos: `int`
+            The MQTT QoS parameter to be used in sending the message:
+             * 0 = at most once
+             * 1 = at least once
+             * 2 = exactly once
+        timeout: `float`
+            Time after which to return a failure, in seconds.
 
         Returns
         -------

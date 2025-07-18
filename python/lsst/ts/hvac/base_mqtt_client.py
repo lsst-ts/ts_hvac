@@ -53,7 +53,9 @@ class BaseMqttClient(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def publish_mqtt_message(self, topic: str, payload: str) -> bool:
+    async def publish_mqtt_message(
+        self, topic: str, payload: str, qos: int = 1, timeout: float = 5.0
+    ) -> bool:
         """Publishes the specified payload to the specified topic on the MQTT
         server.
 
@@ -63,10 +65,17 @@ class BaseMqttClient(ABC):
             The topic to publish to.
         payload: `str`
             The payload to publish.
+        qos: `int`
+            The MQTT QoS parameter to be used in sending the message:
+             * 0 = at most once
+             * 1 = at least once
+             * 2 = exactly once
+        timeout: `float`
+            Time after which to return a failure, in seconds.
 
         Returns
         -------
         is_published: `bool`
-            For now False gets returned since this functionality is disabled.
+            True if the message was published successfully.
         """
         raise NotImplementedError()

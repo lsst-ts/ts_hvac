@@ -158,7 +158,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                     f"Encountered variable {var} of type {type(data)} with value {data} in topic {topic}"
                 )
 
-    def enable_topic(self, topic: str) -> None:
+    async def enable_topic(self, topic: str) -> None:
         """Enable the topic by sending True to the enable command.
 
         Parameters
@@ -168,9 +168,9 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         """
         command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
         value = "true"
-        self.mqtt_client.publish_mqtt_message(command, value)
+        await self.mqtt_client.publish_mqtt_message(command, value)
 
-    def disable_topic(self, topic: str) -> None:
+    async def disable_topic(self, topic: str) -> None:
         """Disable the topic by sending False to the enable command.
 
         Parameters
@@ -180,7 +180,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         """
         command = topic + "/" + "COMANDO_ENCENDIDO_LSST"
         value = "false"
-        self.mqtt_client.publish_mqtt_message(command, value)
+        await self.mqtt_client.publish_mqtt_message(command, value)
 
     def determine_expected_state(self, topic: str) -> dict[str, typing.Any]:
         """Determine the expected state of the topic by looping over each
@@ -254,13 +254,13 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         for topic in topics:
             if topic not in TOPICS_ALWAYS_ENABLED:
                 self.verify_topic_disabled(topic)
-                self.enable_topic(topic)
+                await self.enable_topic(topic)
 
             expected_state = self.determine_expected_state(topic)
             self.verify_topic_state(topic, expected_state)
 
             if topic not in TOPICS_ALWAYS_ENABLED:
-                self.disable_topic(topic)
+                await self.disable_topic(topic)
                 self.verify_topic_disabled(topic)
 
     async def test_config(self) -> None:
@@ -275,7 +275,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
 
                 # Enable the topic otherwise telemetry doesn't get
                 # published.
-                self.enable_topic(topic.value)
+                await self.enable_topic(topic.value)
                 mqtt_state = self.collect_mqtt_state()
                 # Verify that the corresponding telemetry items have the
                 # values as sent in the configurastion command.
@@ -297,4 +297,4 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
 
                 self.log.info(mqtt_state)
                 # Disable the topic again.
-                self.disable_topic(topic.value)
+                await self.disable_topic(topic.value)

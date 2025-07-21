@@ -49,13 +49,13 @@ class MqttClient(BaseMqttClient):
         self.running_loop = asyncio.get_running_loop()
         self.host = host
         self.port = port
-        self.client = mqtt.Client(callback_api_version=2)
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.pub_ack_events: dict[int, asyncio.Event] = dict()
         self.log.debug("MqttClient constructed.")
 
     async def connect(self) -> None:
         """Connect the client to the MQTT server."""
-        self.client = mqtt.Client(callback_api_version=2)
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_message = self.on_message
         self.client.on_publish = self.on_publish
         self.client.connect(self.host, self.port)

@@ -23,6 +23,7 @@ __all__ = ["MqttClient"]
 
 import asyncio
 import logging
+import threading
 import typing
 
 import paho.mqtt.client as mqtt
@@ -47,6 +48,7 @@ class MqttClient(BaseMqttClient):
     def __init__(self, host: str, port: int, log: logging.Logger) -> None:
         super().__init__(log)
         self.running_loop = asyncio.get_running_loop()
+        self.threading_lock = threading.Lock()
         self.host = host
         self.port = port
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -116,7 +118,14 @@ class MqttClient(BaseMqttClient):
         properties: `mqtt.Properties`
             MQTT v5.0 properties returned by the broker.
         """
-        event = self.pub_ack_events.pop(mid, None)
+        with self.threading_lock:
+            event = self.pub_ack_events.pop(mid, None)
+        if reason_code.is_failure:
+            self.running_loop.call_soon_threadsafe(
+                lambda: self.log.warning(
+                    f"MQTT publish failed: {reason_code} ({reason_code.value})"
+                )
+            )
         if event:
             self.running_loop.call_soon_threadsafe(event.set)
 
@@ -146,10 +155,11 @@ class MqttClient(BaseMqttClient):
             True if the message was published successfully.
         """
         self.log.debug(f"Sending message with {topic=!r} and {payload=!r}.")
-        msg_info = self.client.publish(topic=topic, payload=payload)
-        mid = msg_info.mid
         event = asyncio.Event()
-        self.pub_ack_events[mid] = event
+        with self.threading_lock:
+            msg_info = self.client.publish(topic=topic, payload=payload)
+            mid = msg_info.mid
+            self.pub_ack_events[mid] = event
 
         try:
             await asyncio.wait_for(event.wait(), timeout)

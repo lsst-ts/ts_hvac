@@ -698,6 +698,6 @@ class HvacCsc(salobj.BaseCsc):
 
     async def _send_command(self, topic: str, payload: typing.Any) -> bool:
         assert self.mqtt_client is not None
-        was_published = self.mqtt_client.publish_mqtt_message(topic, payload)
+        was_published = await self.mqtt_client.publish_mqtt_message(topic, payload)
         self.log.info(f"{topic=} with {payload=} was published? {was_published}")
         return was_published

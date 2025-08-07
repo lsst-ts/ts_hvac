@@ -1948,6 +1948,25 @@ TOPICS_WITH_DATA_IN_PSI = frozenset(
     )
 )
 
+# For these topics, the data are in CO2 ppm which need to be converted to
+# mg/m3.
+TOPICS_WITH_DATA_IN_CO2_PPM = frozenset(
+    (
+        "LSST/PISO02/FANCOIL01/InternCO2",
+        "LSST/PISO02/FANCOIL02/InternCO2",
+        "LSST/PISO02/FANCOIL03/InternCO2",
+        "LSST/PISO02/FANCOIL04/InternCO2",
+        "LSST/PISO02/FANCOIL05/InternCO2",
+        "LSST/PISO02/FANCOIL06/InternCO2",
+        "LSST/PISO02/FANCOIL07/InternCO2",
+        "LSST/PISO02/FANCOIL08/InternCO2",
+        "LSST/PISO02/FANCOIL09/InternCO2",
+        "LSST/PISO02/FANCOIL10/InternCO2",
+        "LSST/PISO02/FANCOIL11/InternCO2",
+        "LSST/PISO02/FANCOIL12/InternCO2",
+    )
+)
+
 # Dynalene command items.
 DYNALENE_COMMAND_ITEMS_ENGLISH = {
     command_item.name

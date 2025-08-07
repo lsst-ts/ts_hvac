@@ -242,7 +242,7 @@ def _create_telemetry_xml() -> None:
 
 def _create_command_sub_element(
     command_name: str, description_text: str
-) -> etree.SubElement:
+) -> etree.Element:
     st = etree.SubElement(command_root, "SALCommand")
     sub_system = etree.SubElement(st, "Subsystem")
     sub_system.text = "HVAC"

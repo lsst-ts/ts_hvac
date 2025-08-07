@@ -25,6 +25,12 @@ __all__ = ["bar_to_pa", "psi_to_pa", "to_camel_case"]
 import astropy.units as u
 from astropy.units import imperial, misc
 
+# The molecular weight of CO2 (g/mol).
+MOLECULAR_WEIGHT_CO2 = 44.009
+
+# PPM to mg/m3 conversion factor.
+PPM_CONVERSION_FACTOR = 0.0409
+
 
 def bar_to_pa(value: float) -> float:
     """Convert a value in bar to a value in Pa.
@@ -60,6 +66,22 @@ def psi_to_pa(value: float) -> float:
     quantity_in_psi = value * imperial.psi
     quantity_in_pa = quantity_in_psi.to(u.Pa)
     return quantity_in_pa.value
+
+
+def co2_ppm_to_mg_per_cubic_meter(value: float) -> float:
+    """Convert a value in CO2 ppm to a value in mg/m3.
+
+    Parameters
+    ----------
+    value: `float`
+        The value in CO2 ppm.
+
+    Returns
+    -------
+    float
+        The value in mg/m3.
+    """
+    return value * MOLECULAR_WEIGHT_CO2 / PPM_CONVERSION_FACTOR
 
 
 def to_camel_case(string: str, first_lower: bool = False) -> str:

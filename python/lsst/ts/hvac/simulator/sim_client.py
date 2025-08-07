@@ -180,6 +180,12 @@ class SimClient(BaseMqttClient):
             command_item = command_item[:-5]
         self.configuration_values[f"{topic}/{command_item}"] = payload
 
+        hvac_topic = f"{topic}/{command}"
+        msg = mqtt.MQTTMessage(topic=hvac_topic.encode())
+        msg.payload = json.dumps(payload)
+        self.log.debug(f"Publishing telemetry with {hvac_topic=} and {payload=}.")
+        self.msgs.append(msg)
+
     async def _publish_telemetry_every_second(self) -> None:
         """Publish telmetry every second to simulate the behaviour of an MQTT
         server.
@@ -247,4 +253,5 @@ class SimClient(BaseMqttClient):
             if value is not None:
                 msg = mqtt.MQTTMessage(topic=hvac_topic.encode())
                 msg.payload = json.dumps(value)
+                self.log.debug(f"Publishing telemetry with {hvac_topic=} and {value=}.")
                 self.msgs.append(msg)

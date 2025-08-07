@@ -24,7 +24,6 @@ __all__ = [
     "DATA_DIR",
 ]
 
-import enum
 import pathlib
 import re
 import typing
@@ -144,11 +143,13 @@ class MqttInfoReader:
             "°C": "deg_C",
             "bar": "Pa",
             "%": "%",
+            "Hz": "Hz",
             "hr": "h",
             "%RH": "%",
             "m3/h": "m3/h",
             "LPM": "l/min",
             "l/m": "l/min",
+            "ppm": "mg/m3",
             "PSI": "Pa",
             "KW": "kW",
         }[unit_string.strip()]
@@ -181,8 +182,8 @@ class MqttInfoReader:
         upper_limit: int | float = DEFAULT_UPPER_LIMIT
 
         match = re.match(
-            r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a | LPM a | PSI a | KW a )(-?\d+)"
-            r"( ?%| ?°C| bar| hr|%RH| LPM| PSI| KW)?$",
+            r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a | LPM a | PSI a | KW a | ppm a )(-?\d+)"
+            r"( ?%| ?°C| bar| hr|%RH| LPM| PSI| KW| ppm| Hz)?$",
             limits_string,
         )
         if match:
@@ -197,11 +198,17 @@ class MqttInfoReader:
         elif limits_string == "1,2,3,4,5,6":
             lower_limit = 1
             upper_limit = 6
+        elif limits_string == "1,2,3,4,5":
+            lower_limit = 1
+            upper_limit = 5
+        elif limits_string == "1,2,3":
+            lower_limit = 1
+            upper_limit = 3
         elif limits_string in ["true o false", "-", "-1", ""]:
             # ignore because there really are no lower and upper limits
             pass
         else:
-            raise ValueError(f"Couldn't match limits_string {limits_string}")
+            raise ValueError(f"Couldn't match limits_string {limits_string!r}")
 
         # Convert non-standard units to standard ones.
         if "bar" in limits_string:
@@ -262,7 +269,7 @@ class MqttInfoReader:
         unit: str,
         limits: typing.Tuple[int | float, int | float],
         topics: dict[str, typing.Any],
-        items: enum.EnumType,
+        items: type[TelemetryItemEnglish] | type[CommandItemEnglish] | type[EventItem],
     ) -> None:
         """Collect XML topics and items from a row read from the CSV or JSON
         file with the Rubin Observatory HVAC system information sent by
@@ -308,15 +315,22 @@ class MqttInfoReader:
         """
         topic, item = self.extract_topic_and_item(topic_and_item)
 
+        if issubclass(items, TelemetryItemEnglish):
+            item_type = "TelemetryItem"
+        elif issubclass(items, CommandItemEnglish):
+            item_type = "CommandItem"
+        elif issubclass(items, EventItem):
+            item_type = "EventItem"
+        else:
+            raise ValueError(f"Unknown enum {items}.")
+
         # Work around inconsistent telmetry item names.
         if item == "ESTADO_DE_UNIDAD":
             item = "ESTADO_UNIDAD"
         if item == "MODO_OPERACION_UNIDAD":
             item = "MODO_OPERACION"
 
-        topic_enum: enum.EnumType = HvacTopicEnglish
-
-        for hvac_topic in topic_enum:  # type: ignore
+        for hvac_topic in HvacTopicEnglish:
             if hvac_topic.value in topic:
                 if hvac_topic.name not in topics:
                     topics[hvac_topic.name] = {}
@@ -337,16 +351,23 @@ class MqttInfoReader:
                         break
                 else:
                     print(
-                        f"TelemetryItem '{item}' for {topic} not found in {topic_and_item}"
+                        f"{item_type} {item!r} for {topic} not found in {topic_and_item}"
                     )
 
     def _collect_topics_and_items(self, topics: dict[str, typing.Any]) -> None:
-        command_enum: enum.EnumType = CommandItemEnglish
-        telemetry_enum: enum.EnumType = TelemetryItemEnglish
-
         for topic_and_item in sorted(topics.keys()):
+
             if topic_and_item in EVENT_TOPICS:
                 continue
+
+            # Work around inconsistencies in the CSV file.
+            if topic_and_item == "":
+                continue
+
+            # Some Dynalene topics have not been defined yet so skip them.
+            if "TBD" in topic_and_item:
+                continue
+
             idl_type = topics[topic_and_item]["idl_type"]
             topic_type = topics[topic_and_item]["topic_type"]
             unit = topics[topic_and_item]["unit"]
@@ -359,7 +380,7 @@ class MqttInfoReader:
                     unit,
                     limits,
                     self.telemetry_topics,
-                    telemetry_enum,
+                    TelemetryItemEnglish,
                 )
             if topic_type == TopicType.WRITE:
                 self._generic_collect_topics_and_items(
@@ -369,7 +390,7 @@ class MqttInfoReader:
                     unit,
                     limits,
                     self.command_topics,
-                    command_enum,
+                    CommandItemEnglish,
                 )
         for topic_and_item in EVENT_TOPICS:
             idl_type = topics[topic_and_item]["idl_type"]

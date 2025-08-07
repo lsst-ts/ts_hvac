@@ -43,6 +43,7 @@ from .enums import (
     STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITH_DATA_IN_BAR,
+    TOPICS_WITH_DATA_IN_CO2_PPM,
     TOPICS_WITH_DATA_IN_PSI,
     TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH,
     TOPICS_WITHOUT_CONFIGURATION,
@@ -54,7 +55,7 @@ from .enums import (
 from .mqtt_client import MqttClient
 from .mqtt_info_reader import MqttInfoReader
 from .simulator.sim_client import SimClient
-from .utils import bar_to_pa, psi_to_pa, to_camel_case
+from .utils import bar_to_pa, co2_ppm_to_mg_per_cubic_meter, psi_to_pa, to_camel_case
 
 # The number of seconds to collect the state of the HVAC system for before the
 #  telemetry is sent.
@@ -429,8 +430,8 @@ class HvacCsc(salobj.BaseCsc):
                 try:
                     event_item = event_items[0]
                     event_name = f"evt_{HvacTopicEnglish(topic).name}"
-                    event = getattr(self, event_name)
-                    if event_item.name in event.topic_info.fields:
+                    event = getattr(self, event_name, None)
+                    if event and event_item.name in event.topic_info.fields:
                         if event_name not in self.event_data:
                             self.event_data[event_name] = {}
                         self.event_data[event_name][event_item.name] = payload
@@ -516,6 +517,9 @@ class HvacCsc(salobj.BaseCsc):
             if topic_and_item in TOPICS_WITH_DATA_IN_BAR:
                 self.log.debug(f"Converting {topic_and_item} from bar to Pa.")
                 payload = bar_to_pa(float(payload))
+            if topic_and_item in TOPICS_WITH_DATA_IN_CO2_PPM:
+                self.log.debug(f"Converting {topic_and_item} from CO2 ppm to mg/m3.")
+                payload = co2_ppm_to_mg_per_cubic_meter(float(payload))
             if topic_and_item in TOPICS_WITH_DATA_IN_PSI:
                 self.log.debug(f"Converting {topic_and_item} from PSI to Pa.")
                 payload = psi_to_pa(float(payload))

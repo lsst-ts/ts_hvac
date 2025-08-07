@@ -29,9 +29,11 @@ __all__ = [
     "STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON",
     "TOPICS_ALWAYS_ENABLED",
     "TOPICS_WITH_DATA_IN_BAR",
+    "TOPICS_WITH_DATA_IN_CO2_PPM",
     "TOPICS_WITH_DATA_IN_PSI",
     "TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH",
     "TOPICS_WITHOUT_CONFIGURATION",
+    "TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO",
     "CommandItemEnglish",
     "DeviceIndex",
     "EventItem",
@@ -43,7 +45,6 @@ __all__ = [
 
 from enum import Enum
 
-from lsst.ts.xml.component_info import ComponentInfo
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
 # These topics are always enabled because there are no MQTT commands to enable
@@ -55,6 +56,18 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO01/SENSOR_GLYCOL",
         "LSST/PISO01/VALVULA",
         "LSST/PISO05/DYNALENE",
+        "LSST/PISO02/FANCOIL01",
+        "LSST/PISO02/FANCOIL02",
+        "LSST/PISO02/FANCOIL03",
+        "LSST/PISO02/FANCOIL04",
+        "LSST/PISO02/FANCOIL05",
+        "LSST/PISO02/FANCOIL06",
+        "LSST/PISO02/FANCOIL07",
+        "LSST/PISO02/FANCOIL08",
+        "LSST/PISO02/FANCOIL09",
+        "LSST/PISO02/FANCOIL10",
+        "LSST/PISO02/FANCOIL11",
+        "LSST/PISO02/FANCOIL12",
     )
 )
 
@@ -80,16 +93,7 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO05/VEA_17",
         "LSST/PISO01/VEC_01",
         "LSST/PISO01/VIN_01",
-        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
-        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
     )
-)
-
-# TODO: remove backwards compatibility when XML 23.2 is released.
-# See DM-50781.
-component_info = ComponentInfo(name="HVAC", topic_subname="")
-HAS_EXTERIOR = (
-    "exteriorAmbienteTemperature" in component_info.topics["tel_lowerAHU01P05"].fields
 )
 
 
@@ -827,12 +831,6 @@ class TelemetryItemEnglish(Enum):
     dayHeatingSetpoint = "SETPOINT_HEATING_DAY"
     dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR"
     downDevice = "DOWN_DEVICE"
-    # TODO: remove backwards compatibility when XML 23.2 is released.
-    # See DM-50781.
-    if HAS_EXTERIOR:
-        exteriorAmbienteTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
-    else:
-        externalAmbientTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
     externalAmbientTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
     externalTemperatureState = "ESTADO_TEMPERATURA_EXTERIOR"
     fanDemand = "FanDemand"
@@ -1202,12 +1200,7 @@ class TelemetryItemDescription(Enum):
     dayHeatingSetpoint = "Day Heating Setpoint."
     dehumidifierSetpoint = "Dehumidifier Setpoint."
     downDevice = "Device Down."
-    # TODO: remove backwards compatibility when XML 23.2 is released.
-    # See DM-50781.
-    if HAS_EXTERIOR:
-        exteriorAmbienteTemperature = "Exterior Ambient Temperature."
-    else:
-        externalAmbientTemperature = "External Ambient Temperature."
+    externalAmbientTemperature = "External Ambient Temperature."
     externalTemperatureState = "External Temperature State."
     fanDemand = "Fan Demand."
     fanState = "Fan State - a UnitState enum."
@@ -1888,10 +1881,40 @@ GLYCOL_SENSORS_LEVELS = [
 TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH = frozenset(
     (
         "glycolSensor",
+        "fancoil01P02",
+        "fancoil02P02",
+        "fancoil03P02",
+        "fancoil04P02",
+        "fancoil05P02",
+        "fancoil06P02",
+        "fancoil07P02",
+        "fancoil08P02",
+        "fancoil09P02",
+        "fancoil10P02",
+        "fancoil11P02",
+        "fancoil12P02",
         "lowerAHU01P05",
         "lowerAHU02P05",
         "lowerAHU03P05",
         "lowerAHU04P05",
+    )
+)
+
+# These subsystems do not report COMANDO_ENCENDIDO not ESTADO_FUNCIONAMIENTO
+TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO = frozenset(
+    (
+        "fancoil01P02",
+        "fancoil02P02",
+        "fancoil03P02",
+        "fancoil04P02",
+        "fancoil05P02",
+        "fancoil06P02",
+        "fancoil07P02",
+        "fancoil08P02",
+        "fancoil09P02",
+        "fancoil10P02",
+        "fancoil11P02",
+        "fancoil12P02",
     )
 )
 

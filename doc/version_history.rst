@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.17.10 (2025-07-23)
+=====================
+
+New Features
+------------
+
+- Wait for confirmation that the message was published. (`OSW-712 <https://rubinobs.atlassian.net//browse/OSW-712>`_)
+
+
 v0.17.9 (2025-07-10)
 ====================
 

@@ -29,9 +29,11 @@ __all__ = [
     "STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON",
     "TOPICS_ALWAYS_ENABLED",
     "TOPICS_WITH_DATA_IN_BAR",
+    "TOPICS_WITH_DATA_IN_CO2_PPM",
     "TOPICS_WITH_DATA_IN_PSI",
     "TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH",
     "TOPICS_WITHOUT_CONFIGURATION",
+    "TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO",
     "CommandItemEnglish",
     "DeviceIndex",
     "EventItem",
@@ -43,7 +45,6 @@ __all__ = [
 
 from enum import Enum
 
-from lsst.ts.xml.component_info import ComponentInfo
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
 # These topics are always enabled because there are no MQTT commands to enable
@@ -55,6 +56,18 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO01/SENSOR_GLYCOL",
         "LSST/PISO01/VALVULA",
         "LSST/PISO05/DYNALENE",
+        "LSST/PISO02/FANCOIL01",
+        "LSST/PISO02/FANCOIL02",
+        "LSST/PISO02/FANCOIL03",
+        "LSST/PISO02/FANCOIL04",
+        "LSST/PISO02/FANCOIL05",
+        "LSST/PISO02/FANCOIL06",
+        "LSST/PISO02/FANCOIL07",
+        "LSST/PISO02/FANCOIL08",
+        "LSST/PISO02/FANCOIL09",
+        "LSST/PISO02/FANCOIL10",
+        "LSST/PISO02/FANCOIL11",
+        "LSST/PISO02/FANCOIL12",
     )
 )
 
@@ -80,16 +93,7 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO05/VEA_17",
         "LSST/PISO01/VEC_01",
         "LSST/PISO01/VIN_01",
-        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
-        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
     )
-)
-
-# TODO: remove backwards compatibility when XML 23.2 is released.
-# See DM-50781.
-component_info = ComponentInfo(name="HVAC", topic_subname="")
-HAS_EXTERIOR = (
-    "exteriorAmbienteTemperature" in component_info.topics["tel_lowerAHU01P05"].fields
 )
 
 
@@ -818,6 +822,7 @@ class TelemetryItemEnglish(Enum):
     compressor04StatusRecovery = "COMPRESSOR_4_STATUS_RECOVERY"
     compressor04StatusRequest = "COMPRESSOR_4_STATUS_REQUEST"
     compressor04Working = "COMPRESOR_04_FUNCIONANDO"
+    coolingMode = "Mode_Cooling"
     coolingSetpoint = "SETPOINT_COOLING"
     cto1LowerPressure = "PRESION_BAJA_CTO1"
     cto2LowerPressure = "PRESION_BAJA_CTO2"
@@ -826,24 +831,27 @@ class TelemetryItemEnglish(Enum):
     dayHeatingSetpoint = "SETPOINT_HEATING_DAY"
     dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR"
     downDevice = "DOWN_DEVICE"
-    # TODO: remove backwards compatibility when XML 23.2 is released.
-    # See DM-50781.
-    if HAS_EXTERIOR:
-        exteriorAmbienteTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
-    else:
-        externalAmbientTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
+    externalAmbientTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
     externalTemperatureState = "ESTADO_TEMPERATURA_EXTERIOR"
+    fanDemand = "FanDemand"
     fanState = "ESTADO_VENTILADOR"
     faultDevice = "FAULT_DEVICE"
     filterAlarm = "ALARMA_FILTRO"
     generalAlarm = "ALARMA_GENERAL"
+    heatingMode = "Mode_Heating"
     heatingSetpoint = "SETPOINT_HEATING"
     heatingState = "ESTADO_CALEFACTOR"
+    highFanContact = "FanContactHigh"
     hourMeasure = "HOROMETRO"
     humidifierRequirement = "REQUERIMIENTO_HUMIDIFICADOR"
     humidifierSetpoint = "SETPOINT_HUMIDIFICADOR"
     impulsionFanSetpoint = "SETPOINT_VENT_IMPULSION"
+    internalCO2Concentration = "InternCO2"
+    internalHumidity = "InternHumidity"
+    internalTemperature = "InternTemp"
+    lowFanContact = "FanContactLow"
     maxFanSetpoint = "SETPOINT_VENTILADOR_MAX"
+    mediumFanContact = "FanContactMed"
     minFanSetpoint = "SETPOINT_VENTILADOR_MIN"
     nightCoolingSetpoint = "SETPOINT_COOLING_NIGHT"
     nightHeatingSetpoint = "SETPOINT_HEATING_NIGHT"
@@ -897,6 +905,7 @@ class TelemetryItemEnglish(Enum):
     supplyFlowOss = "INY_FLOW_OSS"
     supplyPressOss = "INY_PRESS_OSS"
     supplyTempOss = "INY_TEMP_OSS"
+    systemMode = "SystemMode"
     retPressOss = "RET_PRESS_OSS"
     retTempOss = "RET_TEMP_OSS"
     supplyFlowFloor2 = "INY_FLOW_PISO_2"
@@ -928,10 +937,12 @@ class TelemetryItemEnglish(Enum):
     returnPressAhuLower2 = "RET_PRESS_UMA_LOWER_2"
     returnPressAhuLower3 = "RET_PRESS_UMA_LOWER_3"
     returnPressAhuLower4 = "RET_PRESS_UMA_LOWER_4"
+    returnPressFloor2 = "RET_PRESS_PISO_2"
     returnTempAhuLower1 = "RET_TEMP_UMA_LOWER_1"
     returnTempAhuLower2 = "RET_TEMP_UMA_LOWER_2"
     returnTempAhuLower3 = "RET_TEMP_UMA_LOWER_3"
     returnTempAhuLower4 = "RET_TEMP_UMA_LOWER_4"
+    returnTempFloor2 = "RET_TEMP_PISO_2"
     supplyTemperature = "TEMPERATURA_INYECCION"
     switchedOn = "COMANDO_ENCENDIDO"
     thermalFault = "FALLA_TERMICA"
@@ -1180,6 +1191,7 @@ class TelemetryItemDescription(Enum):
     compressor04StatusRecovery = "Compressor 4 Status Recovery."
     compressor04StatusRequest = "Compressor 4 Status Request."
     compressor04Working = "Compresson 04 Working."
+    coolingMode = "Cooling Mode."
     coolingSetpoint = "Cooling Setpoint."
     cto1LowerPressure = "CTO 1 Lower Pressure."
     cto2LowerPressure = "CTO 2 Lower Pressure."
@@ -1188,24 +1200,27 @@ class TelemetryItemDescription(Enum):
     dayHeatingSetpoint = "Day Heating Setpoint."
     dehumidifierSetpoint = "Dehumidifier Setpoint."
     downDevice = "Device Down."
-    # TODO: remove backwards compatibility when XML 23.2 is released.
-    # See DM-50781.
-    if HAS_EXTERIOR:
-        exteriorAmbienteTemperature = "Exterior Ambient Temperature."
-    else:
-        externalAmbientTemperature = "External Ambient Temperature."
+    externalAmbientTemperature = "External Ambient Temperature."
     externalTemperatureState = "External Temperature State."
+    fanDemand = "Fan Demand."
     fanState = "Fan State - a UnitState enum."
     faultDevice = "Device Fault."
     filterAlarm = "Filter Alarm."
     generalAlarm = "General Alarm."
+    heatingMode = "Heating Mode."
     heatingSetpoint = "Heating Setpoint."
     heatingState = "Heating State."
+    highFanContact = "High fan contact mode set?"
     hourMeasure = "Hour Measure."
     humidifierRequirement = "Humidifier Requirement."
     humidifierSetpoint = "Humidifier Setpoint."
     impulsionFanSetpoint = "Impulsion Fan Setpoint."
+    internalCO2Concentration = "Internal CO2 concentration."
+    internalHumidity = "Internal humidity."
+    internalTemperature = "Internal temperature."
+    lowFanContact = "Low fan contact mode set?"
     maxFanSetpoint = "Max Fan Setpoint."
+    mediumFanContact = "Medium fan contact mode set?"
     minFanSetpoint = "Min Fan Setpoint."
     nightCoolingSetpoint = "Night Cooling Setpoint."
     nightHeatingSetpoint = "Night Heating Setpoint."
@@ -1231,10 +1246,12 @@ class TelemetryItemDescription(Enum):
     retPressChiller01 = "Return Pressure Chiller 01."
     retPressChiller02 = "Return Pressure Chiller 02."
     retPressChiller03 = "Return Pressure Chiller 03."
+    returnPressFloor2 = "Return Pressure Floor 2."
     retPressSlac = "Return Pressure Slac."
     retTempChiller01 = "Return Temperature Chiller 01."
     retTempChiller02 = "Return Temperature Chiller 02."
     retTempChiller03 = "Return Temperature Chiller 03."
+    returnTempFloor2 = "Return Temperature Floor 2."
     retTempSlac = "Return Temperature Slac."
     returnTemperature = "Return Temperature."
     roomHumidity = "Room Humidity."
@@ -1259,6 +1276,7 @@ class TelemetryItemDescription(Enum):
     supplyFlowOss = "Supply Flow OSS."
     supplyPressOss = "Supply Pressure OSS."
     supplyTempOss = "Supply Temperature OSS."
+    systemMode = "System mode set?"
     retPressOss = "Return Pressure OSS."
     retTempOss = "Return Temperature OSS."
     supplyFlowFloor2 = "Supply Flow Floor 2."
@@ -1364,6 +1382,14 @@ class TelemetryItemDescription(Enum):
     # Commands
     switchOn = "Switch On."
     openColdValve = "Open Cold Valve."
+    coolingProportionalBand = "Set the cooling proportional band."
+    fanOperationType = "Set the fan operation type."
+    heatingProportionalBand = "Set the heating proportional band."
+    maxSetpoint = "Set the max setpoint."
+    minSetpoint = "Set the min setpoint."
+    frequency = "Set the frequency."
+    selectFanSpeed = "Select the fan speed."
+    temperatureSetpoint = "Set the temperature setpoint."
 
     # Dynalene items.
     dynCH01LS01 = "Dynalene Tank Level on Chiller 01."
@@ -1541,6 +1567,14 @@ class EventItem(Enum):
     compressor4StatusOn = "COMPRESSOR_4_STATUS_ON"
     compressor4StatusRecovery = "COMPRESSOR_4_STATUS_RECOVERY"
     compressor4StatusRequest = "COMPRESSOR_4_STATUS_REQUEST"
+    coolingProportionalBand = "Cfg_CoolingPropBand"
+    fanOperationType = "Cfg_FanOperationType"
+    heatingProportionalBand = "Cfg_HeatingPropBand"
+    maxSetpoint = "Cfg_MaxSetPoint"
+    minSetpoint = "Cfg_MinSetPoint"
+    frequency = "MODULACION_HZ"
+    temperatureSetpoint = "TempSetPoint"
+    selectFanSpeed = "UserFanSpeedSelect"
     downDevice = "DOWN_DEVICE"
     dynAlarm = "Alarm"
     dynInitialized = "Initialized"
@@ -1652,12 +1686,18 @@ class CommandItemEnglish(Enum):
     openColdValve = "%_APERTURA_VALVULA_FRIO_LSST"
     dynCH1PressRemoteSP = "CH1PressRemoteSP"
     dynCH2PressRemoteSP = "CH2PressRemoteSP"
+    coolingProportionalBand = "Cfg_CoolingPropBand"
+    fanOperationType = "Cfg_FanOperationType"
+    heatingProportionalBand = "Cfg_HeatingPropBand"
+    maxSetpoint = "Cfg_MaxSetPoint"
+    minSetpoint = "Cfg_MinSetPoint"
     dynSystOnOff = "DynSystOnOff"
     dynTaRemoteSP = "DynTaRemoteSP"
     dynTmaRemoteSP = "DynTmaRemoteSP"
     dynExtAirRemoteSP = "ExtAirRemoteSP"
     dynPierFansOnOff = "PierFansOnOff"
     dynTelemetryEnable = "TelemetryEnable"
+    frequency = "MODULACION_HZ"
     activeSetpoint = "SETPOINT_ACTIVO_LSST"
     coolingSetpoint = "SETPOINT_COOLING_LSST"
     dayCoolingSetpoint = "SETPOINT_COOLING_DAY_LSST"
@@ -1671,6 +1711,8 @@ class CommandItemEnglish(Enum):
     maxFanSetpoint = "SETPOINT_VENTILADOR_MAX_LSST"
     minFanSetpoint = "SETPOINT_VENTILADOR_MIN_LSST"
     antiFreezeTemperature = "TEMPERATURA_ANTICONGELANTE_LSST"
+    temperatureSetpoint = "TempSetPoint"
+    selectFanSpeed = "UserFanSpeedSelect"
     roomSetpoint = "VALOR_CONSIGNA_LSST"
 
 
@@ -1839,10 +1881,40 @@ GLYCOL_SENSORS_LEVELS = [
 TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH = frozenset(
     (
         "glycolSensor",
+        "fancoil01P02",
+        "fancoil02P02",
+        "fancoil03P02",
+        "fancoil04P02",
+        "fancoil05P02",
+        "fancoil06P02",
+        "fancoil07P02",
+        "fancoil08P02",
+        "fancoil09P02",
+        "fancoil10P02",
+        "fancoil11P02",
+        "fancoil12P02",
         "lowerAHU01P05",
         "lowerAHU02P05",
         "lowerAHU03P05",
         "lowerAHU04P05",
+    )
+)
+
+# These subsystems do not report COMANDO_ENCENDIDO not ESTADO_FUNCIONAMIENTO
+TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO = frozenset(
+    (
+        "fancoil01P02",
+        "fancoil02P02",
+        "fancoil03P02",
+        "fancoil04P02",
+        "fancoil05P02",
+        "fancoil06P02",
+        "fancoil07P02",
+        "fancoil08P02",
+        "fancoil09P02",
+        "fancoil10P02",
+        "fancoil11P02",
+        "fancoil12P02",
     )
 )
 
@@ -1896,6 +1968,25 @@ TOPICS_WITH_DATA_IN_PSI = frozenset(
         "LSST/PISO05/DYNALENE/DynTAretPS04",
         "LSST/PISO05/DYNALENE/DCH01supPS11",
         "LSST/PISO05/DYNALENE/DCH02supPS13",
+    )
+)
+
+# For these topics, the data are in CO2 ppm which need to be converted to
+# mg/m3.
+TOPICS_WITH_DATA_IN_CO2_PPM = frozenset(
+    (
+        "LSST/PISO02/FANCOIL01/InternCO2",
+        "LSST/PISO02/FANCOIL02/InternCO2",
+        "LSST/PISO02/FANCOIL03/InternCO2",
+        "LSST/PISO02/FANCOIL04/InternCO2",
+        "LSST/PISO02/FANCOIL05/InternCO2",
+        "LSST/PISO02/FANCOIL06/InternCO2",
+        "LSST/PISO02/FANCOIL07/InternCO2",
+        "LSST/PISO02/FANCOIL08/InternCO2",
+        "LSST/PISO02/FANCOIL09/InternCO2",
+        "LSST/PISO02/FANCOIL10/InternCO2",
+        "LSST/PISO02/FANCOIL11/InternCO2",
+        "LSST/PISO02/FANCOIL12/InternCO2",
     )
 )
 

@@ -35,7 +35,7 @@ from lsst.ts.hvac.enums import (
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
 expected_units = frozenset(
-    ("deg_C", "unitless", "bar", "%", "h", "m3/h", "l/min", "Pa", "kW")
+    ("deg_C", "unitless", "bar", "%", "h", "m3/h", "l/min", "Pa", "kW", "mg/m3", "Hz")
 )
 
 
@@ -282,17 +282,20 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                 for key in data.keys():
                     command_item = CommandItemEnglish[key]
                     self.log.info(f"{topic.value}/{command_item.value[:-5]}")
-                    # TODO: These command items do not have a telemetry
-                    #  counter point in the "Lower" components. It is being
-                    #  clarified how to verify them so they are skipped for
-                    #  now.
+
+                    # These command items do not have a telemetry counter
+                    # point.
                     if command_item.value in [
                         "SETPOINT_VENTILADOR_MIN_LSST",
                         "SETPOINT_VENTILADOR_MAX_LSST",
                     ] and topic.value.startswith("LSST/PISO05/MANEJADORA/LOWER"):
                         continue
+
+                    command_item_value = command_item.value
+                    if command_item.value.endswith("_LSST"):
+                        command_item_value = command_item.value[:-5]
                     self.assertEqual(
-                        data[key], mqtt_state[topic.value][command_item.value[:-5]]
+                        data[key], mqtt_state[topic.value][command_item_value]
                     )
 
                 self.log.info(mqtt_state)

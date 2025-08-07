@@ -1,0 +1,1 @@
+Added new commands, events and telemetry.

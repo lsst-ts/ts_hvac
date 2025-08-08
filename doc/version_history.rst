@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.18.0 (2025-08-08)
+====================
+
+New Features
+------------
+
+- Added new commands, events and telemetry. (`OSW-823 <https://rubinobs.atlassian.net//browse/OSW-823>`_)
+
+
 v0.17.10 (2025-07-23)
 =====================
 

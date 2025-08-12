@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.18.1 (2025-08-12)
+====================
+
+Performance Enhancement
+-----------------------
+
+- Lowered log message level. (`OSW-857 <https://rubinobs.atlassian.net//browse/OSW-857>`_)
+
+
 v0.18.0 (2025-08-08)
 ====================
 

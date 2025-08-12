@@ -394,7 +394,7 @@ class HvacCsc(salobj.BaseCsc):
                     if data_item in data:
                         event_data[command_topic] = data[data_item]
                     else:
-                        self.log.warning(f"{event_name=} has no {data_item=}.")
+                        self.log.debug(f"{event_name=} has no {data_item=}.")
             event_data_key = f"{event_name}:{device_id}"
             cached_event_data = self.event_data.get(event_data_key)
             if event_data != cached_event_data:

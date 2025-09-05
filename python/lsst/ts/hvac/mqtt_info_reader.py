@@ -19,59 +19,39 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = [
-    "MqttInfoReader",
-    "DATA_DIR",
-]
+__all__ = ["MqttInfoReader", "DATA_DIR"]
 
+import csv
 import pathlib
 import re
 import typing
 
-import pandas
-
 from .enums import (
-    DYNALENE_EVENT_GROUP_DICT,
+    DYNALENE_EVENT_TOPICS,
+    EVENT_TOPIC_DICT_ENGLISH,
     EVENT_TOPICS,
-    GLYCOL_SENSORS_LEVELS,
     TOPICS_ALWAYS_ENABLED,
     CommandItemEnglish,
     EventItem,
     HvacTopicEnglish,
+    SalTopicType,
     TelemetryItemEnglish,
     TopicType,
 )
-from .utils import bar_to_pa, psi_to_pa
+from .utils import determine_unit, parse_limits
 
-# The default lower limit
-DEFAULT_LOWER_LIMIT = -9999
-
-# The default upper limit
-DEFAULT_UPPER_LIMIT = 9999
-
-# The names of the columns in the CSV file in the correct order.
-names = [
-    "floor",
-    "subsystem",
-    "variable",
-    "topic_and_item",
-    "publication",
-    "subscription",
-    "signal",
-    "rw",
-    "range",
-    "limits",
-    "unit",
-    "state",
-    "observations",
-    "notes",
-]
+# Various regex for CSV row parsing.
+COMPAIR_REGEX = re.compile(r"LSST/PISO01/COMPAIR/0\d")
+GENERAL_MANEJADORS_REGEX = re.compile(r"LSST/PISO04/MANEJADORA/GENERAL/[A-Z]+")
+GENERAL_REGEX = re.compile(r"LSST/PISO0\d/[A-Z_0-9]+")
+GLYCOL_SENSOR_REGEX = re.compile(r"LSST/PISO0\d/SENSOR_GLYCOL")
+LOWER_MANEJADORS_REGEX = re.compile(r"LSST/PISO05/MANEJADORA/LOWER_\d\d")
+VEX_MANEJADORS_REGEX = re.compile(r"LSST/PISO04/VEX_0\d/[A-Z_]+/GENERAL")
 
 # Find the data directory relative to the location of this file.
 DATA_DIR = pathlib.Path(__file__).resolve().parents[0] / "data"
-
 INPUT_DIR = DATA_DIR / "input"
-dat_control_csv_filename = INPUT_DIR / "Direccionamiento_RubinObservatory.csv"
+DAT_CONTROL_CSV_FILENAME = INPUT_DIR / "Direccionamiento_RubinObservatory.csv"
 
 
 class MqttInfoReader:
@@ -124,205 +104,36 @@ class MqttInfoReader:
 
         self._collect_hvac_topics_and_items_from_csv()
 
-    def _determine_unit(self, unit_string: str) -> str:
-        """Convert the provided unit string to a string representing the unit.
+    def extract_topic_and_item(
+        self, hvac_topic_and_item: str
+    ) -> typing.Tuple[str, str, str | None]:
+        """Extract the generic topic, representing a HVAC device, and item,
+         representing a published value of the device, from a string.
 
         Parameters
         ----------
-        unit_string: `str`
-            The unit as read from the input file.
-
-        Returns
-        -------
-        unit: `str`
-            A string representing the unit.
-        """
-        return {
-            "-": "unitless",
-            "": "unitless",
-            "°C": "deg_C",
-            "bar": "Pa",
-            "%": "%",
-            "Hz": "Hz",
-            "hr": "h",
-            "%RH": "%",
-            "m3/h": "m3/h",
-            "LPM": "l/min",
-            "l/m": "l/min",
-            "ppm": "mg/m3",
-            "PSI": "Pa",
-            "KW": "kW",
-        }[unit_string.strip()]
-
-    def _parse_limits(
-        self, limits_string: str
-    ) -> typing.Tuple[int | float, int | float]:
-        """Parse the string value of the limits column by comparing it to known
-        regular expressions and extracting the minimum and maximum values.
-
-        Parameters
-        ----------
-        limits_string: `str`
-            The string containing the limits to parse.
-
-        Returns
-        -------
-        lower_limit: `int` or `float`
-            The lower limit
-        upper_limit: `int` or `float`
-            The upper limit
-
-        Raises
-        ------
-        ValueError
-            In case an unknown string pattern is found in the limits column.
-
-        """
-        lower_limit: int | float = DEFAULT_LOWER_LIMIT
-        upper_limit: int | float = DEFAULT_UPPER_LIMIT
-
-        match = re.match(
-            r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a | LPM a | PSI a | KW a | ppm a )(-?\d+)"
-            r"( ?%| ?°C| bar| hr|%RH| LPM| PSI| KW| ppm| Hz)?$",
-            limits_string,
-        )
-        if match:
-            lower_limit = float(match.group(1))
-            upper_limit = float(match.group(3))
-        elif re.match(r"^\d$", limits_string):
-            lower_limit = 0
-            upper_limit = 100
-        elif limits_string == "1,2,3,4,5,6,7,8":
-            lower_limit = 1
-            upper_limit = 8
-        elif limits_string == "1,2,3,4,5,6":
-            lower_limit = 1
-            upper_limit = 6
-        elif limits_string == "1,2,3,4,5":
-            lower_limit = 1
-            upper_limit = 5
-        elif limits_string == "1,2,3":
-            lower_limit = 1
-            upper_limit = 3
-        elif limits_string in ["true o false", "-", "-1", ""]:
-            # ignore because there really are no lower and upper limits
-            pass
-        else:
-            raise ValueError(f"Couldn't match limits_string {limits_string!r}")
-
-        # Convert non-standard units to standard ones.
-        if "bar" in limits_string:
-            lower_limit = round(bar_to_pa(lower_limit), 1)
-            upper_limit = round(bar_to_pa(upper_limit), 1)
-        if "PSI" in limits_string:
-            lower_limit = round(psi_to_pa(lower_limit), 1)
-            upper_limit = round(psi_to_pa(upper_limit), 1)
-
-        return lower_limit, upper_limit
-
-    def extract_topic_and_item(self, topic_and_item: str) -> typing.Tuple[str, str]:
-        """Extract the generic topic, representing a HVAC subsystem, and item,
-         representing a published value of the subsystem, from a string.
-
-        This method searches for the last occurrence of that forward slash and
-        will return the part before the slash as topic and after the slash as
-        item.
-
-        Parameters
-        ----------
-        topic_and_item: `str`
+        hvac_topic_and_item: `str`
             The string to extract the generic topic and item from.
 
         Returns
         -------
-        topic: `str`
-            Defined as the part before the last forward slash.
+        device: `str`
+            The HVAC device.
         item: `str`:
-             Defined as the part after the last forward slash.
+             The published value of the device.
+        original_device : `str` | `None`
+            The original device from the MQTT string before corrections for
+            use in the HVAC CSC or None if the original device is the same as
+            the corrected device.
 
         Raises
         ------
         ValueError
-            In case no forward slash is found.
+            In case no known device is found.
         """
-        # This throws a ValueError in case no forward slash is found.
-        topic, item = topic_and_item.rsplit("/", 1)
-        # Treat the Dynelane Safety and Status topics in a special way.
-        if topic in [
-            "LSST/PISO05/DYNALENE/Safeties",
-            "LSST/PISO05/DYNALENE/Status",
-            "LSST/PISO05/DYNALENE/DynaleneState",
-        ]:
-            topic = "LSST/PISO05/DYNALENE"
-        if topic in GLYCOL_SENSORS_LEVELS:
-            topic = "LSST/PISO01/SENSOR_GLYCOL"
-        # Some Dynalene event items need to be grouped together.
-        if item in DYNALENE_EVENT_GROUP_DICT:
-            item = DYNALENE_EVENT_GROUP_DICT[item]
-        return topic, item
-
-    def _generic_collect_topics_and_items(
-        self,
-        topic_and_item: str,
-        topic_type: str,
-        idl_type: str,
-        unit: str,
-        limits: typing.Tuple[int | float, int | float],
-        topics: dict[str, typing.Any],
-        items: type[TelemetryItemEnglish] | type[CommandItemEnglish] | type[EventItem],
-    ) -> None:
-        """Collect XML topics and items from a row read from the CSV or JSON
-        file with the Rubin Observatory HVAC system information sent by
-        DatControl.
-
-        Parameters
-        ----------
-        topic_and_item: `str`
-            The topic and item to parse, for instance
-
-                "LSST/PISO02/CRACK01/ESTADO_FUNCIONAMIENTO"
-
-            would be the topic "LSST/PISO02/CRACK01" and the item
-            "ESTADO_FUNCIONAMIENTO"
-        topic_type: `str`
-            Indicates whether the topic is a telemetry topic (READ) or a
-            command topic (WRITE).
-        idl_type: `str`
-            The IDL type.
-        unit: `str`
-            A string representing an astropy unit.
-        limits: tuple
-            A tuple containing the lower and upper limits.
-        topics: `dict`
-            The dictionary to which to add the XML topic and item.
-        items: enum.Enum
-            The Enum that is used to translate the HVAC topics and items to XML
-            topics and items.
-
-
-        Raises
-        -------
-        ValueError
-            In case a HVAC topic or item is not present in the Telemetry, Item
-            or Command Enums. This error will only be raised during development
-            of the code and serves to ensure that all HVAC topics and items are
-            present in the Enums.
-
-        Notes
-        -----
-        The hvac_topics dictionary gets filled as well by this method.
-
-        """
-        topic, item = self.extract_topic_and_item(topic_and_item)
-
-        if issubclass(items, TelemetryItemEnglish):
-            item_type = "TelemetryItem"
-        elif issubclass(items, CommandItemEnglish):
-            item_type = "CommandItem"
-        elif issubclass(items, EventItem):
-            item_type = "EventItem"
-        else:
-            raise ValueError(f"Unknown enum {items}.")
+        device, original_device = self._extract_device(hvac_topic_and_item)
+        device_for_item = original_device if original_device is not None else device
+        item = hvac_topic_and_item.replace(f"{device_for_item}/", "")
 
         # Work around inconsistent telmetry item names.
         if item == "ESTADO_DE_UNIDAD":
@@ -330,112 +141,180 @@ class MqttInfoReader:
         if item == "MODO_OPERACION_UNIDAD":
             item = "MODO_OPERACION"
 
-        for hvac_topic in HvacTopicEnglish:
-            if hvac_topic.value in topic:
-                if hvac_topic.name not in topics:
-                    topics[hvac_topic.name] = {}
-
-                # Cannot use type hints in for loops.
-                for hvac_item in items:  # type: ignore
-                    if hvac_item.value == item:
-                        topics[hvac_topic.name][hvac_item.name] = {
-                            "idl_type": idl_type,
-                            "unit": unit,
-                        }
-                        self.hvac_topics[topic_and_item] = {
-                            "idl_type": idl_type,
-                            "unit": unit,
-                            "topic_type": topic_type,
-                            "limits": limits,
-                        }
-                        break
-                else:
-                    print(
-                        f"{item_type} {item!r} for {topic} not found in {topic_and_item}"
-                    )
-
-    def _collect_topics_and_items(self, topics: dict[str, typing.Any]) -> None:
-        for topic_and_item in sorted(topics.keys()):
-
-            if topic_and_item in EVENT_TOPICS:
-                continue
-
-            # Work around inconsistencies in the CSV file.
-            if topic_and_item == "":
-                continue
-
-            # Some Dynalene topics have not been defined yet so skip them.
-            if "TBD" in topic_and_item:
-                continue
-
-            idl_type = topics[topic_and_item]["idl_type"]
-            topic_type = topics[topic_and_item]["topic_type"]
-            unit = topics[topic_and_item]["unit"]
-            limits = topics[topic_and_item]["limits"]
-            if topic_type == TopicType.READ:
-                self._generic_collect_topics_and_items(
-                    topic_and_item,
-                    topic_type,
-                    idl_type,
-                    unit,
-                    limits,
-                    self.telemetry_topics,
-                    TelemetryItemEnglish,
-                )
-            if topic_type == TopicType.WRITE:
-                self._generic_collect_topics_and_items(
-                    topic_and_item,
-                    topic_type,
-                    idl_type,
-                    unit,
-                    limits,
-                    self.command_topics,
-                    CommandItemEnglish,
-                )
-        for topic_and_item in EVENT_TOPICS:
-            idl_type = topics[topic_and_item]["idl_type"]
-            topic_type = topics[topic_and_item]["topic_type"]
-            unit = topics[topic_and_item]["unit"]
-            limits = topics[topic_and_item]["limits"]
-            self._generic_collect_topics_and_items(
-                topic_and_item,
-                topic_type,
-                idl_type,
-                unit,
-                limits,
-                self.event_topics,
-                EventItem,
-            )
+        return device, item, original_device
 
     def _collect_hvac_topics_and_items_from_csv(self) -> None:
-        """Loop over all rows in the CSV file and extracts either telemetry
-        topic data or command topic data depending on the contents of the "rw"
-        column in the CSV row.
-        """
-        csv_hvac_topics = {}
-        with open(dat_control_csv_filename) as csv_file:
-            csv_reader = pandas.read_csv(
-                csv_file,
-                delimiter=";",
-                index_col=False,
-                dtype=str,
-                names=names,
-                keep_default_na=False,
+        contents: list[dict[str, str]] = []
+        with open(DAT_CONTROL_CSV_FILENAME) as f:
+            f.readline()
+            f.readline()
+            d = csv.DictReader(f, delimiter=";")
+            for row in d:
+                contents.append(row)
+
+        mqtt_topic_rows: list[dict[str, str]] = []
+        piso = ""
+        tablero = ""
+        for row in contents:
+            m = GENERAL_REGEX.match(row["TOPIC MQTT"])
+            if m:
+                # Skip undefined Dynalene commands and telemetry.
+                if "tbd" in row["TOPIC MQTT"].lower():
+                    continue
+                if row["PISO"] and row["TABLERO"]:
+                    piso = row["PISO"]
+                    tablero = row["TABLERO"]
+                if not row["PISO"]:
+                    row["PISO"] = piso
+                if not row["TABLERO"]:
+                    row["TABLERO"] = tablero
+                mqtt_topic_rows.append(row)
+
+        self._validate_all_rows_contain_know_devices(mqtt_topic_rows)
+
+        read_topic_rows = [
+            row
+            for row in mqtt_topic_rows
+            if row["READ / WRITE"] == "READ "
+            and not (
+                row["TOPIC MQTT"] in EVENT_TOPICS
+                or row["TOPIC MQTT"] in EVENT_TOPIC_DICT_ENGLISH
+                or row["TOPIC MQTT"] in DYNALENE_EVENT_TOPICS
             )
-            for index, row in csv_reader.iterrows():
-                csv_hvac_topic_and_item = row["topic_and_item"]
-                idl_type = "float" if "ANALOG" in row["signal"] else "boolean"
-                topic_type = row["rw"].strip()
-                if topic_type in [TopicType.READ, TopicType.WRITE]:
-                    unit = self._determine_unit(row["unit"])
-                    limits = self._parse_limits(row["limits"].strip())
-                    csv_hvac_topics[csv_hvac_topic_and_item] = {
-                        "idl_type": idl_type,
-                        "topic_type": topic_type,
-                        "unit": unit,
-                        "limits": limits,
-                    }
-        self._collect_topics_and_items(csv_hvac_topics)
+        ]
+        write_topic_rows = [
+            row for row in mqtt_topic_rows if row["READ / WRITE"] == "WRITE"
+        ]
+        event_topic_rows = [
+            row
+            for row in mqtt_topic_rows
+            if row["TOPIC MQTT"] in EVENT_TOPICS
+            and row["TOPIC MQTT"] not in EVENT_TOPIC_DICT_ENGLISH
+            and row["TOPIC MQTT"] not in DYNALENE_EVENT_TOPICS
+        ]
+
+        self._validate_all_event_topics(event_topic_rows)
+
+        self._collect_devices_and_items(read_topic_rows, SalTopicType.TELEMETRY)
+        self._collect_devices_and_items(write_topic_rows, SalTopicType.COMMAND)
+        self._collect_devices_and_items(event_topic_rows, SalTopicType.EVENT)
+
+    def _extract_device(self, mqtt_topic: str) -> typing.Tuple[str, str | None]:
+        """Extract the device from the mqtt_topic.
+
+        This also returns the original device, if different from the device,
+        or None.
+
+        Parameters
+        ----------
+        mqtt_topic : `str`
+            The MQTT topic string to extract the device from.
+
+        Returns
+        -------
+        typing.Tuple[str, str | None]
+            A tuple of the extracted device and either the original device
+            from the MQTT string or None if the device and opriginal device
+            are the same.
+        """
+        m = LOWER_MANEJADORS_REGEX.match(mqtt_topic)
+        if m:
+            return m.group(), None
+        m = GENERAL_MANEJADORS_REGEX.match(mqtt_topic)
+        if m:
+            return m.group(), None
+        m = VEX_MANEJADORS_REGEX.match(mqtt_topic)
+        if m:
+            return m.group(), None
+        m = GLYCOL_SENSOR_REGEX.match(mqtt_topic)
+        if m:
+            return "LSST/PISO01/SENSOR_GLYCOL", m.group()
+        m = COMPAIR_REGEX.match(mqtt_topic)
+        if m:
+            device = m.group().replace("/0", "_0")
+            return device, m.group()
+        if mqtt_topic.startswith("LSST/PISO02/APERTURA"):
+            return HvacTopicEnglish.chillerValve.value, "LSST/PISO02/APERTURA"
+
+        # Handle the default case.
+        m = GENERAL_REGEX.match(mqtt_topic)
+        if m:
+            return m.group(), None
+        raise KeyError(f"No known device found in {mqtt_topic}.")
+
+    def _validate_all_rows_contain_know_devices(
+        self, mqtt_topic_rows: list[dict[str, str]]
+    ) -> None:
+        devices: set[str] = set()
+        for row in mqtt_topic_rows:
+            topic = row["TOPIC MQTT"]
+            device, _ = self._extract_device(topic)
+            devices.add(device)
+
+        for device in devices:
+            HvacTopicEnglish(device)
+        for hvac_device in HvacTopicEnglish:
+            assert hvac_device.value in devices, f"{hvac_device.value} is missing."
+
+    def _validate_all_event_topics(
+        self, event_topic_rows: list[dict[str, str]]
+    ) -> None:
+        all_event_topic_rows = [row["TOPIC MQTT"] for row in event_topic_rows]
+        for event_topic in EVENT_TOPICS:
+            assert (
+                event_topic in all_event_topic_rows
+            ), f"{event_topic} doesn't exist in event_topic_rows."
+        for event_topic in all_event_topic_rows:
+            assert (
+                event_topic in EVENT_TOPICS
+            ), f"{event_topic} doesn't exist in EVENT_TOPICS."
+
+    def _collect_devices_and_items(
+        self, topic_rows: list[dict[str, str]], sal_topic_type: SalTopicType
+    ) -> None:
+        for row in topic_rows:
+            hvac_topic_and_item = row["TOPIC MQTT"]
+            idl_type = "float" if "ANALOG" in row["SIGNAL"] else "boolean"
+            topic_type = row["READ / WRITE"].strip()
+            if topic_type in [TopicType.READ, TopicType.WRITE]:
+                unit = determine_unit(row["UNIT"])
+                limits = parse_limits(row["LIMITES"].strip())
+            else:
+                raise KeyError(f"Found unknown topic type {topic_type}.")
+
+            device, item, _ = self.extract_topic_and_item(hvac_topic_and_item)
+            hvac_topic = HvacTopicEnglish(device)
+            hvac_item: TelemetryItemEnglish | CommandItemEnglish | EventItem = (
+                TelemetryItemEnglish.alarmDevice
+            )
+            hvac_topics = self.telemetry_topics
+            try:
+                match sal_topic_type:
+                    case SalTopicType.TELEMETRY:
+                        hvac_item = TelemetryItemEnglish(item)
+                        hvac_topics = self.telemetry_topics
+                    case SalTopicType.COMMAND:
+                        hvac_item = CommandItemEnglish(item)
+                        hvac_topics = self.command_topics
+                    case SalTopicType.EVENT:
+                        hvac_item = EventItem(item)
+                        hvac_topics = self.event_topics
+                    case _:
+                        raise KeyError(f"Unknown SalTopicType {sal_topic_type}.")
+            except ValueError:
+                print(f'{sal_topic_type}: {device} / {item} "{hvac_topic_and_item}",')
+            if hvac_topic.name not in hvac_topics:
+                hvac_topics[hvac_topic.name] = {}
+            hvac_topics[hvac_topic.name][hvac_item.name] = {
+                "idl_type": idl_type,
+                "unit": unit,
+            }
+            self.hvac_topics[hvac_topic_and_item] = {
+                "idl_type": idl_type,
+                "unit": unit,
+                "topic_type": topic_type,
+                "limits": limits,
+            }
 
     def get_generic_hvac_topics(self) -> set[str]:
         """Convenience method to collect all generic topics, representing the
@@ -453,52 +332,13 @@ class MqttInfoReader:
             if topic_type == TopicType.WRITE and hvac_topic_and_item.endswith(
                 "COMANDO_ENCENDIDO_LSST"
             ):
-                topic, _ = self.extract_topic_and_item(hvac_topic_and_item)
+                topic, _, _ = self.extract_topic_and_item(hvac_topic_and_item)
+
                 hvac_topics.add(topic)
         for topic in TOPICS_ALWAYS_ENABLED:
             hvac_topics.add(topic)
 
         return hvac_topics
-
-    def get_items_for_hvac_topic(self, topic: str) -> dict[str, typing.Any]:
-        """Convenience method to get all items for a generic HVAC topic.
-
-        Parameters
-        ----------
-        topic: `str`
-            The generic HVAC topic to get the items for.
-
-        Returns
-        -------
-        items: `dict`
-            A dict containing all items for the generic HVAC topic.
-
-        Notes
-        -----
-        The structure of the dictionary is exactly the same as for the items in
-        `hvac_topics`.
-
-        """
-        items: dict[str, typing.Any] = {}
-        for hvac_topic in self.hvac_topics:
-            tpc, item = self.extract_topic_and_item(hvac_topic)
-            if tpc == topic:
-                items[item] = self.hvac_topics[hvac_topic]
-        return items
-
-    def _get_mqtt_topics_and_items_for_type(
-        self, topic_type: str
-    ) -> dict[str, typing.Any]:
-        mqtt_topics: dict[str, typing.Any] = {}
-        for hvac_topic in self.get_generic_hvac_topics():
-            items = self.get_items_for_hvac_topic(hvac_topic)
-            topic_items = {}
-            for item in items:
-                # Make sure only topics with the specified type are used.
-                if items[item]["topic_type"] == topic_type:
-                    topic_items[item] = items[item]
-            mqtt_topics[hvac_topic] = topic_items
-        return mqtt_topics
 
     def get_telemetry_mqtt_topics_and_items(self) -> dict[str, typing.Any]:
         """Convenience method to collect all MQTT topics and their items that
@@ -533,3 +373,43 @@ class MqttInfoReader:
         topics (indicated by topic type READ) have been filtered out.
         """
         return self._get_mqtt_topics_and_items_for_type(TopicType.WRITE)
+
+    def _get_mqtt_topics_and_items_for_type(
+        self, topic_type: str
+    ) -> dict[str, typing.Any]:
+        mqtt_topics: dict[str, typing.Any] = {}
+        for hvac_topic in self.get_generic_hvac_topics():
+            items = self.get_items_for_hvac_topic(hvac_topic)
+            topic_items = {}
+            for item in items:
+                # Make sure only topics with the specified type are used.
+                if items[item]["topic_type"] == topic_type:
+                    topic_items[item] = items[item]
+            mqtt_topics[hvac_topic] = topic_items
+        return mqtt_topics
+
+    def get_items_for_hvac_topic(self, topic: str) -> dict[str, typing.Any]:
+        """Convenience method to get all items for a generic HVAC topic.
+
+        Parameters
+        ----------
+        topic: `str`
+            The generic HVAC topic to get the items for.
+
+        Returns
+        -------
+        items: `dict`
+            A dict containing all items for the generic HVAC topic.
+
+        Notes
+        -----
+        The structure of the dictionary is exactly the same as for the items in
+        `hvac_topics`.
+
+        """
+        items: dict[str, typing.Any] = {}
+        for hvac_topic in self.hvac_topics:
+            tpc, item, _ = self.extract_topic_and_item(hvac_topic)
+            if tpc == topic:
+                items[item] = self.hvac_topics[hvac_topic]
+        return items

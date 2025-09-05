@@ -420,7 +420,7 @@ class HvacCsc(salobj.BaseCsc):
                     )
                     continue
 
-            topic, item = self.xml.extract_topic_and_item(topic_and_item)
+            topic, item, _ = self.xml.extract_topic_and_item(topic_and_item)
 
             # Prepare the HVAC event if the message applies to one.
             event_items = [

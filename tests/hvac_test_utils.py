@@ -57,6 +57,8 @@ def get_random_config_data(topic: enum.Enum) -> dict[str, float]:
                 data[data_item.name] = (
                     random.uniform(10 * limits[0], 10 * limits[1]) / 10.0
                 )
+            elif idl_type == "boolean":
+                data[data_item.name] = bool(random.getrandbits(1))
             else:
                 raise RuntimeError(
                     f"Encountered IDL type {idl_type!r} for {topic.value}/{item}"

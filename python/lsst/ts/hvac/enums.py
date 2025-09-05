@@ -23,6 +23,7 @@ __all__ = [
     "DEVICE_GROUPS_ENGLISH",
     "DYNALENE_COMMAND_ITEMS_ENGLISH",
     "DYNALENE_EVENT_GROUP_DICT",
+    "DYNALENE_EVENT_TOPICS",
     "EVENT_TOPICS",
     "EVENT_TOPIC_DICT_ENGLISH",
     "GLYCOL_SENSORS_LEVELS",
@@ -38,12 +39,13 @@ __all__ = [
     "DeviceIndex",
     "EventItem",
     "HvacTopicEnglish",
+    "SalTopicType",
     "TelemetryItemDescription",
     "TelemetryItemEnglish",
     "TopicType",
 ]
 
-from enum import Enum
+from enum import Enum, StrEnum
 
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
 
@@ -68,6 +70,9 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO02/FANCOIL10",
         "LSST/PISO02/FANCOIL11",
         "LSST/PISO02/FANCOIL12",
+        "LSST/PISO02/VALVULA",
+        "LSST/PISO01/COMPAIR_01",
+        "LSST/PISO01/COMPAIR_02",
     )
 )
 
@@ -93,6 +98,8 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO05/VEA_17",
         "LSST/PISO01/VEC_01",
         "LSST/PISO01/VIN_01",
+        "LSST/PISO01/COMPAIR_01",
+        "LSST/PISO01/COMPAIR_02",
     )
 )
 
@@ -105,8 +112,11 @@ class HvacTopicEnglish(Enum):
     chiller02P01 = "LSST/PISO01/CHILLER_02"
     chiller03P01 = "LSST/PISO01/CHILLER_03"
     chiller04P01 = "LSST/PISO01/CHILLER_04"
+    chillerValve = "LSST/PISO02/VALVULA"
     crac01P02 = "LSST/PISO02/CRACK01"
     crac02P02 = "LSST/PISO02/CRACK02"
+    compair01 = "LSST/PISO01/COMPAIR_01"
+    compair02 = "LSST/PISO01/COMPAIR_02"
     dynaleneP05 = "LSST/PISO05/DYNALENE"
     fancoil01P02 = "LSST/PISO02/FANCOIL01"
     fancoil02P02 = "LSST/PISO02/FANCOIL02"
@@ -653,37 +663,6 @@ EVENT_TOPICS = [
     "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA/ALARM_DEVICE",
     "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA/DOWN_DEVICE",
     "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA/FAULT_DEVICE",
-    "LSST/PISO05/DYNALENE/DynaleneState/Initialized",
-    "LSST/PISO05/DYNALENE/DynaleneState/Shutting Down",
-    "LSST/PISO05/DYNALENE/DynaleneState/Powering ON",
-    "LSST/PISO05/DYNALENE/DynaleneState/Powered ON",
-    "LSST/PISO05/DYNALENE/DynaleneState/Powering OFF",
-    "LSST/PISO05/DYNALENE/DynaleneState/Powered OFF",
-    "LSST/PISO05/DYNALENE/DynaleneState/Warning",
-    "LSST/PISO05/DYNALENE/DynaleneState/Alarm",
-    "LSST/PISO05/DYNALENE/DynaleneState/Shutted OFF",
-    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarm",
-    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmCMD",
-    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorON",
-    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorOFF",
-    "LSST/PISO05/DYNALENE/Safeties/DynTAalarm",
-    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmCMD",
-    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorON",
-    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorOFF",
-    "LSST/PISO05/DYNALENE/Safeties/DynMainGridAlarm",
-    "LSST/PISO05/DYNALENE/Safeties/DynMainGridAlarmCMD",
-    "LSST/PISO05/DYNALENE/Safeties/DynMainGridFailureFlag",
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarm",
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelWarning",
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelOK",
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarmCMD",
-    "LSST/PISO05/DYNALENE/Safeties/DynSafetyResetFlag",
-    "LSST/PISO05/DYNALENE/Safeties/DynSysFault",
-    "LSST/PISO05/DYNALENE/Safeties/DynSysWarning",
-    "LSST/PISO05/DYNALENE/Safeties/DynSysOK",
-    "LSST/PISO05/DYNALENE/Status/DynRemoteLocalModeStatus",
-    "LSST/PISO05/DYNALENE/Status/DynAmbientDeltaModeStatus",
-    "LSST/PISO05/DYNALENE/Status/DynExhaustAirBackupModeStatus",
     "LSST/PISO05/MANEJADORA/LOWER_01/ALARM_DEVICE",
     "LSST/PISO05/MANEJADORA/LOWER_01/DOWN_DEVICE",
     "LSST/PISO05/MANEJADORA/LOWER_01/FAULT_DEVICE",
@@ -696,6 +675,30 @@ EVENT_TOPICS = [
     "LSST/PISO05/MANEJADORA/LOWER_04/ALARM_DEVICE",
     "LSST/PISO05/MANEJADORA/LOWER_04/DOWN_DEVICE",
     "LSST/PISO05/MANEJADORA/LOWER_04/FAULT_DEVICE",
+    "LSST/PISO02/FANCOIL01/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL01/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL02/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL02/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL03/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL03/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL04/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL04/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL05/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL05/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL06/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL06/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL07/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL07/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL08/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL08/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL09/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL09/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL10/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL10/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL11/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL11/UserFanSpeedSelect",
+    "LSST/PISO02/FANCOIL12/Cfg_FanOperationType",
+    "LSST/PISO02/FANCOIL12/UserFanSpeedSelect",
 ]
 
 
@@ -712,8 +715,14 @@ class TelemetryItemEnglish(Enum):
     antiFreezeTemperatureState = "ESTADO_TEMPERATURA_ANTICONGELANTE"
     availableChillerCapacity = "POTENCIA_DISPONIBLE_CHILLER"
     averageCompressorHours = "HORAS_COMPRESOR_PROMEDIO"
+    chiller03 = "CHILLER_03"
+    chiller04 = "CHILLER_04"
     coldValveOpening = "%_APERTURA_VALVULA_FRIO"
     commanded = "COMANDO"
+    comfortRetPressFloor02 = "COMFORT/RET_PRESS_PISO_2"
+    comfortRetTempFloor02 = "COMFORT/RET_TEMP_PISO_2"
+    comfortSupplyPressFloor02 = "COMFORT/INY_PRESS_PISO_2"
+    comfortSupplyTempFloor02 = "COMFORT/INY_TEMP_PISO_2"
     compressor01Alarm = "COMPRESOR_01_ALARMADO"
     compressor01Hours = "HORAS_COMPRESOR_01"
     compressor01Plus2pEnabledWhole = "COMPRESSOR_1_PLUS2P_ENABLED_WHOLE"
@@ -822,6 +831,9 @@ class TelemetryItemEnglish(Enum):
     compressor04StatusRecovery = "COMPRESSOR_4_STATUS_RECOVERY"
     compressor04StatusRequest = "COMPRESSOR_4_STATUS_REQUEST"
     compressor04Working = "COMPRESOR_04_FUNCIONANDO"
+    compressor1Volume = "Volume, Compressor 1"
+    compressor2Volume = "Volume, Compressor 2"
+    compressorPowerConsumption = "Power, Compressor consumption"
     coolingMode = "Mode_Cooling"
     coolingSetpoint = "SETPOINT_COOLING"
     cto1LowerPressure = "PRESION_BAJA_CTO1"
@@ -829,6 +841,7 @@ class TelemetryItemEnglish(Enum):
     damperstate = "ESTADO_DAMPER"
     dayCoolingSetpoint = "SETPOINT_COOLING_DAY"
     dayHeatingSetpoint = "SETPOINT_HEATING_DAY"
+    dcLinkVoltage = "Voltage, DC-Link"
     dehumidifierSetpoint = "SETPOINT_DESHUMIDIFICADOR"
     downDevice = "DOWN_DEVICE"
     externalAmbientTemperature = "TEMPERATURA_AMBIENTE&EXTERIOR"
@@ -838,9 +851,11 @@ class TelemetryItemEnglish(Enum):
     faultDevice = "FAULT_DEVICE"
     filterAlarm = "ALARMA_FILTRO"
     generalAlarm = "ALARMA_GENERAL"
+    groupVolume = "Volume, Group"
     heatingMode = "Mode_Heating"
     heatingSetpoint = "SETPOINT_HEATING"
     heatingState = "ESTADO_CALEFACTOR"
+    heatsinkTemperature = "Temperature, Heatsink"
     highFanContact = "FanContactHigh"
     hourMeasure = "HOROMETRO"
     humidifierRequirement = "REQUERIMIENTO_HUMIDIFICADOR"
@@ -849,9 +864,19 @@ class TelemetryItemEnglish(Enum):
     internalCO2Concentration = "InternCO2"
     internalHumidity = "InternHumidity"
     internalTemperature = "InternTemp"
+    linePressure = "Pressure, Line"
+    loadedHours50PercHighWord = "Loaded Hours 50% (High Word)"
+    loadedHoursHighWord = "Loaded Hours (High Word)"
+    loadedHours50PercLowWord = "Loaded Hours 50% (Low Word)"
+    loadedHoursLowWord = "Loaded Hours (Low Word)"
     lowFanContact = "FanContactLow"
+    lowestServiceCounter = "Lowest Service Counter"
     maxFanSetpoint = "SETPOINT_VENTILADOR_MAX"
     mediumFanContact = "FanContactMed"
+    motor1Speed = "Speed, Motor 1"
+    motor2Speed = "Speed, Motor 2"
+    motorCurrent = "Current,motor"
+    motorInputPower = "Power, Motor Input"
     minFanSetpoint = "SETPOINT_VENTILADOR_MIN"
     nightCoolingSetpoint = "SETPOINT_COOLING_NIGHT"
     nightHeatingSetpoint = "SETPOINT_HEATING_NIGHT"
@@ -886,7 +911,11 @@ class TelemetryItemEnglish(Enum):
     roomHumidity = "%_HUMEDAD_SALA"
     roomSetpoint = "VALOR_CONSIGNA"
     roomTemperature = "TEMPERATURA_SALA"
+    runningHoursHighWord = "Running Hours (High Word)"
+    runningHoursLowWord = "Running Hours (Low word)"
     selectorState = "ESTADO_SELECTOR"
+    stage1Output = "Stage1-Output"
+    stage1OutputPressure = "Pressure, Stage1-Output"
     stageHeating01 = "CALEFACCION_ETAPA_01"
     stageHeating02 = "CALEFACCION_ETAPA_02"
     supplyFanCapacity = "CAUDAL_VENTILADOR_IMPULSION"
@@ -908,6 +937,7 @@ class TelemetryItemEnglish(Enum):
     systemMode = "SystemMode"
     retPressOss = "RET_PRESS_OSS"
     retTempOss = "RET_TEMP_OSS"
+    runOnTimer = "Run-On Timer"
     supplyFlowFloor2 = "INY_FLOW_PISO_2"
     supplyPressFloor2 = "INY_PRESS_PISO_2"
     supplyTempFloor2 = "INY_TEMP_PISO_2"
@@ -945,6 +975,7 @@ class TelemetryItemEnglish(Enum):
     returnTempFloor2 = "RET_TEMP_PISO_2"
     supplyTemperature = "TEMPERATURA_INYECCION"
     switchedOn = "COMANDO_ENCENDIDO"
+    targetSpeed = "Speed, Target"
     thermalFault = "FALLA_TERMICA"
     unitConfigurationStatus_1Bit10Unused = "UNIT_CONFIGURATION_STATUS_1_BIT10_UNUSED"
     unitConfigurationStatus_1Bit12Unused = "UNIT_CONFIGURATION_STATUS_1_BIT12_UNUSED"
@@ -1026,7 +1057,7 @@ class TelemetryItemEnglish(Enum):
     dynTAalarm = "DynTAalarm"
     dynTAalarmCMD = "DynTAalarmCMD"
     dynTAalarmMonitor = "DynTAalarmMonitor"
-    dynTankLevel = "DynTankLevel"
+    dynTankLevelAlarm = "DynTankLevel"
     dynTankLevelAlarmCMD = "DynTankLevelAlarmCMD"
     dynTMAalarm = "DynTMAalarm"
     dynTMAalarmCMD = "DynTMAalarmCMD"
@@ -1081,7 +1112,14 @@ class TelemetryItemDescription(Enum):
     antiFreezeTemperatureState = "Anti-Freeze Temperature State."
     availableChillerCapacity = "Available Chiller Capacity."
     averageCompressorHours = "Average Compressor Hours."
+    chiller03 = "Chiller 03."
+    chiller04 = "Chiller 04."
+    closeAperture = "Close the aperture."
     coldValveOpening = "Cold Valve Opening Percentage."
+    comfortRetPressFloor02 = "Comfort return pressure on floor 2."
+    comfortRetTempFloor02 = "Comfort return temperature on floor 2."
+    comfortSupplyPressFloor02 = "Comfort supply pressure on floor 2."
+    comfortSupplyTempFloor02 = "Comfort supply temperature on floor 2."
     commanded = "Commanded."
     compressor01Alarm = "Compresson 01 Alarm."
     compressor01Hours = "Compressor 01 Hours."
@@ -1191,6 +1229,9 @@ class TelemetryItemDescription(Enum):
     compressor04StatusRecovery = "Compressor 4 Status Recovery."
     compressor04StatusRequest = "Compressor 4 Status Request."
     compressor04Working = "Compresson 04 Working."
+    compressor1Volume = "Compressor 1 volume."
+    compressor2Volume = "Compressor 2 volume."
+    compressorPowerConsumption = "Compressor power consumption."
     coolingMode = "Cooling Mode."
     coolingSetpoint = "Cooling Setpoint."
     cto1LowerPressure = "CTO 1 Lower Pressure."
@@ -1198,6 +1239,7 @@ class TelemetryItemDescription(Enum):
     damperstate = "Damper State."
     dayCoolingSetpoint = "Day Cooling Setpoint."
     dayHeatingSetpoint = "Day Heating Setpoint."
+    dcLinkVoltage = "DC link voltage."
     dehumidifierSetpoint = "Dehumidifier Setpoint."
     downDevice = "Device Down."
     externalAmbientTemperature = "External Ambient Temperature."
@@ -1207,9 +1249,11 @@ class TelemetryItemDescription(Enum):
     faultDevice = "Device Fault."
     filterAlarm = "Filter Alarm."
     generalAlarm = "General Alarm."
+    groupVolume = "Group volume."
     heatingMode = "Heating Mode."
     heatingSetpoint = "Heating Setpoint."
     heatingState = "Heating State."
+    heatsinkTemperature = "Heatsink temperature."
     highFanContact = "High fan contact mode set?"
     hourMeasure = "Hour Measure."
     humidifierRequirement = "Humidifier Requirement."
@@ -1218,9 +1262,19 @@ class TelemetryItemDescription(Enum):
     internalCO2Concentration = "Internal CO2 concentration."
     internalHumidity = "Internal humidity."
     internalTemperature = "Internal temperature."
+    linePressure = "Line pressure."
+    loadedHours50PercHighWord = "Loaded hours 50 percent high word."
+    loadedHours50PercLowWord = "Loaded hours 50 percent low word."
+    loadedHoursHighWord = "Loaded hours high word."
+    loadedHoursLowWord = "Loaded hours low word."
+    lowestServiceCounter = "Lowest service counter."
     lowFanContact = "Low fan contact mode set?"
     maxFanSetpoint = "Max Fan Setpoint."
     mediumFanContact = "Medium fan contact mode set?"
+    motor1Speed = "Motor 1 speed."
+    motor2Speed = "Motor 2 speed."
+    motorCurrent = "Motor current."
+    motorInputPower = "Motor input power."
     minFanSetpoint = "Min Fan Setpoint."
     nightCoolingSetpoint = "Night Cooling Setpoint."
     nightHeatingSetpoint = "Night Heating Setpoint."
@@ -1257,9 +1311,14 @@ class TelemetryItemDescription(Enum):
     roomHumidity = "Room Humidity."
     roomSetpoint = "Room Setpoint."
     roomTemperature = "Room Temperature."
+    runOnTimer = "Run-On Timer"
+    runningHoursHighWord = "Running hours high word."
+    runningHoursLowWord = "Running hours low word."
     selectorState = "Selector State."
     stageHeating01 = "Stage Heating 01."
     stageHeating02 = "Stage HEating 02."
+    stage1Output = "Stage 1 output."
+    stage1OutputPressure = "Stage 1 output pressure."
     supplyFanCapacity = "Supply Fan Capacity."
     supplyFlowChiller01 = "Supply Flow Chiller 01."
     supplyFlowChiller02 = "Supply Flow Chiller 02."
@@ -1314,6 +1373,7 @@ class TelemetryItemDescription(Enum):
     returnTempAhuLower4 = "Return Temperature AHU Lower 4."
     supplyTemperature = "Supply Temperature."
     switchedOn = "Switched On."
+    targetSpeed = "Target speed."
     thermalFault = "Thermal Fault."
     unitConfigurationStatus_1Bit10Unused = "Unit Configuration Status 1 Bit10 Unused."
     unitConfigurationStatus_1Bit12Unused = "Unit Configuration Status 1 Bit12 Unused."
@@ -1407,7 +1467,7 @@ class TelemetryItemDescription(Enum):
     dynTAalarm = "Dynalene TA Alarm State."
     dynTAalarmCMD = "Dynalene TA Alarm Command State."
     dynTAalarmMonitor = "Dynalene TA Alarm Monitor State."
-    dynTankLevel = "Dynalene Tank Level Alarm State."
+    dynTankLevelAlarm = "Dynalene Tank Level Alarm State."
     dynTankLevelAlarmCMD = "Dynalene Tank Level Alarm Command State."
     dynTMAalarm = "Dynalene TMA Alarm State."
     dynTMAalarmCMD = "Dynalene TMA Alarm Command State."
@@ -1450,11 +1510,11 @@ class TelemetryItemDescription(Enum):
     # Dynalene state items
     dynAlarm = "Alarm"
     dynInitialized = "Initialized"
-    dynPoweredOff = "Powered Off"
-    dynPoweredOn = "Powered On"
-    dynPoweringOff = "Powering Off"
-    dynPoweringOn = "Powering On"
-    dynShutOff = "Shut Off"
+    dynPoweredOff = "Powered OFF"
+    dynPoweredOn = "Powered ON"
+    dynPoweringOff = "Powering OFF"
+    dynPoweringOn = "Powering ON"
+    dynShutOff = "Shutted OFF"
     dynShuttingDown = "Shutting Down"
     dynWarning = "Warning"
 
@@ -1597,6 +1657,8 @@ class EventItem(Enum):
     dynTMAalarm = "DynTMAalarm"
     dynTMAalarmCMD = "DynTMAalarmCMD"
     dynTMAalarmMonitor = "DynTMAalarmMonitor"
+    dynTMAalarmMonitorOn = "DynTMAalarmMonitorON"
+    dynTMAalarmMonitorOff = "DynTMAalarmMonitorOFF"
     dynSysFault = "DynSysFault"
     dynSysOK = "DynSysOK"
     dynSysWarning = "DynSysWarning"
@@ -1680,6 +1742,16 @@ DYNALENE_EVENT_GROUP_DICT = {
     "DynTankLevelOK": "DynTankLevel",
 }
 
+DYNALENE_EVENT_TOPICS = {
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorOFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorON",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorOFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorON",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelWarning",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelOK",
+}
+
 
 class CommandItemEnglish(Enum):
     switchOn = "COMANDO_ENCENDIDO_LSST"
@@ -1714,11 +1786,18 @@ class CommandItemEnglish(Enum):
     temperatureSetpoint = "TempSetPoint"
     selectFanSpeed = "UserFanSpeedSelect"
     roomSetpoint = "VALOR_CONSIGNA_LSST"
+    closeAperture = "COMANDO_APERTURA_CIERRE"
 
 
 class TopicType(str, Enum):
     READ = "READ"
     WRITE = "WRITE"
+
+
+class SalTopicType(StrEnum):
+    TELEMETRY = "Telemetry"
+    COMMAND = "Command"
+    EVENT = "Event"
 
 
 # These topics cannot be distinguished from telemetry topics in the CSV file,
@@ -1727,17 +1806,17 @@ EVENT_TOPIC_DICT_ENGLISH = (
     {
         "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
             "topic": HvacTopicEnglish.dynaleneP05.name,
-            "item": TelemetryItemDescription.dynTankLevel.name.replace(
+            "item": TelemetryItemDescription.dynTankLevelAlarm.name.replace(
                 "dyn", "dynalene"
             ),
-            "event": f"evt_{TelemetryItemDescription.dynTankLevel.name.replace('dyn', 'dynalene')}",
+            "event": f"evt_{TelemetryItemDescription.dynTankLevelAlarm.name.replace('dyn', 'dynalene')}",
             "type": "enum",
             "enum": DynaleneTankLevel,
             "item_description": (
-                f"{TelemetryItemDescription.dynTankLevel.value.replace(' State.', ' state;')} "
+                f"{TelemetryItemDescription.dynTankLevelAlarm.value.replace(' State.', ' state;')} "
                 f"a DynaleneTankLevel enum."
             ),
-            "evt_description": f"{TelemetryItemDescription.dynTankLevel.value}",
+            "evt_description": f"{TelemetryItemDescription.dynTankLevelAlarm.value}",
         },
     }
     | {
@@ -1767,7 +1846,7 @@ EVENT_TOPIC_DICT_ENGLISH = (
         ]
     }
     | {
-        f"LSST/PISO05/DYNALENE/DynaleneState/{dyn_enum.name.replace('dyn', 'Dyn')}": {
+        f"LSST/PISO05/DYNALENE/DynaleneState/{dyn_enum.value}": {
             "topic": HvacTopicEnglish.dynaleneP05.name,
             "item": dyn_enum.name,
             "event": f"evt_{dyn_enum.name}",
@@ -1816,6 +1895,11 @@ DEVICE_GROUPS_ENGLISH = {
         "LSST/PISO01/CHILLER_02",
         "LSST/PISO01/CHILLER_03",
         "LSST/PISO01/CHILLER_04",
+    ],
+    "CHILLER_VALVE": ["LSST/PISO02/VALVULA"],
+    "COMPAIR": [
+        "LSST/PISO01/COMPAIR_01",
+        "LSST/PISO01/COMPAIR_02",
     ],
     "CRAC": [
         "LSST/PISO02/CRACK01",
@@ -1915,6 +1999,9 @@ TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO = frozenset(
         "fancoil10P02",
         "fancoil11P02",
         "fancoil12P02",
+        "chillerValve",
+        "compair01",
+        "compair02",
     )
 )
 

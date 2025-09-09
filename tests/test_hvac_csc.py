@@ -282,6 +282,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 "switchOn",
                 "maxFanSetpoint",
                 "minFanSetpoint",
+                "closeAperture",
             ]:
                 command_item = getattr(data, command_topic)
                 if math.isnan(config_data[command_topic]):

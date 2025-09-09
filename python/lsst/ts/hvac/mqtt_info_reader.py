@@ -44,7 +44,7 @@ from .utils import determine_unit, parse_limits
 COMPAIR_REGEX = re.compile(r"LSST/PISO01/COMPAIR/0\d")
 GENERAL_MANEJADORS_REGEX = re.compile(r"LSST/PISO04/MANEJADORA/GENERAL/[A-Z]+")
 GENERAL_REGEX = re.compile(r"LSST/PISO0\d/[A-Z_0-9]+")
-GLYCOL_SENSOR_REGEX = re.compile(r"LSST/PISO0\d/SENSOR_GLYCOL")
+GLYCOL_SENSOR_REGEX = re.compile(r"LSST/PISO0\d/SENSOR[_/]GLYCOL")
 LOWER_MANEJADORS_REGEX = re.compile(r"LSST/PISO05/MANEJADORA/LOWER_\d\d")
 VEX_MANEJADORS_REGEX = re.compile(r"LSST/PISO04/VEX_0\d/[A-Z_]+/GENERAL")
 
@@ -144,6 +144,7 @@ class MqttInfoReader:
         return device, item, original_device
 
     def _collect_hvac_topics_and_items_from_csv(self) -> None:
+        unique_mqtt_topics: set[str] = set()
         contents: list[dict[str, str]] = []
         with open(DAT_CONTROL_CSV_FILENAME) as f:
             f.readline()
@@ -153,21 +154,17 @@ class MqttInfoReader:
                 contents.append(row)
 
         mqtt_topic_rows: list[dict[str, str]] = []
-        piso = ""
-        tablero = ""
         for row in contents:
             m = GENERAL_REGEX.match(row["TOPIC MQTT"])
             if m:
+                if f'{row["TOPIC MQTT"]}:{row["READ / WRITE"]}' in unique_mqtt_topics:
+                    print(f"Duplicate MQTT topic found in {row}.")
+                unique_mqtt_topics.add(f'{row["TOPIC MQTT"]}:{row["READ / WRITE"]}')
+
                 # Skip undefined Dynalene commands and telemetry.
                 if "tbd" in row["TOPIC MQTT"].lower():
                     continue
-                if row["PISO"] and row["TABLERO"]:
-                    piso = row["PISO"]
-                    tablero = row["TABLERO"]
-                if not row["PISO"]:
-                    row["PISO"] = piso
-                if not row["TABLERO"]:
-                    row["TABLERO"] = tablero
+
                 mqtt_topic_rows.append(row)
 
         self._validate_all_rows_contain_know_devices(mqtt_topic_rows)
@@ -274,7 +271,11 @@ class MqttInfoReader:
     ) -> None:
         for row in topic_rows:
             hvac_topic_and_item = row["TOPIC MQTT"]
-            idl_type = "float" if "ANALOG" in row["SIGNAL"] else "boolean"
+            idl_type = (
+                "float"
+                if "ANALOG" in row["SIGNAL"] or "NUMERIC" in row["SIGNAL"]
+                else "boolean"
+            )
             topic_type = row["READ / WRITE"].strip()
             if topic_type in [TopicType.READ, TopicType.WRITE]:
                 unit = determine_unit(row["UNIT"])

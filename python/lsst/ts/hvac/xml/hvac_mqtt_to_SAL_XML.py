@@ -81,6 +81,8 @@ events_root.addprevious(
 
 xml = MqttInfoReader()
 
+unknown_telemetry_descriptions = set()
+
 
 def _split_event_description(item: str) -> str:
     """Split a camelCase event description string into its components.
@@ -227,7 +229,11 @@ def _create_telemetry_xml() -> None:
             # Skip if a topic item should be an event.
             if telemetry_item in topic_items_that_should_be_events:
                 continue
-            description = TelemetryItemDescription[telemetry_item].value
+            try:
+                description = TelemetryItemDescription[telemetry_item].value
+            except KeyError:
+                description = "WOUTER"
+                unknown_telemetry_descriptions.add(telemetry_item)
             _create_item_element(
                 st,
                 telemetry_topic,
@@ -292,7 +298,11 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             st, command_group, "device_id", "int", "unitless", description_text, 1
         )
         for command_item in command_items:
-            description = TelemetryItemDescription[command_item].value
+            try:
+                description = TelemetryItemDescription[command_item].value
+            except KeyError:
+                description = "WOUTER"
+                unknown_telemetry_descriptions.add(command_item)
             _create_item_element(
                 st,
                 command_group,
@@ -402,7 +412,11 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             st, command_group, "device_id", "int", "unitless", description_text, 1
         )
         for command_item in command_items:
-            description = TelemetryItemDescription[command_item].value
+            try:
+                description = TelemetryItemDescription[command_item].value
+            except KeyError:
+                description = "WOUTER"
+                unknown_telemetry_descriptions.add(command_item)
             _create_item_element(
                 st,
                 command_group,
@@ -488,3 +502,8 @@ def create_xml() -> None:
 
 if __name__ == "__main__":
     create_xml()
+
+    if len(unknown_telemetry_descriptions) > 0:
+        print("Telemetry descriptions missing for:")
+        for item in sorted(unknown_telemetry_descriptions):
+            print(item)

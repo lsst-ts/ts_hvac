@@ -101,14 +101,14 @@ class SimClient(BaseMqttClient):
             self.topics_enabled[topic] = True
 
     async def publish_mqtt_message(
-        self, topic: str, payload: str, qos: int = 1, timeout: float = 5.0
+        self, hvac_topic: str, payload: str, qos: int = 1, timeout: float = 5.0
     ) -> bool:
         """Publishes the specified payload to the specified topic on the MQTT
         server.
 
         Parameters
         ----------
-        topic: `str`
+        hvac_topic: `str`
             The topic to publish to.
         payload: `str`
             The payload to publish. This corresponds to a boolean for the
@@ -132,8 +132,12 @@ class SimClient(BaseMqttClient):
         ValueError
             In case a topic doesn't exist.
         """
-        self.log.debug(f"Publishing message on topic {topic} with payload {payload}")
-        topic, command = self.xml.extract_topic_and_item(topic)
+        self.log.debug(f"Publishing message on {hvac_topic=} with {payload=}.")
+        corrected_topic, command, original_topic = self.xml.extract_topic_and_item(
+            hvac_topic
+        )
+        topic = corrected_topic if not original_topic else original_topic
+
         if command == "COMANDO_ENCENDIDO_LSST":
             self._handle_enable_command(topic, json.loads(payload))
         else:
@@ -205,9 +209,11 @@ class SimClient(BaseMqttClient):
         server.
         """
         for hvac_topic in self.hvac_topics:
-            topic, variable = self.xml.extract_topic_and_item(hvac_topic)
+            corrected_topic, variable, original_topic = self.xml.extract_topic_and_item(
+                hvac_topic
+            )
 
-            topic_enabled = self.topics_enabled[topic]
+            topic_enabled = self.topics_enabled[corrected_topic]
             topic_type = self.hvac_topics[hvac_topic]["topic_type"]
             idl_type = self.hvac_topics[hvac_topic]["idl_type"]
             limits = self.hvac_topics[hvac_topic]["limits"]

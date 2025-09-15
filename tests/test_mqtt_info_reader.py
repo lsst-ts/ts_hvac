@@ -28,13 +28,13 @@ class MqttInfoReaderTestCase(unittest.TestCase):
     def test_extract_topic_and_item(self) -> None:
         mir = MqttInfoReader()
         topic_and_item = "LSST/PISO01/CHILLER_01/TEMPERATURA_AGUA_RETORNO_EVAPORADOR"
-        topic, item = mir.extract_topic_and_item(topic_and_item)
+        topic, item, _ = mir.extract_topic_and_item(topic_and_item)
         self.assertEqual("LSST/PISO01/CHILLER_01", topic)
         self.assertEqual("TEMPERATURA_AGUA_RETORNO_EVAPORADOR", item)
 
         topic_and_item = "STRING_WITHOUT_FORWARD_SLASH"
         try:
-            topic, item = mir.extract_topic_and_item(topic_and_item)
+            topic, item, _ = mir.extract_topic_and_item(topic_and_item)
             self.fail("A ValueError was expected here.")
-        except ValueError as e:
+        except KeyError as e:
             self.assertIsNot(e, None)

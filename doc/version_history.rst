@@ -8,6 +8,21 @@ Version History
 
 .. towncrier release notes start
 
+v0.19.0 (2025-09-16)
+====================
+
+New Features
+------------
+
+- Added new telemetry, event and command topics. (`OSW-912 <https://rubinobs.atlassian.net//browse/OSW-912>`_)
+
+
+Performance Enhancement
+-----------------------
+
+- Rewrote MQTT info reader. (`OSW-912 <https://rubinobs.atlassian.net//browse/OSW-912>`_)
+
+
 v0.18.1 (2025-08-12)
 ====================
 

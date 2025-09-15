@@ -1,1 +1,0 @@
-Rewrote MQTT info reader.

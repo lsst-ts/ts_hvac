@@ -96,7 +96,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
             msg = msgs.popleft()
             topic = msg.topic
             data = json.loads(msg.payload)
-            topic, variable = self.xml.extract_topic_and_item(topic)
+            topic, variable, _ = self.xml.extract_topic_and_item(topic)
             if topic not in mqtt_state:
                 mqtt_state[topic] = {}
             mqtt_state[topic][variable] = data

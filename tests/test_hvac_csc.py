@@ -212,7 +212,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 pass
             elif name in TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO:
                 # No status to check.
-                pass
+                continue
             elif name not in TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH:
                 item = getattr(telemetry, comando_encendido)
                 self.assertEqual(item, status_to_check)
@@ -282,6 +282,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 "switchOn",
                 "maxFanSetpoint",
                 "minFanSetpoint",
+                "closeAperture",
             ]:
                 command_item = getattr(data, command_topic)
                 if math.isnan(config_data[command_topic]):
@@ -303,6 +304,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             "cmd_configFancoil": DeviceId.fancoil01P02,
             "cmd_configLowerAhu": DeviceId.lowerAHU01P05,
             "cmd_configFan": DeviceId.lowerDamperFan03P04,
+            "cmd_configChillerValve": DeviceId.chillerValve,
         }
         async with self.make_csc(
             initial_state=salobj.State.ENABLED,

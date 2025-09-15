@@ -20,10 +20,19 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-__all__ = ["bar_to_pa", "psi_to_pa", "to_camel_case"]
+__all__ = ["bar_to_pa", "determine_unit", "parse_limits", "psi_to_pa", "to_camel_case"]
+
+import re
+import typing
 
 import astropy.units as u
 from astropy.units import imperial, misc
+
+# The default lower limit
+DEFAULT_LOWER_LIMIT = -9999
+
+# The default upper limit
+DEFAULT_UPPER_LIMIT = 9999
 
 # The molecular weight of CO2 (g/mol).
 MOLECULAR_WEIGHT_CO2 = 44.009
@@ -104,3 +113,98 @@ def to_camel_case(string: str, first_lower: bool = False) -> str:
     else:
         first, rest = ("", string)
     return first.lower() + "".join(part.capitalize() for part in rest.split("_"))
+
+
+def determine_unit(unit_string: str) -> str:
+    """Convert the provided unit string to a string representing the unit.
+
+    Parameters
+    ----------
+    unit_string: `str`
+        The unit as read from the input file.
+
+    Returns
+    -------
+    unit: `str`
+        A string representing the unit.
+    """
+    return {
+        "-": "unitless",
+        "": "unitless",
+        "°C": "deg_C",
+        "bar": "Pa",
+        "Co2": "mg/m3",
+        "%": "%",
+        "Hr": "%",
+        "Hz": "Hz",
+        "hr": "h",
+        "%RH": "%",
+        "m3/h": "m3/h",
+        "LPM": "l/min",
+        "l/m": "l/min",
+        "ppm": "mg/m3",
+        "PSI": "Pa",
+        "KW": "kW",
+    }[unit_string.strip()]
+
+
+def parse_limits(limits_string: str) -> typing.Tuple[int | float, int | float]:
+    """Parse the string value of the limits column by comparing it to known
+    regular expressions and extracting the minimum and maximum values.
+
+    Parameters
+    ----------
+    limits_string: `str`
+        The string containing the limits to parse.
+
+    Returns
+    -------
+    lower_limit: `int` or `float`
+        The lower limit
+    upper_limit: `int` or `float`
+        The upper limit
+
+    Raises
+    ------
+    ValueError
+        In case an unknown string pattern is found in the ;limits' column.
+
+    """
+    lower_limit: int | float = DEFAULT_LOWER_LIMIT
+    upper_limit: int | float = DEFAULT_UPPER_LIMIT
+
+    # This match looks for known units in the limits string which helps to
+    # reveal copy/paste errors in the CSV file.
+    match = re.match(
+        r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a |Hr a | LPM a | PSI a | KW a | ?ppm a | Co2 a )(-?\d+)"
+        r"( ?%| ?°C| bar| hr|%RH|Hr| LPM| PSI| KW| ppm| Hz| Co2)?$",
+        limits_string,
+    )
+    # This match is used for limit strings like "1,2,3,4,5".
+    all_numbers_matches = re.findall(r"\d+", limits_string)
+
+    if match:
+        lower_limit = float(match.group(1))
+        upper_limit = float(match.group(3))
+    elif re.match(r"^\d$", limits_string):
+        lower_limit = 0
+        upper_limit = 100
+    elif "a" not in limits_string and "-1" not in limits_string and all_numbers_matches:
+        lower_limit = int(all_numbers_matches[0])
+        upper_limit = int(all_numbers_matches[-1])
+    elif limits_string in ["true o false", "-", "-1", ""]:
+        # ignore because there really are no lower and upper limits
+        pass
+    else:
+        print(f"Couldn't match limits_string {limits_string!r}")
+        # raise ValueError(f"Couldn't match limits_string {limits_string!r}")
+
+    # Convert non-standard units to standard ones.
+    if "bar" in limits_string:
+        lower_limit = round(bar_to_pa(lower_limit), 1)
+        upper_limit = round(bar_to_pa(upper_limit), 1)
+    if "PSI" in limits_string:
+        lower_limit = round(psi_to_pa(lower_limit), 1)
+        upper_limit = round(psi_to_pa(upper_limit), 1)
+
+    return lower_limit, upper_limit

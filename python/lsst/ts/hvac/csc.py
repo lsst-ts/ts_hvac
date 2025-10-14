@@ -401,6 +401,14 @@ class HvacCsc(salobj.BaseCsc):
                 await command_group_coro.set_write(**event_data)
             self.event_data[event_data_key] = event_data
 
+        # Send all other events as well.
+        for event_data_key in self.event_data:
+            if ":" not in event_data_key:
+                event = getattr(self, event_data_key)
+                event_data_dict = self.event_data[event_data_key]
+                self.log.debug(f"Sending {event_data_key}.")
+                await event.set_write(**event_data_dict)
+
     async def _handle_mqtt_messages(self) -> None:
         self.log.debug("Handling MQTT messages.")
         assert self.mqtt_client is not None

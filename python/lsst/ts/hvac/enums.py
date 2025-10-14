@@ -1644,35 +1644,35 @@ class EventItem(Enum):
     temperatureSetpoint = "TempSetPoint"
     selectFanSpeed = "UserFanSpeedSelect"
     downDevice = "DOWN_DEVICE"
-    dynAlarm = "Alarm"
-    dynInitialized = "Initialized"
-    dynPoweredOff = "Powered OFF"
-    dynPoweredOn = "Powered ON"
-    dynPoweringOff = "Powering OFF"
-    dynPoweringOn = "Powering ON"
-    dynShutOff = "Shutted OFF"
-    dynShuttingDown = "Shutting Down"
-    dynWarning = "Warning"
-    dynMainGridAlarm = "DynMainGridAlarm"
-    dynMainGridAlarmCMD = "DynMainGridAlarmCMD"
-    dynMainGridFailureFlag = "DynMainGridFailureFlag"
-    dynSafetyResetFlag = "DynSafetyResetFlag"
-    dynTAalarm = "DynTAalarm"
-    dynTAalarmCMD = "DynTAalarmCMD"
-    dynTAalarmMonitor = "DynTAalarmMonitor"
-    dynTankLevel = "DynTankLevel"
-    dynTankLevelAlarmCMD = "DynTankLevelAlarmCMD"
-    dynTMAalarm = "DynTMAalarm"
-    dynTMAalarmCMD = "DynTMAalarmCMD"
-    dynTMAalarmMonitor = "DynTMAalarmMonitor"
-    dynTMAalarmMonitorOn = "DynTMAalarmMonitorON"
-    dynTMAalarmMonitorOff = "DynTMAalarmMonitorOFF"
-    dynSysFault = "DynSysFault"
-    dynSysOK = "DynSysOK"
-    dynSysWarning = "DynSysWarning"
-    dynAmbientDeltaModeStatus = "DynAmbientDeltaModeStatus"
-    dynExhaustAirBackupModeStatus = "DynExhaustAirBackupModeStatus"
-    dynRemoteLocalModeStatus = "DynRemoteLocalModeStatus"
+    dynAlarm = "DynaleneState/Alarm"
+    dynInitialized = "DynaleneState/Initialized"
+    dynPoweredOff = "DynaleneState/Powered OFF"
+    dynPoweredOn = "DynaleneState/Powered ON"
+    dynPoweringOff = "DynaleneState/Powering OFF"
+    dynPoweringOn = "DynaleneState/Powering ON"
+    dynShutOff = "DynaleneState/Shutted OFF"
+    dynShuttingDown = "DynaleneState/Shutting Down"
+    dynWarning = "DynaleneState/Warning"
+    dynMainGridAlarm = "Safeties/DynMainGridAlarm"
+    dynMainGridAlarmCMD = "Safeties/DynMainGridAlarmCMD"
+    dynMainGridFailureFlag = "Safeties/DynMainGridFailureFlag"
+    dynSafetyResetFlag = "Safeties/DynSafetyResetFlag"
+    dynTAalarm = "Safeties/DynTAalarm"
+    dynTAalarmCMD = "Safeties/DynTAalarmCMD"
+    dynTAalarmMonitor = "Safeties/DynTAalarmMonitor"
+    dynTankLevel = "Safeties/DynTankLevel"
+    dynTankLevelAlarmCMD = "Safeties/DynTankLevelAlarmCMD"
+    dynTMAalarm = "Safeties/DynTMAalarm"
+    dynTMAalarmCMD = "Safeties/DynTMAalarmCMD"
+    dynTMAalarmMonitor = "Safeties/DynTMAalarmMonitor"
+    dynTMAalarmMonitorOn = "Safeties/DynTMAalarmMonitorON"
+    dynTMAalarmMonitorOff = "Safeties/DynTMAalarmMonitorOFF"
+    dynSysFault = "Safeties/DynSysFault"
+    dynSysOK = "Safeties/DynSysOK"
+    dynSysWarning = "Safeties/DynSysWarning"
+    dynAmbientDeltaModeStatus = "Status/DynAmbientDeltaModeStatus"
+    dynExhaustAirBackupModeStatus = "Status/DynExhaustAirBackupModeStatus"
+    dynRemoteLocalModeStatus = "Status/DynRemoteLocalModeStatus"
     faultDevice = "FAULT_DEVICE"
     pumpCodesBit11Unused = "PUMP_CODES_BIT11_UNUSED"
     pumpCodesBit3Unused = "PUMP_CODES_BIT3_UNUSED"
@@ -1740,6 +1740,7 @@ class EventItem(Enum):
     )
 
 
+# TODO OSW-1232 Make sure that these event items are in the XML.
 DYNALENE_EVENT_GROUP_DICT = {
     "DynTAalarmMonitorOFF": "DynTAalarmMonitor",
     "DynTAalarmMonitorON": "DynTAalarmMonitor",
@@ -1750,6 +1751,7 @@ DYNALENE_EVENT_GROUP_DICT = {
     "DynTankLevelOK": "DynTankLevel",
 }
 
+# TODO OSW-1232 Make sure that these event items are in the XML.
 DYNALENE_EVENT_TOPICS = {
     "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorOFF",
     "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorON",

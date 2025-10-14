@@ -427,19 +427,19 @@ class HvacCsc(salobj.BaseCsc):
                 event_item for event_item in EventItem if event_item.value == item
             ]
             if len(event_items) > 0:
-                try:
-                    event_item = event_items[0]
-                    event_name = f"evt_{HvacTopicEnglish(topic).name}"
+                event_item = event_items[0]
+                event_item_name = event_item.name
+                event_name = f"evt_{HvacTopicEnglish(topic).name}"
+                event = getattr(self, event_name, None)
+                if event is None and "Dyn" in topic_and_item:
+                    event_name = f"evt_{EventItem(item).name}"
                     event = getattr(self, event_name, None)
-                    if event and event_item.name in event.topic_info.fields:
-                        if event_name not in self.event_data:
-                            self.event_data[event_name] = {}
-                        self.event_data[event_name][event_item.name] = payload
-                        continue
-                except ValueError:
-                    self.log.warning(
-                        f"Ignoring unknown {topic=} for {topic_and_item=}."
-                    )
+                    event_item_name = "state"
+                if event and event_item_name in event.topic_info.fields:
+                    if event_name not in self.event_data:
+                        self.event_data[event_name] = {}
+                    self.event_data[event_name][event_item_name] = payload
+                    continue
 
             # DM-39103 Workaround for unknown or misspelled topic and item
             # names.

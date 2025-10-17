@@ -20,7 +20,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-__all__ = ["bar_to_pa", "determine_unit", "parse_limits", "psi_to_pa", "to_camel_case"]
+__all__ = [
+    "bar_to_pa",
+    "co2_ppm_to_mg_per_cubic_meter",
+    "determine_unit",
+    "parse_limits",
+    "psi_to_pa",
+    "to_camel_case",
+]
 
 import re
 import typing

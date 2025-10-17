@@ -29,7 +29,6 @@ from lsst.ts.hvac import MqttClient
 
 
 class MqttClientTestCase(unittest.IsolatedAsyncioTestCase):
-
     @mock.patch("paho.mqtt.client.Client")
     async def test_mqtt_client(self, mock_client: mock.MagicMock) -> None:
         log = logging.Logger(type(self).__name__)
@@ -79,9 +78,7 @@ class MqttClientTestCase(unittest.IsolatedAsyncioTestCase):
         assert result is True
         assert len(mqtt_client.pub_ack_events) == 0
         assert (
-            mock.call(
-                "Timeout while sending message with topic='some/topic' and payload='payload'."
-            )
+            mock.call("Timeout while sending message with topic='some/topic' and payload='payload'.")
             not in mqtt_client.log.debug.call_args_list
         )
 
@@ -97,9 +94,7 @@ class MqttClientTestCase(unittest.IsolatedAsyncioTestCase):
         mqtt_client.client.publish = mock.MagicMock()
         mqtt_client.client.publish.return_value = msg_info
 
-        result = await mqtt_client.publish_mqtt_message(
-            "some/topic", "payload", timeout=0.1
-        )
+        result = await mqtt_client.publish_mqtt_message("some/topic", "payload", timeout=0.1)
         assert not result
         assert len(mqtt_client.pub_ack_events) == 0
         mqtt_client.log.debug.assert_any_call(

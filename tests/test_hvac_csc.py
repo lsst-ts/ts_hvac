@@ -152,18 +152,14 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,
         ):
-            await salobj.set_summary_state(
-                remote=self.remote, state=salobj.State.ENABLED
-            )
+            await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
             for topic in HvacTopicEnglish:  # type: ignore
                 if topic.value not in TOPICS_ALWAYS_ENABLED:
                     # Retrieve the DeviceId.
                     device_id = DeviceId[topic.name]
                     data = {"device_id": device_id}
                     # Enable the subsystem.
-                    await self.remote.cmd_enableDevice.set_start(
-                        **data, timeout=STD_TIMEOUT
-                    )
+                    await self.remote.cmd_enableDevice.set_start(**data, timeout=STD_TIMEOUT)
                     # Make sure that the SimClient publishes telemetry.
                     self.csc.mqtt_client.publish_telemetry()
                     # Make sure that the CSC publishes the telemetry.
@@ -178,13 +174,9 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                         await event.next(flush=False, timeout=STD_TIMEOUT)
 
                     # Disable the subsystem.
-                    await self.remote.cmd_disableDevice.set_start(
-                        **data, timeout=STD_TIMEOUT
-                    )
+                    await self.remote.cmd_disableDevice.set_start(**data, timeout=STD_TIMEOUT)
 
-    async def _verify_config_telemetry(
-        self, subsystem: str, config_data: dict[str, float]
-    ) -> None:
+    async def _verify_config_telemetry(self, subsystem: str, config_data: dict[str, float]) -> None:
         # Loop over all telemetry topics and verify the status
         all_telemetry = await self._retrieve_all_telemetry()
 
@@ -220,9 +212,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 item = getattr(telemetry, working_state)
                 self.assertEqual(item, status_to_check)
 
-            await self._verify_configurable_items(
-                subsystem, config_data, name, telemetry
-            )
+            await self._verify_configurable_items(subsystem, config_data, name, telemetry)
 
     async def _verify_configurable_items(
         self,
@@ -258,13 +248,8 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 else:
                     self.assertAlmostEqual(telemetry_item, config_data[key], 3)
 
-    async def _verify_config_event(
-        self, hvac_topic: HvacTopicEnglish, config_data: dict[str, float]
-    ) -> None:
-
-        command_group = [
-            k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic.value in v
-        ][0]
+    async def _verify_config_event(self, hvac_topic: HvacTopicEnglish, config_data: dict[str, float]) -> None:
+        command_group = [k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic.value in v][0]
         if command_group in ["FANCOIL", "FAN"]:
             return
         command_group_coro = getattr(
@@ -272,9 +257,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             f"evt_{to_camel_case(command_group, True)}Configuration",
         )
         device_id = DeviceId[hvac_topic.name]
-        data = await self.assert_next_sample(
-            topic=command_group_coro, device_id=device_id
-        )
+        data = await self.assert_next_sample(topic=command_group_coro, device_id=device_id)
         command_topics = self.csc.xml.command_topics[hvac_topic.name]
         for command_topic in command_topics:
             # skip topics that are not reported
@@ -294,9 +277,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         """Test to prove that the command arguments in ts_xml correspond to
         what the CSC expects."""
         ci = ComponentInfo(name="HVAC", topic_subname="")
-        config_commands = [
-            topic for topic in ci.topics if topic.startswith("cmd_config")
-        ]
+        config_commands = [topic for topic in ci.topics if topic.startswith("cmd_config")]
         device_ids_to_use = {
             "cmd_configAhu": DeviceId.cleanRoomAHU01P05,
             "cmd_configChiller": DeviceId.chiller01P01,
@@ -320,9 +301,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,
         ):
-            await salobj.set_summary_state(
-                remote=self.remote, state=salobj.State.ENABLED
-            )
+            await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
             random_seed = 12345
             for run_count in range(2):
@@ -336,9 +315,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
 
                         if hvac_topic.value not in TOPICS_ALWAYS_ENABLED:
                             # Enable the subsystem.
-                            await self.remote.cmd_enableDevice.set_start(
-                                **enable_data, timeout=STD_TIMEOUT
-                            )
+                            await self.remote.cmd_enableDevice.set_start(**enable_data, timeout=STD_TIMEOUT)
 
                         # Retrieve the config command of the subsystem.
                         command_group = re.sub(r"\d{0,2}P\d{2}$", r"", device_id.name)
@@ -347,14 +324,9 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                             command_group = command_group.replace("AHU", "Ahu")
                         if "White" in command_group or "Clean" in command_group:
                             command_group = "Ahu"
-                        if (
-                            "LowerDamperFan" in command_group
-                            or "LoadingBayFan" in command_group
-                        ):
+                        if "LowerDamperFan" in command_group or "LoadingBayFan" in command_group:
                             command_group = "Fan"
-                        config_method = getattr(
-                            self.remote, f"cmd_config{command_group}"
-                        )
+                        config_method = getattr(self.remote, f"cmd_config{command_group}")
 
                         # Invoke the config command.
                         config_data = hvac_test_utils.get_random_config_data(hvac_topic)
@@ -375,18 +347,14 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
 
                         if hvac_topic.value not in TOPICS_ALWAYS_ENABLED:
                             # Disable the subsystem.
-                            await self.remote.cmd_disableDevice.set_start(
-                                **enable_data, timeout=STD_TIMEOUT
-                            )
+                            await self.remote.cmd_disableDevice.set_start(**enable_data, timeout=STD_TIMEOUT)
 
     async def test_dynalene_set_chiller1_pressure_setpoint(self) -> None:
         async with self.make_csc(
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,
         ):
-            await salobj.set_summary_state(
-                remote=self.remote, state=salobj.State.ENABLED
-            )
+            await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
             value = 5.0
             await self.remote.cmd_dynCH1PressRemoteSP.set_start(
                 dynCH1PressRemoteSP=value, timeout=STD_TIMEOUT
@@ -399,9 +367,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             initial_state=salobj.State.STANDBY,
             simulation_mode=1,
         ):
-            await salobj.set_summary_state(
-                remote=self.remote, state=salobj.State.ENABLED
-            )
+            await salobj.set_summary_state(remote=self.remote, state=salobj.State.ENABLED)
 
             # Only consider one HVAC device here and assume this also works
             # for all other devices that can be configured.
@@ -412,9 +378,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             device_id = DeviceId[subsystem]
             enable_data = {"device_id": device_id}
             # Enable the subsystem.
-            await self.remote.cmd_enableDevice.set_start(
-                **enable_data, timeout=STD_TIMEOUT
-            )
+            await self.remote.cmd_enableDevice.set_start(**enable_data, timeout=STD_TIMEOUT)
 
             command_group = "LowerAhu"
             config_method = getattr(self.remote, f"cmd_config{command_group}")
@@ -441,6 +405,4 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             await self._verify_config_event(hvac_topic, config_data)
 
             # Disable the subsystem.
-            await self.remote.cmd_disableDevice.set_start(
-                **enable_data, timeout=STD_TIMEOUT
-            )
+            await self.remote.cmd_disableDevice.set_start(**enable_data, timeout=STD_TIMEOUT)

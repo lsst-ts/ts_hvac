@@ -45,9 +45,7 @@ class SimClient(BaseMqttClient):
         unit tests should set it to False.
     """
 
-    def __init__(
-        self, log: logging.Logger, start_publish_telemetry_every_second: bool = True
-    ) -> None:
+    def __init__(self, log: logging.Logger, start_publish_telemetry_every_second: bool = True) -> None:
         super().__init__(log)
         self.hvac_topics: dict[str, typing.Any] = {}
         self.telemetry_task: typing.Optional[asyncio.Task] = None
@@ -78,9 +76,7 @@ class SimClient(BaseMqttClient):
         self._collect_topics()
 
         if self.start_publish_telemetry_every_second:
-            self.telemetry_task = asyncio.create_task(
-                self._publish_telemetry_every_second()
-            )
+            self.telemetry_task = asyncio.create_task(self._publish_telemetry_every_second())
 
         self.connected = True
         self.log.info("Connected.")
@@ -133,9 +129,7 @@ class SimClient(BaseMqttClient):
             In case a topic doesn't exist.
         """
         self.log.debug(f"Publishing message on {hvac_topic=} with {payload=}.")
-        corrected_topic, command, original_topic = self.xml.extract_topic_and_item(
-            hvac_topic
-        )
+        corrected_topic, command, original_topic = self.xml.extract_topic_and_item(hvac_topic)
         topic = corrected_topic if not original_topic else original_topic
 
         if command == "COMANDO_ENCENDIDO_LSST":
@@ -176,9 +170,7 @@ class SimClient(BaseMqttClient):
         ValueError
             In case the item doesn't exist in the topic.
         """
-        self.log.info(
-            f"Received message [topic={topic!r}, command={command!r}, payload={payload!r}]"
-        )
+        self.log.info(f"Received message [topic={topic!r}, command={command!r}, payload={payload!r}]")
         command_item = command
         if command_item.endswith("_LSST"):
             command_item = command_item[:-5]
@@ -209,9 +201,7 @@ class SimClient(BaseMqttClient):
         server.
         """
         for hvac_topic in self.hvac_topics:
-            corrected_topic, variable, original_topic = self.xml.extract_topic_and_item(
-                hvac_topic
-            )
+            corrected_topic, variable, original_topic = self.xml.extract_topic_and_item(hvac_topic)
 
             topic_enabled = self.topics_enabled[corrected_topic]
             topic_type = self.hvac_topics[hvac_topic]["topic_type"]
@@ -246,9 +236,7 @@ class SimClient(BaseMqttClient):
                         # Making sure that no alarm bells start ringing.
                         if "ALARM" in variable:
                             value = False
-                    elif (
-                        idl_type == "float" and limits[0] is None and limits[1] is None
-                    ):
+                    elif idl_type == "float" and limits[0] is None and limits[1] is None:
                         value = 0.0
                     else:
                         value = random.uniform(10 * limits[0], 10 * limits[1]) / 10.0

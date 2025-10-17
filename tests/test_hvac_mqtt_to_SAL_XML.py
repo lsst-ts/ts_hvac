@@ -30,9 +30,7 @@ from lsst.ts.xml.enums.HVAC import DeviceId
 class MqttToSalTestCase(unittest.TestCase):
     def test_mask(self) -> None:
         mask = 0b10000000110001
-        topics_enabled = [
-            flag for (index, flag) in enumerate(DeviceId) if (mask & 2**index)
-        ]
+        topics_enabled = [flag for (index, flag) in enumerate(DeviceId) if (mask & 2**index)]
         print(topics_enabled)
         mask_check = 0
         device_id_index = {dev_id: i for i, dev_id in enumerate(DeviceId)}
@@ -53,11 +51,7 @@ class MqttToSalTestCase(unittest.TestCase):
                 topic_found = True
                 continue
             command_group = next(
-                (
-                    group
-                    for group, topic in device_groups.items()
-                    if hvac_topic in topic
-                ),
+                (group for group, topic in device_groups.items() if hvac_topic in topic),
                 None,
             )
             if command_group:
@@ -83,10 +77,8 @@ class MqttToSalTestCase(unittest.TestCase):
 
     def test_collect_command_topics(self) -> None:
         xml = MqttInfoReader()
-        unique_command_items_per_group = (
-            hvac_mqtt_to_SAL_XML.collect_unique_command_items_per_group(
-                xml.command_topics
-            )
+        unique_command_items_per_group = hvac_mqtt_to_SAL_XML.collect_unique_command_items_per_group(
+            xml.command_topics
         )
 
         for command_group in unique_command_items_per_group.keys():

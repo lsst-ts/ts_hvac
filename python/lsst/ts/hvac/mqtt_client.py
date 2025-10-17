@@ -73,9 +73,7 @@ class MqttClient(BaseMqttClient):
         self.connected = False
         self.log.debug("Disconnected.")
 
-    def on_message(
-        self, client: mqtt.Client, userdata: typing.Any, msg: mqtt.MQTTMessage
-    ) -> None:
+    def on_message(self, client: mqtt.Client, userdata: typing.Any, msg: mqtt.MQTTMessage) -> None:
         """Callback for when an MQTT message arrives.
 
         Parameters
@@ -122,9 +120,7 @@ class MqttClient(BaseMqttClient):
             event = self.pub_ack_events.pop(mid, None)
         if reason_code.is_failure:
             self.running_loop.call_soon_threadsafe(
-                lambda: self.log.warning(
-                    f"MQTT publish failed: {reason_code} ({reason_code.value})"
-                )
+                lambda: self.log.warning(f"MQTT publish failed: {reason_code} ({reason_code.value})")
             )
         if event:
             self.running_loop.call_soon_threadsafe(event.set)
@@ -164,9 +160,7 @@ class MqttClient(BaseMqttClient):
         try:
             await asyncio.wait_for(event.wait(), timeout)
         except asyncio.TimeoutError:
-            self.log.debug(
-                f"Timeout while sending message with {topic=!r} and {payload=!r}."
-            )
+            self.log.debug(f"Timeout while sending message with {topic=!r} and {payload=!r}.")
         finally:
             self.pub_ack_events.pop(mid, None)
 

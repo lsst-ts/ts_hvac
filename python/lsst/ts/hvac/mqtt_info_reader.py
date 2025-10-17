@@ -104,9 +104,7 @@ class MqttInfoReader:
 
         self._collect_hvac_topics_and_items_from_csv()
 
-    def extract_topic_and_item(
-        self, hvac_topic_and_item: str
-    ) -> typing.Tuple[str, str, str | None]:
+    def extract_topic_and_item(self, hvac_topic_and_item: str) -> typing.Tuple[str, str, str | None]:
         """Extract the generic topic, representing a HVAC device, and item,
          representing a published value of the device, from a string.
 
@@ -157,9 +155,9 @@ class MqttInfoReader:
         for row in contents:
             m = GENERAL_REGEX.match(row["TOPIC MQTT"])
             if m:
-                if f'{row["TOPIC MQTT"]}:{row["READ / WRITE"]}' in unique_mqtt_topics:
+                if f"{row['TOPIC MQTT']}:{row['READ / WRITE']}" in unique_mqtt_topics:
                     print(f"Duplicate MQTT topic found in {row}.")
-                unique_mqtt_topics.add(f'{row["TOPIC MQTT"]}:{row["READ / WRITE"]}')
+                unique_mqtt_topics.add(f"{row['TOPIC MQTT']}:{row['READ / WRITE']}")
 
                 # Skip undefined Dynalene commands and telemetry.
                 if "tbd" in row["TOPIC MQTT"].lower():
@@ -179,9 +177,7 @@ class MqttInfoReader:
                 or row["TOPIC MQTT"] in DYNALENE_EVENT_TOPICS
             )
         ]
-        write_topic_rows = [
-            row for row in mqtt_topic_rows if row["READ / WRITE"] == "WRITE"
-        ]
+        write_topic_rows = [row for row in mqtt_topic_rows if row["READ / WRITE"] == "WRITE"]
         event_topic_rows = [
             row
             for row in mqtt_topic_rows
@@ -239,9 +235,7 @@ class MqttInfoReader:
             return m.group(), None
         raise KeyError(f"No known device found in {mqtt_topic}.")
 
-    def _validate_all_rows_contain_know_devices(
-        self, mqtt_topic_rows: list[dict[str, str]]
-    ) -> None:
+    def _validate_all_rows_contain_know_devices(self, mqtt_topic_rows: list[dict[str, str]]) -> None:
         devices: set[str] = set()
         for row in mqtt_topic_rows:
             topic = row["TOPIC MQTT"]
@@ -253,29 +247,19 @@ class MqttInfoReader:
         for hvac_device in HvacTopicEnglish:
             assert hvac_device.value in devices, f"{hvac_device.value} is missing."
 
-    def _validate_all_event_topics(
-        self, event_topic_rows: list[dict[str, str]]
-    ) -> None:
+    def _validate_all_event_topics(self, event_topic_rows: list[dict[str, str]]) -> None:
         all_event_topic_rows = [row["TOPIC MQTT"] for row in event_topic_rows]
         for event_topic in EVENT_TOPICS:
-            assert (
-                event_topic in all_event_topic_rows
-            ), f"{event_topic} doesn't exist in event_topic_rows."
+            assert event_topic in all_event_topic_rows, f"{event_topic} doesn't exist in event_topic_rows."
         for event_topic in all_event_topic_rows:
-            assert (
-                event_topic in EVENT_TOPICS
-            ), f"{event_topic} doesn't exist in EVENT_TOPICS."
+            assert event_topic in EVENT_TOPICS, f"{event_topic} doesn't exist in EVENT_TOPICS."
 
     def _collect_devices_and_items(
         self, topic_rows: list[dict[str, str]], sal_topic_type: SalTopicType
     ) -> None:
         for row in topic_rows:
             hvac_topic_and_item = row["TOPIC MQTT"]
-            idl_type = (
-                "float"
-                if "ANALOG" in row["SIGNAL"] or "NUMERIC" in row["SIGNAL"]
-                else "boolean"
-            )
+            idl_type = "float" if "ANALOG" in row["SIGNAL"] or "NUMERIC" in row["SIGNAL"] else "boolean"
             topic_type = row["READ / WRITE"].strip()
             if topic_type in [TopicType.READ, TopicType.WRITE]:
                 unit = determine_unit(row["UNIT"])
@@ -330,9 +314,7 @@ class MqttInfoReader:
         hvac_topics = set()
         for hvac_topic_and_item in self.hvac_topics:
             topic_type = self.hvac_topics[hvac_topic_and_item]["topic_type"]
-            if topic_type == TopicType.WRITE and hvac_topic_and_item.endswith(
-                "COMANDO_ENCENDIDO_LSST"
-            ):
+            if topic_type == TopicType.WRITE and hvac_topic_and_item.endswith("COMANDO_ENCENDIDO_LSST"):
                 topic, _, _ = self.extract_topic_and_item(hvac_topic_and_item)
 
                 hvac_topics.add(topic)
@@ -375,9 +357,7 @@ class MqttInfoReader:
         """
         return self._get_mqtt_topics_and_items_for_type(TopicType.WRITE)
 
-    def _get_mqtt_topics_and_items_for_type(
-        self, topic_type: str
-    ) -> dict[str, typing.Any]:
+    def _get_mqtt_topics_and_items_for_type(self, topic_type: str) -> dict[str, typing.Any]:
         mqtt_topics: dict[str, typing.Any] = {}
         for hvac_topic in self.get_generic_hvac_topics():
             items = self.get_items_for_hvac_topic(hvac_topic)

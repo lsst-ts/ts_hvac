@@ -205,9 +205,7 @@ class HvacCsc(salobj.BaseCsc):
             self.log.info("Connecting SimClient.")
         else:
             # Use the MQTT Client.
-            self.log.info(
-                f"Connecting MqttClient to host {self.host} and port {self.port}."
-            )
+            self.log.info(f"Connecting MqttClient to host {self.host} and port {self.port}.")
             self.mqtt_client = MqttClient(host=self.host, port=self.port, log=self.log)
 
         try:
@@ -216,9 +214,7 @@ class HvacCsc(salobj.BaseCsc):
             self.log.exception(f"Timeout connecting to host {self.host}")
             raise e
         if self.start_telemetry_publishing:
-            self.telemetry_task = asyncio.create_task(
-                self._publish_telemetry_regularly()
-            )
+            self.telemetry_task = asyncio.create_task(self._publish_telemetry_regularly())
         self.log.info("Connected.")
 
     async def disconnect(self) -> None:
@@ -236,9 +232,7 @@ class HvacCsc(salobj.BaseCsc):
         for mqtt_topic, items in mqtt_topics_and_items.items():
             topic_state = {}
             for item in items:
-                topic_state[item] = InternalItemState(
-                    mqtt_topic, item, items[item]["idl_type"]
-                )
+                topic_state[item] = InternalItemState(mqtt_topic, item, items[item]["idl_type"])
             self.hvac_state[mqtt_topic] = topic_state
 
     async def begin_enable(self, id_data: salobj.BaseDdsDataType) -> None:
@@ -356,9 +350,7 @@ class HvacCsc(salobj.BaseCsc):
             if data:
                 await telemetry_method.set_write(**data)
             device_id = DeviceId[hvac_topic_name]
-            await self.send_events(
-                topic, enabled, hvac_topic_name, hvac_topic_value, device_id, data
-            )
+            await self.send_events(topic, enabled, hvac_topic_name, hvac_topic_value, device_id, data)
 
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
         self.log.debug("Done.")
@@ -373,9 +365,7 @@ class HvacCsc(salobj.BaseCsc):
         data: dict[str, float | bool],
     ) -> None:
         if topic not in TOPICS_WITHOUT_CONFIGURATION and enabled:
-            command_group = [
-                k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic_value in v
-            ][0]
+            command_group = [k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic_value in v][0]
             event_name = f"evt_{to_camel_case(command_group, True)}Configuration"
             command_group_coro = getattr(self, event_name)
             event_data = {"device_id": device_id}
@@ -423,17 +413,14 @@ class HvacCsc(salobj.BaseCsc):
                     payload = json.loads(msg.payload)
                 except json.decoder.JSONDecodeError:
                     self.log.exception(
-                        f"Exception decoding topic {msg.topic} "
-                        f"payload {msg.payload}. Continuing."
+                        f"Exception decoding topic {msg.topic} payload {msg.payload}. Continuing."
                     )
                     continue
 
             topic, item, _ = self.xml.extract_topic_and_item(topic_and_item)
 
             # Prepare the HVAC event if the message applies to one.
-            event_items = [
-                event_item for event_item in EventItem if event_item.value == item
-            ]
+            event_items = [event_item for event_item in EventItem if event_item.value == item]
             if len(event_items) > 0:
                 event_item = event_items[0]
                 event_item_name = event_item.name
@@ -452,9 +439,7 @@ class HvacCsc(salobj.BaseCsc):
             # DM-39103 Workaround for unknown or misspelled topic and item
             # names.
             if topic not in self.hvac_state or item not in self.hvac_state[topic]:
-                self.log.warning(
-                    f"Ignoring unknown {topic=} and {item=} for {topic_and_item=}."
-                )
+                self.log.warning(f"Ignoring unknown {topic=} and {item=} for {topic_and_item=}.")
                 continue
 
             # Some Dynalene event topics need to be grouped together, which is
@@ -539,9 +524,7 @@ class HvacCsc(salobj.BaseCsc):
             event = getattr(self, event_name, None)  # type: ignore
             if event:
                 if event_name in self.event_data:
-                    self.log.debug(
-                        f"Writing {event_name=} with data {self.event_data[event_name]}."
-                    )
+                    self.log.debug(f"Writing {event_name=} with data {self.event_data[event_name]}.")
                     await event.set_write(**self.event_data[event_name])
                 else:
                     logging.warning(f"No data for {event_name=}.")
@@ -562,9 +545,7 @@ class HvacCsc(salobj.BaseCsc):
             pass
         except Exception as e:
             self.log.exception("Exception and this was unexpected.")
-            await self.fault(
-                -1, "Error publishing telemetry.", traceback.format_exception(e)
-            )
+            await self.fault(-1, "Error publishing telemetry.", traceback.format_exception(e))
 
     @property
     def connected(self) -> bool:
@@ -574,10 +555,7 @@ class HvacCsc(salobj.BaseCsc):
 
     def _add_config_commands(self) -> None:
         command_groups = set(
-            k
-            for k, v in DEVICE_GROUPS_ENGLISH.items()
-            for i in v
-            if i not in TOPICS_WITHOUT_CONFIGURATION
+            k for k, v in DEVICE_GROUPS_ENGLISH.items() for i in v if i not in TOPICS_WITHOUT_CONFIGURATION
         )
         # This adds the do_configFoos functions.
         for command_group in command_groups:
@@ -676,9 +654,7 @@ class HvacCsc(salobj.BaseCsc):
 
                 topic = topic_value + "/" + command_item.value
                 payload = json.dumps(value)
-                was_published[command_item.name] = await self._send_command(
-                    topic, payload
-                )
+                was_published[command_item.name] = await self._send_command(topic, payload)
 
                 if not was_published[command_item.name]:
                     # TODO: DM-28028: Handling of was_published == False will

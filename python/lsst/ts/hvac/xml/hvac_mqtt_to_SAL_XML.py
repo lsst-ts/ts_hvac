@@ -42,9 +42,7 @@ events_filename = OUTPUT_DIR / "HVAC_Events.xml"
 XML_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 XSL = "type='text/xsl' "
 NSMAP = {"xsi": XML_NAMESPACE}
-attr_qname = etree.QName(
-    "http://www.w3.org/2001/XMLSchema-instance", "noNamespaceSchemaLocation"
-)
+attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "noNamespaceSchemaLocation")
 telemetry_root = etree.Element(
     "SALTelemetrySet",
     {attr_qname: "http://lsst-sal.tuc.noao.edu/schema/SALTelemetrySet.xsd"},
@@ -211,8 +209,7 @@ def _create_telemetry_xml() -> None:
     event_topic_dict = EVENT_TOPIC_DICT_ENGLISH
     # Create a list of topic items that should be events.
     topic_items_that_should_be_events = [
-        val["item"].replace("dynalene", "dyn")
-        for topic, val in event_topic_dict.items()
+        val["item"].replace("dynalene", "dyn") for topic, val in event_topic_dict.items()
     ]
     for telemetry_topic in xml.telemetry_topics:
         st = etree.SubElement(telemetry_root, "SALTelemetry")
@@ -246,9 +243,7 @@ def _create_telemetry_xml() -> None:
     _write_tree_to_file(telemetry_root, telemetry_filename)
 
 
-def _create_command_sub_element(
-    command_name: str, description_text: str
-) -> etree.Element:
+def _create_command_sub_element(command_name: str, description_text: str) -> etree.Element:
     st = etree.SubElement(command_root, "SALCommand")
     sub_system = etree.SubElement(st, "Subsystem")
     sub_system.text = "HVAC"
@@ -270,9 +265,7 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             f"The ID indicating which device needs to be {command}d. The IDs "
             "can be found in the DeviceId enumeration."
         )
-        _create_item_element(
-            st, f"{command}", "device_id", "long", "unitless", description_text, 1
-        )
+        _create_item_element(st, f"{command}", "device_id", "long", "unitless", description_text, 1)
 
     # Create configuration commands for the devices grouped by similar
     # functionality.
@@ -288,15 +281,11 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
         elif command_group == "CRAC":
             command_group_for_description = "CRAC (Computer Room Air Conditioning)"
         description_text = f"Configure a {command_group_for_description} device."
-        st = _create_command_sub_element(
-            f"config{to_camel_case(command_group)}", description_text
-        )
+        st = _create_command_sub_element(f"config{to_camel_case(command_group)}", description_text)
 
         command_items = command_items_per_group[command_group]
         description_text = f"Device ID; one of the DeviceId_{to_camel_case(command_group, True)} enums."
-        _create_item_element(
-            st, command_group, "device_id", "int", "unitless", description_text, 1
-        )
+        _create_item_element(st, command_group, "device_id", "int", "unitless", description_text, 1)
         for command_item in command_items:
             try:
                 description = TelemetryItemDescription[command_item].value
@@ -393,9 +382,7 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
         sub_system = etree.SubElement(st, "Subsystem")
         sub_system.text = "HVAC"
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
-        efdb_topic.text = (
-            f"HVAC_logevent_{to_camel_case(command_group, True)}Configuration"
-        )
+        efdb_topic.text = f"HVAC_logevent_{to_camel_case(command_group, True)}Configuration"
         description = etree.SubElement(st, "Description")
         command_group_for_description = command_group
         if command_group not in ["CRAC", "AHU"]:
@@ -408,9 +395,7 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
 
         command_items = command_items_per_group[command_group]
         description_text = f"Device ID; one of the DeviceId_{to_camel_case(command_group, True)} enums."
-        _create_item_element(
-            st, command_group, "device_id", "int", "unitless", description_text, 1
-        )
+        _create_item_element(st, command_group, "device_id", "int", "unitless", description_text, 1)
         for command_item in command_items:
             try:
                 description = TelemetryItemDescription[command_item].value

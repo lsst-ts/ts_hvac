@@ -34,9 +34,7 @@ from lsst.ts.hvac.enums import (
 )
 from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
 
-expected_units = frozenset(
-    ("deg_C", "unitless", "bar", "%", "h", "m3/h", "l/min", "Pa", "kW", "mg/m3", "Hz")
-)
+expected_units = frozenset(("deg_C", "unitless", "bar", "%", "h", "m3/h", "l/min", "Pa", "kW", "mg/m3", "Hz"))
 
 
 class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
@@ -48,9 +46,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         self.hvac_topics = self.xml.hvac_topics
 
         # Set up the simulator client.
-        self.mqtt_client = sim_client.SimClient(
-            self.log, start_publish_telemetry_every_second=False
-        )
+        self.mqtt_client = sim_client.SimClient(self.log, start_publish_telemetry_every_second=False)
         # Call connect to make sure that the MQTT client is in the correct
         # state for the test.
         await self.mqtt_client.connect()
@@ -119,13 +115,9 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
             if isinstance(data, bool):
                 self.assertFalse(data)
             else:
-                self.fail(
-                    f"Encountered variable {var} with value {data} in topic {topic}"
-                )
+                self.fail(f"Encountered variable {var} with value {data} in topic {topic}")
 
-    def verify_topic_state(
-        self, topic: str, expected_state: dict[str, typing.Any]
-    ) -> None:
+    def verify_topic_state(self, topic: str, expected_state: dict[str, typing.Any]) -> None:
         """Verifies that the state as reported by the topic is as expected.
 
         For a description of the expected state dict, see the
@@ -229,13 +221,9 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                             "max": upper_limit,
                         }
                     else:
-                        self.fail(
-                            f"Found unexpected unit {var['unit']} for variable {variable}"
-                        )
+                        self.fail(f"Found unexpected unit {var['unit']} for variable {variable}")
                 else:
-                    self.fail(
-                        f"Found unexpected idl_type {var['idl_type']} for variable {variable}"
-                    )
+                    self.fail(f"Found unexpected idl_type {var['idl_type']} for variable {variable}")
         return expected_state
 
     async def test_topics(self) -> None:
@@ -269,9 +257,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                 data = hvac_test_utils.get_random_config_data(topic)
                 for key in data.keys():
                     command_item = CommandItemEnglish[key]
-                    self.mqtt_client._handle_config_command(
-                        topic.value, command_item.value, data[key]
-                    )
+                    self.mqtt_client._handle_config_command(topic.value, command_item.value, data[key])
 
                 # Enable the topic otherwise telemetry doesn't get
                 # published.
@@ -294,9 +280,7 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
                     command_item_value = command_item.value
                     if command_item.value.endswith("_LSST"):
                         command_item_value = command_item.value[:-5]
-                    self.assertEqual(
-                        data[key], mqtt_state[topic.value][command_item_value]
-                    )
+                    self.assertEqual(data[key], mqtt_state[topic.value][command_item_value])
 
                 self.log.info(mqtt_state)
                 # Disable the topic again.

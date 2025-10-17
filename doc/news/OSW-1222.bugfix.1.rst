@@ -1,1 +1,0 @@
-Made sure that all non-configure events are sent as well.

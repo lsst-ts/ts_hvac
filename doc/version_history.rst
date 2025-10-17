@@ -8,6 +8,28 @@ Version History
 
 .. towncrier release notes start
 
+v0.19.2 (2025-10-17)
+====================
+
+New Features
+------------
+
+- Added a script to generate TICKscripts for Chronograph alerts. (`OSW-1222 <https://rubinobs.atlassian.net//browse/OSW-1222>`_)
+
+
+Bug Fixes
+---------
+
+- Fixed handling of most Dynalene events. (`OSW-1222 <https://rubinobs.atlassian.net//browse/OSW-1222>`_)
+- Made sure that all non-configure events are sent as well. (`OSW-1222 <https://rubinobs.atlassian.net//browse/OSW-1222>`_)
+
+
+Performance Enhancement
+-----------------------
+
+- Switched from black, flake8 and isort to ruff. (`OSW-1222 <https://rubinobs.atlassian.net//browse/OSW-1222>`_)
+
+
 v0.19.1 (2025-10-09)
 ====================
 

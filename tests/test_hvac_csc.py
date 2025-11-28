@@ -176,6 +176,10 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     # Disable the subsystem.
                     await self.remote.cmd_disableDevice.set_start(**data, timeout=STD_TIMEOUT)
 
+            # Should be empty because no unknown topics are emitted by the
+            # simulator.
+            assert len(self.csc.unknown_mqtt_topics) == 0
+
     async def _verify_config_telemetry(self, subsystem: str, config_data: dict[str, float]) -> None:
         # Loop over all telemetry topics and verify the status
         all_telemetry = await self._retrieve_all_telemetry()
@@ -295,6 +299,10 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                 config_data = {"device_id": device_ids_to_use[config_command].value}
                 config_method = getattr(self.remote, config_command)
                 await config_method.set_start(**config_data)
+
+        # Should be empty because no unknown topics are emitted by the
+        # simulator.
+        assert len(self.csc.unknown_mqtt_topics) == 0
 
     async def test_config(self) -> None:
         async with self.make_csc(

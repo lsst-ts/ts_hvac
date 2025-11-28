@@ -191,6 +191,9 @@ class HvacCsc(salobj.BaseCsc):
         # Keep track of event data to suppress superfluous events.
         self.event_data: dict[str, dict[str, typing.Any]] = {}
 
+        # Keep track of unknown MQTT topics to avoid superfluous warnings.
+        self.unknown_mqtt_topics: set[str] = set()
+
     async def connect(self) -> None:
         """Start the HVAC MQTT client or start the mock client, if in
         simulation mode.
@@ -234,6 +237,9 @@ class HvacCsc(salobj.BaseCsc):
             for item in items:
                 topic_state[item] = InternalItemState(mqtt_topic, item, items[item]["idl_type"])
             self.hvac_state[mqtt_topic] = topic_state
+
+        # Clear the unknown topics set in case the MQTT topics have changed.
+        self.unknown_mqtt_topics.clear()
 
     async def begin_enable(self, id_data: salobj.BaseDdsDataType) -> None:
         """Begin do_enable; called before state changes.
@@ -439,7 +445,9 @@ class HvacCsc(salobj.BaseCsc):
             # DM-39103 Workaround for unknown or misspelled topic and item
             # names.
             if topic not in self.hvac_state or item not in self.hvac_state[topic]:
-                self.log.warning(f"Ignoring unknown {topic=} and {item=} for {topic_and_item=}.")
+                if topic_and_item not in self.unknown_mqtt_topics:
+                    self.log.warning(f"Ignoring unknown {topic=} and {item=} for {topic_and_item=}.")
+                    self.unknown_mqtt_topics.add(topic_and_item)
                 continue
 
             # Some Dynalene event topics need to be grouped together, which is

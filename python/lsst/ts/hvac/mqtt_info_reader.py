@@ -27,11 +27,9 @@ import re
 import typing
 
 from .enums import (
-    DYNALENE_EVENT_TOPICS,
-    EVENT_TOPIC_DICT_ENGLISH,
-    EVENT_TOPICS,
-    TOPICS_ALWAYS_ENABLED,
+    EVENT_TOPIC_ITEMS,
     CommandItemEnglish,
+    DynaleneEventTopic,
     EventItem,
     HvacTopicEnglish,
     SalTopicType,
@@ -165,31 +163,20 @@ class MqttInfoReader:
 
                 mqtt_topic_rows.append(row)
 
-        self._validate_all_rows_contain_know_devices(mqtt_topic_rows)
+        self._validate_all_rows_contain_known_devices(mqtt_topic_rows)
 
-        read_topic_rows = [
+        telemetry_topic_rows = [
             row
             for row in mqtt_topic_rows
-            if row["READ / WRITE"] == "READ "
-            and not (
-                row["TOPIC MQTT"] in EVENT_TOPICS
-                or row["TOPIC MQTT"] in EVENT_TOPIC_DICT_ENGLISH
-                or row["TOPIC MQTT"] in DYNALENE_EVENT_TOPICS
-            )
+            if row["READ / WRITE"] == "READ " and row["TOPIC MQTT"] not in EVENT_TOPIC_ITEMS
         ]
-        write_topic_rows = [row for row in mqtt_topic_rows if row["READ / WRITE"] == "WRITE"]
-        event_topic_rows = [
-            row
-            for row in mqtt_topic_rows
-            if row["TOPIC MQTT"] in EVENT_TOPICS
-            and row["TOPIC MQTT"] not in EVENT_TOPIC_DICT_ENGLISH
-            and row["TOPIC MQTT"] not in DYNALENE_EVENT_TOPICS
-        ]
+        command_topic_rows = [row for row in mqtt_topic_rows if row["READ / WRITE"] == "WRITE"]
+        event_topic_rows = [row for row in mqtt_topic_rows if row["TOPIC MQTT"] in EVENT_TOPIC_ITEMS]
 
         self._validate_all_event_topics(event_topic_rows)
 
-        self._collect_devices_and_items(read_topic_rows, SalTopicType.TELEMETRY)
-        self._collect_devices_and_items(write_topic_rows, SalTopicType.COMMAND)
+        self._collect_devices_and_items(telemetry_topic_rows, SalTopicType.TELEMETRY)
+        self._collect_devices_and_items(command_topic_rows, SalTopicType.COMMAND)
         self._collect_devices_and_items(event_topic_rows, SalTopicType.EVENT)
 
     def _extract_device(self, mqtt_topic: str) -> typing.Tuple[str, str | None]:
@@ -235,7 +222,7 @@ class MqttInfoReader:
             return m.group(), None
         raise KeyError(f"No known device found in {mqtt_topic}.")
 
-    def _validate_all_rows_contain_know_devices(self, mqtt_topic_rows: list[dict[str, str]]) -> None:
+    def _validate_all_rows_contain_known_devices(self, mqtt_topic_rows: list[dict[str, str]]) -> None:
         devices: set[str] = set()
         for row in mqtt_topic_rows:
             topic = row["TOPIC MQTT"]
@@ -245,14 +232,20 @@ class MqttInfoReader:
         for device in devices:
             HvacTopicEnglish(device)
         for hvac_device in HvacTopicEnglish:
-            assert hvac_device.value in devices, f"{hvac_device.value} is missing."
+            # Skip Dynalene event topics for now.
+            if (
+                DynaleneEventTopic.dynaleneSafeties.value not in hvac_device.value
+                and DynaleneEventTopic.dynaleneState.value not in hvac_device.value
+                and DynaleneEventTopic.dynaleneStatus.value not in hvac_device.value
+            ):
+                assert hvac_device.value in devices, f"{hvac_device.value} is missing."
 
     def _validate_all_event_topics(self, event_topic_rows: list[dict[str, str]]) -> None:
         all_event_topic_rows = [row["TOPIC MQTT"] for row in event_topic_rows]
-        for event_topic in EVENT_TOPICS:
+        for event_topic in EVENT_TOPIC_ITEMS:
             assert event_topic in all_event_topic_rows, f"{event_topic} doesn't exist in event_topic_rows."
         for event_topic in all_event_topic_rows:
-            assert event_topic in EVENT_TOPICS, f"{event_topic} doesn't exist in EVENT_TOPICS."
+            assert event_topic in EVENT_TOPIC_ITEMS, f"{event_topic} doesn't exist in EVENT_TOPIC_ITEMS."
 
     def _collect_devices_and_items(
         self, topic_rows: list[dict[str, str]], sal_topic_type: SalTopicType
@@ -268,6 +261,13 @@ class MqttInfoReader:
                 raise KeyError(f"Found unknown topic type {topic_type}.")
 
             device, item, _ = self.extract_topic_and_item(hvac_topic_and_item)
+
+            # Work around Dynalene event special names.
+            if "DYNALENE" in device:
+                for det in DynaleneEventTopic:
+                    if det.value in item:
+                        device += "/" + det.value
+
             hvac_topic = HvacTopicEnglish(device)
             hvac_item: TelemetryItemEnglish | CommandItemEnglish | EventItem = (
                 TelemetryItemEnglish.alarmDevice
@@ -313,12 +313,7 @@ class MqttInfoReader:
         """
         hvac_topics = set()
         for hvac_topic_and_item in self.hvac_topics:
-            topic_type = self.hvac_topics[hvac_topic_and_item]["topic_type"]
-            if topic_type == TopicType.WRITE and hvac_topic_and_item.endswith("COMANDO_ENCENDIDO_LSST"):
-                topic, _, _ = self.extract_topic_and_item(hvac_topic_and_item)
-
-                hvac_topics.add(topic)
-        for topic in TOPICS_ALWAYS_ENABLED:
+            topic, _, _ = self.extract_topic_and_item(hvac_topic_and_item)
             hvac_topics.add(topic)
 
         return hvac_topics

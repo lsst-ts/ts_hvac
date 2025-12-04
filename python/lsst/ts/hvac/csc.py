@@ -24,23 +24,21 @@ __all__ = ["HvacCsc", "run_hvac"]
 import asyncio
 import enum
 import json
-import logging
 import math
 import traceback
 import typing
 from types import SimpleNamespace
 
 from lsst.ts import salobj, utils
-from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
+from lsst.ts.xml.enums.HVAC import DeviceId
 
 from . import __version__
 from .base_mqtt_client import BaseMqttClient
 from .enums import (
     DEVICE_GROUPS_ENGLISH,
     DYNALENE_COMMAND_ITEMS_ENGLISH,
-    DYNALENE_EVENT_GROUP_DICT,
-    EVENT_TOPIC_DICT_ENGLISH,
     STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON,
+    TELEMETRY_TOPICS,
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITH_DATA_IN_BAR,
     TOPICS_WITH_DATA_IN_CO2_PPM,
@@ -48,6 +46,7 @@ from .enums import (
     TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH,
     TOPICS_WITHOUT_CONFIGURATION,
     CommandItemEnglish,
+    DynaleneEventTopic,
     EventItem,
     HvacTopicEnglish,
     TelemetryItemEnglish,
@@ -331,51 +330,73 @@ class HvacCsc(salobj.BaseCsc):
 
         return device_id_index, enabled
 
+    def _get_data_for_topic(self, topic: str) -> dict[str, float | bool]:
+        data: dict[str, float | bool] = {}
+        for item in self.hvac_state[topic]:
+            info = self.hvac_state[topic][item]
+            value = info.get_most_recent_value()
+            if value is not None:
+                if item == "ESTADO_DE_UNIDAD":
+                    item_name = TelemetryItemEnglish("ESTADO_UNIDAD").name
+                elif item == "MODO_OPERACION_UNIDAD":
+                    item_name = TelemetryItemEnglish("MODO_OPERACION").name
+                else:
+                    try:
+                        item_name = TelemetryItemEnglish(item).name
+                    except ValueError:
+                        # Ignore because it is an EventItem.
+                        continue
+                data[item_name] = value
+        return data
+
     async def _send_telemetry(self) -> None:
         enabled_mask = 0b0
         for topic in self.hvac_state:
-            device_id_index, enabled = self._get_topic_enabled_state(topic)
-            if enabled:
-                enabled_mask += 1 << device_id_index
-            data: dict[str, float | bool] = {}
-            for item in self.hvac_state[topic]:
-                info = self.hvac_state[topic][item]
-                value = info.get_most_recent_value()
-                if value is not None:
-                    if item == "ESTADO_DE_UNIDAD":
-                        item_name = TelemetryItemEnglish("ESTADO_UNIDAD").name
-                    elif item == "MODO_OPERACION_UNIDAD":
-                        item_name = TelemetryItemEnglish("MODO_OPERACION").name
-                    else:
-                        item_name = TelemetryItemEnglish(item).name
-                    data[item_name] = value
+            hvac_topic = HvacTopicEnglish(topic)
+            data = self._get_data_for_topic(topic)
 
-            telemetry_method = getattr(self, "tel_" + HvacTopicEnglish(topic).name)
-            hvac_topic_name = HvacTopicEnglish(topic).name
-            hvac_topic_value = HvacTopicEnglish(topic).value
-            if data:
-                await telemetry_method.set_write(**data)
-            device_id = DeviceId[hvac_topic_name]
-            await self.send_events(topic, enabled, hvac_topic_name, hvac_topic_value, device_id, data)
+            if hvac_topic in TELEMETRY_TOPICS:
+                device_id_index, enabled = self._get_topic_enabled_state(topic)
+                if enabled:
+                    enabled_mask += 1 << device_id_index
+
+                telemetry_method = getattr(self, "tel_" + HvacTopicEnglish(topic).name)
+                if data:
+                    await telemetry_method.set_write(**data)
 
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
         self.log.debug("Done.")
 
-    async def send_events(
-        self,
-        topic: str,
-        enabled: bool,
-        hvac_topic_name: str,
-        hvac_topic_value: str,
-        device_id: DeviceId,
-        data: dict[str, float | bool],
-    ) -> None:
+    async def _send_events(self) -> None:
+        for topic in self.hvac_state:
+            await self._send_config_event(topic)
+
+            data = self._get_data_for_topic(topic)
+            event_data: dict[str, float | bool] = {}
+            if HvacTopicEnglish(topic).name in self.xml.event_topics:
+                event_name = f"evt_{HvacTopicEnglish(topic).name}"
+                event = getattr(self, event_name)
+                event_items = self.xml.event_topics[HvacTopicEnglish(topic).name]
+                for event_item in event_items:
+                    if event_item in data:
+                        event_data[event_item] = data[event_item]
+
+                self.log.debug(f"Sending event {event} with {event_data=}")
+                await event.set_write(**event_data)
+
+    async def _send_config_event(self, topic: str) -> None:
+        data = self._get_data_for_topic(topic)
+        _, enabled = self._get_topic_enabled_state(topic)
+
         if topic not in TOPICS_WITHOUT_CONFIGURATION and enabled:
-            command_group = [k for k, v in DEVICE_GROUPS_ENGLISH.items() if hvac_topic_value in v][0]
+            device_id = DeviceId[HvacTopicEnglish(topic).name]
+            command_group = [
+                k for k, v in DEVICE_GROUPS_ENGLISH.items() if HvacTopicEnglish(topic).value in v
+            ][0]
             event_name = f"evt_{to_camel_case(command_group, True)}Configuration"
-            command_group_coro = getattr(self, event_name)
+            event = getattr(self, event_name)
             event_data = {"device_id": device_id}
-            command_topics = self.xml.command_topics[hvac_topic_name]
+            command_topics = self.xml.command_topics[HvacTopicEnglish(topic).name]
             for command_topic in command_topics:
                 # skip topics that are not reported
                 if command_topic not in [
@@ -394,16 +415,9 @@ class HvacCsc(salobj.BaseCsc):
             event_data_key = f"{event_name}:{device_id}"
             cached_event_data = self.event_data.get(event_data_key)
             if event_data != cached_event_data:
-                await command_group_coro.set_write(**event_data)
+                self.log.debug(f"Sending event {event} with {event_data=}")
+                await event.set_write(**event_data)
             self.event_data[event_data_key] = event_data
-
-        # Send all other events as well.
-        for event_data_key in self.event_data:
-            if ":" not in event_data_key:
-                event = getattr(self, event_data_key)
-                event_data_dict = self.event_data[event_data_key]
-                self.log.debug(f"Sending {event_data_key}.")
-                await event.set_write(**event_data_dict)
 
     async def _handle_mqtt_messages(self) -> None:
         self.log.debug("Handling MQTT messages.")
@@ -424,6 +438,10 @@ class HvacCsc(salobj.BaseCsc):
                     continue
 
             topic, item, _ = self.xml.extract_topic_and_item(topic_and_item)
+            # Handle Dynalene event items.
+            for dyn_evt_topic in DynaleneEventTopic:
+                if item.startswith(dyn_evt_topic.value):
+                    topic = topic + f"/{dyn_evt_topic.value}"
 
             # Prepare the HVAC event if the message applies to one.
             event_items = [event_item for event_item in EventItem if event_item.value == item]
@@ -450,59 +468,10 @@ class HvacCsc(salobj.BaseCsc):
                     self.unknown_mqtt_topics.add(topic_and_item)
                 continue
 
-            # Some Dynalene event topics need to be grouped together, which is
-            # what these next lines do.
-            for dyn_event_grp in DYNALENE_EVENT_GROUP_DICT:
-                if topic_and_item.endswith(dyn_event_grp):
-                    # First set the correct event group. See
-                    # EVENT_TOPIC_DICT/EVENT_TOPIC_DICT_ENGLISH for the event
-                    # groups.
-                    topic_and_item = topic_and_item.replace(
-                        dyn_event_grp,
-                        DYNALENE_EVENT_GROUP_DICT[dyn_event_grp],
-                    )
-
-                    # Then set the correct payload value.
-                    # There are two types of events in three groups. In all
-                    # cases all MQTT topics in the group are received and each
-                    # one is converted to a generic alarm. Only one of these
-                    # MQTT topics is received at a time but eventually all MQTT
-                    # topics in a group are recevied. In the code only the
-                    # cases where the payload needs to be changed are
-                    # considered, since the others are evident.
-
-                    # The first type has one MQTT topic that ends in "ON" and
-                    # one in "OFF". There are two groups of these events and
-                    # for them the following applies:
-                    # * If ON==True and OFF==False, the alarm state is True.
-                    # * If ON==False and OFF==True, the alarm state is False.
-                    # It is not verifed that if one is True, the other is
-                    # False.
-                    if dyn_event_grp.endswith("OFF") or dyn_event_grp.endswith("ON"):
-                        # The net result is negating the payload of the "OFF"
-                        # MQTT topic.
-                        if dyn_event_grp.endswith("OFF") and payload is False:
-                            payload = True
-                        elif dyn_event_grp.endswith("OFF") and payload is True:
-                            payload = False
-
-                    # The second type has three MQTT topics, one for each alarm
-                    # level of OK, Warning and Alarm. At a given time only one
-                    # of the three should be True and the other two False. This
-                    # is not verified.
-                    else:
-                        if dyn_event_grp.endswith("OK") and payload is True:
-                            payload = DynaleneTankLevel.OK.value
-                        elif dyn_event_grp.endswith("Warning") and payload is True:
-                            payload = DynaleneTankLevel.Warning.value
-                        else:
-                            payload = DynaleneTankLevel.Alarm.value
-                    break
-
             # Some Dynalene topics need to be emitted as events rather than as
             # telemetry. This next if statement takes care of that.
-            if topic_and_item in EVENT_TOPIC_DICT_ENGLISH:
-                event_name = EVENT_TOPIC_DICT_ENGLISH[topic_and_item]["event"]
+            if topic_and_item in self.xml.event_topics:
+                event_name = self.xml.event_topics[topic_and_item]["event"]
                 event = getattr(self, event_name)
                 await event.set_write(state=int(payload))
                 continue
@@ -516,32 +485,20 @@ class HvacCsc(salobj.BaseCsc):
                 self.log.debug(f"Translating {payload=!s} to True.")
                 payload = True
             if topic_and_item in TOPICS_WITH_DATA_IN_BAR:
-                self.log.debug(f"Converting {topic_and_item} from bar to Pa.")
                 payload = bar_to_pa(float(payload))
             if topic_and_item in TOPICS_WITH_DATA_IN_CO2_PPM:
-                self.log.debug(f"Converting {topic_and_item} from CO2 ppm to mg/m3.")
                 payload = co2_ppm_to_mg_per_cubic_meter(float(payload))
             if topic_and_item in TOPICS_WITH_DATA_IN_PSI:
-                self.log.debug(f"Converting {topic_and_item} from PSI to Pa.")
                 payload = psi_to_pa(float(payload))
 
             item_state.recent_values.append(payload)
-
-        for hvac_topic in HvacTopicEnglish:  # type: ignore
-            event_name = f"evt_{hvac_topic.name}"
-            event = getattr(self, event_name, None)  # type: ignore
-            if event:
-                if event_name in self.event_data:
-                    self.log.debug(f"Writing {event_name=} with data {self.event_data[event_name]}.")
-                    await event.set_write(**self.event_data[event_name])
-                else:
-                    logging.warning(f"No data for {event_name=}.")
 
         self.log.debug("Done.")
 
     async def publish_telemetry(self) -> None:
         await self._handle_mqtt_messages()
         await self._send_telemetry()
+        await self._send_events()
 
     async def _publish_telemetry_regularly(self) -> None:
         try:

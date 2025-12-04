@@ -25,7 +25,9 @@ ospl-info.log
 python/lsst/ts/hvac/data/output/
 
 .idea/
-.pre-commit-config.yaml
+.flake8
+.isort.cfg
 .mypy.ini
+.pre-commit-config.yaml
 .ruff.toml
 towncrier.toml

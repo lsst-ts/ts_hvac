@@ -22,12 +22,10 @@
 __all__ = [
     "DEVICE_GROUPS_ENGLISH",
     "DYNALENE_COMMAND_ITEMS_ENGLISH",
-    "DYNALENE_EVENT_GROUP_DICT",
-    "DYNALENE_EVENT_TOPICS",
-    "EVENT_TOPICS",
-    "EVENT_TOPIC_DICT_ENGLISH",
+    "EVENT_TOPIC_ITEMS",
     "GLYCOL_SENSORS_LEVELS",
     "STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON",
+    "TELEMETRY_TOPICS",
     "TOPICS_ALWAYS_ENABLED",
     "TOPICS_WITH_DATA_IN_BAR",
     "TOPICS_WITH_DATA_IN_CO2_PPM",
@@ -35,7 +33,10 @@ __all__ = [
     "TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH",
     "TOPICS_WITHOUT_CONFIGURATION",
     "TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO",
+    "TOPICS_WITHOUT_EVENTS",
+    "TOPICS_WITHOUT_TELEMETRY",
     "CommandItemEnglish",
+    "DynaleneEventTopic",
     "DeviceIndex",
     "EventItem",
     "HvacTopicEnglish",
@@ -47,7 +48,7 @@ __all__ = [
 
 from enum import Enum, StrEnum
 
-from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel
+from lsst.ts.xml.enums.HVAC import DeviceId
 
 # These topics are always enabled because there are no MQTT commands to enable
 # or disable them.
@@ -73,6 +74,9 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO02/VALVULA",
         "LSST/PISO01/COMPAIR_01",
         "LSST/PISO01/COMPAIR_02",
+        "LSST/PISO05/DYNALENE/Safeties",
+        "LSST/PISO05/DYNALENE/Status",
+        "LSST/PISO05/DYNALENE/DynaleneState",
     )
 )
 
@@ -100,6 +104,50 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO01/VIN_01",
         "LSST/PISO01/COMPAIR_01",
         "LSST/PISO01/COMPAIR_02",
+        "LSST/PISO05/DYNALENE/Safeties",
+        "LSST/PISO05/DYNALENE/DynaleneState",
+        "LSST/PISO05/DYNALENE/Status",
+    )
+)
+
+
+# These topics don't have event items.
+TOPICS_WITHOUT_EVENTS = frozenset(
+    (
+        "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO02/VALVULA",
+        "LSST/PISO01/COMPAIR_01",
+        "LSST/PISO01/COMPAIR_02",
+        "LSST/PISO05/DYNALENE",
+        "LSST/PISO01/GENERAL",
+        "LSST/PISO01/SENSOR_GLYCOL",
+        "LSST/PISO01/VALVULA",
+        "LSST/PISO01/VEA_01",
+        "LSST/PISO05/VEA_01",
+        "LSST/PISO05/VEA_08",
+        "LSST/PISO05/VEA_09",
+        "LSST/PISO05/VEA_10",
+        "LSST/PISO05/VEA_11",
+        "LSST/PISO05/VEA_12",
+        "LSST/PISO05/VEA_13",
+        "LSST/PISO05/VEA_14",
+        "LSST/PISO05/VEA_15",
+        "LSST/PISO05/VEA_16",
+        "LSST/PISO05/VEA_17",
+        "LSST/PISO01/VEC_01",
+        "LSST/PISO01/VIN_01",
+        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
+        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+    )
+)
+
+
+# These topics don't have telemetry items.
+TOPICS_WITHOUT_TELEMETRY = frozenset(
+    (
+        "LSST/PISO05/DYNALENE/Safeties",
+        "LSST/PISO05/DYNALENE/DynaleneState",
+        "LSST/PISO05/DYNALENE/Status",
     )
 )
 
@@ -118,6 +166,9 @@ class HvacTopicEnglish(Enum):
     compair01 = "LSST/PISO01/COMPAIR_01"
     compair02 = "LSST/PISO01/COMPAIR_02"
     dynaleneP05 = "LSST/PISO05/DYNALENE"
+    dynaleneP05Safeties = "LSST/PISO05/DYNALENE/Safeties"
+    dynaleneP05State = "LSST/PISO05/DYNALENE/DynaleneState"
+    dynaleneP05Status = "LSST/PISO05/DYNALENE/Status"
     fancoil01P02 = "LSST/PISO02/FANCOIL01"
     fancoil02P02 = "LSST/PISO02/FANCOIL02"
     fancoil03P02 = "LSST/PISO02/FANCOIL03"
@@ -157,7 +208,65 @@ class HvacTopicEnglish(Enum):
     loadingBayFan04P04 = "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL"
 
 
-EVENT_TOPICS = [
+TELEMETRY_TOPICS = [
+    HvacTopicEnglish.coldWaterPump01,
+    HvacTopicEnglish.chiller01P01,
+    HvacTopicEnglish.chiller02P01,
+    HvacTopicEnglish.chiller03P01,
+    HvacTopicEnglish.chiller04P01,
+    HvacTopicEnglish.chillerValve,
+    HvacTopicEnglish.crac01P02,
+    HvacTopicEnglish.crac02P02,
+    HvacTopicEnglish.compair01,
+    HvacTopicEnglish.compair02,
+    HvacTopicEnglish.dynaleneP05,
+    HvacTopicEnglish.fancoil01P02,
+    HvacTopicEnglish.fancoil02P02,
+    HvacTopicEnglish.fancoil03P02,
+    HvacTopicEnglish.fancoil04P02,
+    HvacTopicEnglish.fancoil05P02,
+    HvacTopicEnglish.fancoil06P02,
+    HvacTopicEnglish.fancoil07P02,
+    HvacTopicEnglish.fancoil08P02,
+    HvacTopicEnglish.fancoil09P02,
+    HvacTopicEnglish.fancoil10P02,
+    HvacTopicEnglish.fancoil11P02,
+    HvacTopicEnglish.fancoil12P02,
+    HvacTopicEnglish.generalP01,
+    HvacTopicEnglish.glycolSensor,
+    HvacTopicEnglish.lowerAHU01P05,
+    HvacTopicEnglish.lowerAHU02P05,
+    HvacTopicEnglish.lowerAHU03P05,
+    HvacTopicEnglish.lowerAHU04P05,
+    HvacTopicEnglish.whiteRoomAHU01P05,
+    HvacTopicEnglish.cleanRoomAHU01P05,
+    HvacTopicEnglish.valveP01,
+    HvacTopicEnglish.airInletFan01P01,
+    HvacTopicEnglish.airInletFan01P05,
+    HvacTopicEnglish.airInletFan08P05,
+    HvacTopicEnglish.airInletFan09P05,
+    HvacTopicEnglish.airInletFan10P05,
+    HvacTopicEnglish.airInletFan11P05,
+    HvacTopicEnglish.airInletFan12P05,
+    HvacTopicEnglish.airInletFan13P05,
+    HvacTopicEnglish.airInletFan14P05,
+    HvacTopicEnglish.airInletFan15P05,
+    HvacTopicEnglish.airInletFan16P05,
+    HvacTopicEnglish.airInletFan17P05,
+    HvacTopicEnglish.centrifugalExtractionFan01P01,
+    HvacTopicEnglish.centrifugalSupplyFan01P01,
+    HvacTopicEnglish.lowerDamperFan03P04,
+    HvacTopicEnglish.loadingBayFan04P04,
+]
+
+
+class DynaleneEventTopic(Enum):
+    dynaleneSafeties = "Safeties"
+    dynaleneState = "DynaleneState"
+    dynaleneStatus = "Status"
+
+
+EVENT_TOPIC_ITEMS = [
     "LSST/PISO01/CHILLER_01/ALARM_DEVICE",
     "LSST/PISO01/CHILLER_01/COMPRESSOR_1_PLUS2P_ENABLED_WHOLE",
     "LSST/PISO01/CHILLER_01/COMPRESSOR_1_PLUS2P_ENABLED_WITH_1_STEP_ACTIVE",
@@ -699,6 +808,37 @@ EVENT_TOPICS = [
     "LSST/PISO02/FANCOIL11/UserFanSpeedSelect",
     "LSST/PISO02/FANCOIL12/Cfg_FanOperationType",
     "LSST/PISO02/FANCOIL12/UserFanSpeedSelect",
+    "LSST/PISO05/DYNALENE/DynaleneState/Initialized",
+    "LSST/PISO05/DYNALENE/DynaleneState/Shutting Down",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powering ON",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powered ON",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powering OFF",
+    "LSST/PISO05/DYNALENE/DynaleneState/Powered OFF",
+    "LSST/PISO05/DYNALENE/DynaleneState/Warning",
+    "LSST/PISO05/DYNALENE/DynaleneState/Alarm",
+    "LSST/PISO05/DYNALENE/DynaleneState/Shutted OFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorON",
+    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorOFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorON",
+    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorOFF",
+    "LSST/PISO05/DYNALENE/Safeties/DynMainGridAlarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynMainGridAlarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynMainGridFailureFlag",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarm",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelWarning",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelOK",
+    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarmCMD",
+    "LSST/PISO05/DYNALENE/Safeties/DynSafetyResetFlag",
+    "LSST/PISO05/DYNALENE/Safeties/DynSysFault",
+    "LSST/PISO05/DYNALENE/Safeties/DynSysWarning",
+    "LSST/PISO05/DYNALENE/Safeties/DynSysOK",
+    "LSST/PISO05/DYNALENE/Status/DynRemoteLocalModeStatus",
+    "LSST/PISO05/DYNALENE/Status/DynAmbientDeltaModeStatus",
+    "LSST/PISO05/DYNALENE/Status/DynExhaustAirBackupModeStatus",
 ]
 
 
@@ -1534,6 +1674,11 @@ class EventItem(Enum):
     dynTAalarmMonitor = "Safeties/DynTAalarmMonitor"
     dynTankLevel = "Safeties/DynTankLevel"
     dynTankLevelAlarmCMD = "Safeties/DynTankLevelAlarmCMD"
+    dynTankLevelAlarm = "Safeties/DynTankLevelAlarm"
+    dynTankLevelWarning = "Safeties/DynTankLevelWarning"
+    dynTankLevelAlarmOK = "Safeties/DynTankLevelOK"
+    dynTAalarmMonitorOn = "Safeties/DynTAalarmMonitorON"
+    dynTAalarmMonitorOff = "Safeties/DynTAalarmMonitorOFF"
     dynTMAalarm = "Safeties/DynTMAalarm"
     dynTMAalarmCMD = "Safeties/DynTMAalarmCMD"
     dynTMAalarmMonitor = "Safeties/DynTMAalarmMonitor"
@@ -1598,29 +1743,6 @@ class EventItem(Enum):
     unitConfigurationStatus2TimeBandsEnabled = "UNIT_CONFIGURATION_STATUS_2_TIME_BANDS_ENABLED"
 
 
-# TODO OSW-1232 Make sure that these event items are in the XML.
-DYNALENE_EVENT_GROUP_DICT = {
-    "DynTAalarmMonitorOFF": "DynTAalarmMonitor",
-    "DynTAalarmMonitorON": "DynTAalarmMonitor",
-    "DynTMAalarmMonitorOFF": "DynTMAalarmMonitor",
-    "DynTMAalarmMonitorON": "DynTMAalarmMonitor",
-    "DynTankLevelAlarm": "DynTankLevel",
-    "DynTankLevelWarning": "DynTankLevel",
-    "DynTankLevelOK": "DynTankLevel",
-}
-
-# TODO OSW-1232 Make sure that these event items are in the XML.
-DYNALENE_EVENT_TOPICS = {
-    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorOFF",
-    "LSST/PISO05/DYNALENE/Safeties/DynTAalarmMonitorON",
-    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorOFF",
-    "LSST/PISO05/DYNALENE/Safeties/DynTMAalarmMonitorON",
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelAlarm",
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelWarning",
-    "LSST/PISO05/DYNALENE/Safeties/DynTankLevelOK",
-}
-
-
 class CommandItemEnglish(Enum):
     switchOn = "COMANDO_ENCENDIDO_LSST"
     openColdValve = "%_APERTURA_VALVULA_FRIO_LSST"
@@ -1667,87 +1789,6 @@ class SalTopicType(StrEnum):
     COMMAND = "Command"
     EVENT = "Event"
 
-
-# These topics cannot be distinguished from telemetry topics in the CSV file,
-# so they get marked here to be emitted as events instead.
-EVENT_TOPIC_DICT_ENGLISH = (
-    {
-        "LSST/PISO05/DYNALENE/Safeties/DynTankLevel": {
-            "topic": HvacTopicEnglish.dynaleneP05.name,
-            "item": TelemetryItemDescription.dynTankLevelAlarm.name.replace("dyn", "dynalene"),
-            "event": f"evt_{TelemetryItemDescription.dynTankLevelAlarm.name.replace('dyn', 'dynalene')}",
-            "type": "enum",
-            "enum": DynaleneTankLevel,
-            "item_description": (
-                f"{TelemetryItemDescription.dynTankLevelAlarm.value.replace(' State.', ' state;')} "
-                f"a DynaleneTankLevel enum."
-            ),
-            "evt_description": f"{TelemetryItemDescription.dynTankLevelAlarm.value}",
-        },
-    }
-    | {
-        f"LSST/PISO05/DYNALENE/Safeties/{dyn_enum.name.replace('dyn', 'Dyn')}": {
-            "topic": HvacTopicEnglish.dynaleneP05.name,
-            "item": dyn_enum.name,
-            "event": f"evt_{dyn_enum.name}",
-            "type": "boolean",
-            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
-            "evt_description": f"{dyn_enum.value}",
-        }
-        for dyn_enum in [
-            TelemetryItemDescription.dynTMAalarm,
-            TelemetryItemDescription.dynTMAalarmCMD,
-            TelemetryItemDescription.dynTMAalarmMonitor,
-            TelemetryItemDescription.dynTAalarm,
-            TelemetryItemDescription.dynTAalarmCMD,
-            TelemetryItemDescription.dynTAalarmMonitor,
-            TelemetryItemDescription.dynMainGridAlarm,
-            TelemetryItemDescription.dynMainGridAlarmCMD,
-            TelemetryItemDescription.dynMainGridFailureFlag,
-            TelemetryItemDescription.dynTankLevelAlarmCMD,
-            TelemetryItemDescription.dynSafetyResetFlag,
-            TelemetryItemDescription.dynSysFault,
-            TelemetryItemDescription.dynSysWarning,
-            TelemetryItemDescription.dynSysOK,
-        ]
-    }
-    | {
-        f"LSST/PISO05/DYNALENE/DynaleneState/{dyn_enum.value}": {
-            "topic": HvacTopicEnglish.dynaleneP05.name,
-            "item": dyn_enum.name,
-            "event": f"evt_{dyn_enum.name}",
-            "type": "boolean",
-            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
-            "evt_description": f"{dyn_enum.value}",
-        }
-        for dyn_enum in [
-            TelemetryItemDescription.dynInitialized,
-            TelemetryItemDescription.dynShuttingDown,
-            TelemetryItemDescription.dynPoweringOn,
-            TelemetryItemDescription.dynPoweredOn,
-            TelemetryItemDescription.dynPoweringOff,
-            TelemetryItemDescription.dynPoweredOff,
-            TelemetryItemDescription.dynWarning,
-            TelemetryItemDescription.dynAlarm,
-            TelemetryItemDescription.dynShutOff,
-        ]
-    }
-    | {
-        f"LSST/PISO05/DYNALENE/Status/{dyn_enum.name.replace('dyn', 'Dyn')}": {
-            "topic": HvacTopicEnglish.dynaleneP05.name,
-            "item": dyn_enum.name,
-            "event": f"evt_{dyn_enum.name}",
-            "type": "boolean",
-            "item_description": f"{dyn_enum.value.replace(' State.', ' state;')} On (true) or Off (false).",
-            "evt_description": f"{dyn_enum.value}",
-        }
-        for dyn_enum in [
-            TelemetryItemDescription.dynRemoteLocalModeStatus,
-            TelemetryItemDescription.dynAmbientDeltaModeStatus,
-            TelemetryItemDescription.dynExhaustAirBackupModeStatus,
-        ]
-    }
-)
 
 # Dict of index: DeviceId, where index is the index of the device in DeviceId.
 # Used to understand the bits in the device_ids field of the deviceEnabled

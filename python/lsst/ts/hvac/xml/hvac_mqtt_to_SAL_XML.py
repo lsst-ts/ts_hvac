@@ -23,16 +23,16 @@ import enum
 import re
 import typing
 
+from lxml import etree
+
 from lsst.ts.hvac.enums import (
     DEVICE_GROUPS_ENGLISH,
-    EVENT_TOPIC_DICT_ENGLISH,
     HvacTopicEnglish,
     TelemetryItemDescription,
 )
 from lsst.ts.hvac.mqtt_info_reader import DATA_DIR, MqttInfoReader
 from lsst.ts.hvac.utils import to_camel_case
 from lsst.ts.xml.enums.HVAC import DeviceId, DynaleneTankLevel, OperatingMode, UnitState
-from lxml import etree
 
 OUTPUT_DIR = DATA_DIR / "output"
 telemetry_filename = OUTPUT_DIR / "HVAC_Telemetry.xml"
@@ -206,11 +206,6 @@ def collect_unique_command_items_per_group(
 
 def _create_telemetry_xml() -> None:
     """Create the Telemetry XML file."""
-    event_topic_dict = EVENT_TOPIC_DICT_ENGLISH
-    # Create a list of topic items that should be events.
-    topic_items_that_should_be_events = [
-        val["item"].replace("dynalene", "dyn") for topic, val in event_topic_dict.items()
-    ]
     for telemetry_topic in xml.telemetry_topics:
         st = etree.SubElement(telemetry_root, "SALTelemetry")
         sub_system = etree.SubElement(st, "Subsystem")
@@ -223,13 +218,10 @@ def _create_telemetry_xml() -> None:
             telemetry_topic_name = "Dynalene"
         description.text = f"Telemetry for the {telemetry_topic_name} device."
         for telemetry_item in xml.telemetry_topics[telemetry_topic]:
-            # Skip if a topic item should be an event.
-            if telemetry_item in topic_items_that_should_be_events:
-                continue
             try:
                 description = TelemetryItemDescription[telemetry_item].value
             except KeyError:
-                description = "WOUTER"
+                description = "KeyError"
                 unknown_telemetry_descriptions.add(telemetry_item)
             _create_item_element(
                 st,
@@ -290,7 +282,7 @@ def _create_command_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             try:
                 description = TelemetryItemDescription[command_item].value
             except KeyError:
-                description = "WOUTER"
+                description = "KeyError"
                 unknown_telemetry_descriptions.add(command_item)
             _create_item_element(
                 st,
@@ -400,7 +392,7 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             try:
                 description = TelemetryItemDescription[command_item].value
             except KeyError:
-                description = "WOUTER"
+                description = "KeyError"
                 unknown_telemetry_descriptions.add(command_item)
             _create_item_element(
                 st,
@@ -430,29 +422,6 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
             dynalene_group[dynalene_item]["idl_type"],
             dynalene_group[dynalene_item]["unit"],
             description,
-            1,
-        )
-
-    event_topic_dict = EVENT_TOPIC_DICT_ENGLISH
-    for event_topic in event_topic_dict:
-        st = etree.SubElement(events_root, "SALEvent")
-        sub_system = etree.SubElement(st, "Subsystem")
-        sub_system.text = "HVAC"
-        efdb_topic = etree.SubElement(st, "EFDB_Topic")
-        efdb_topic.text = f"HVAC_logevent_{event_topic_dict[event_topic]['item']}"
-        description = etree.SubElement(st, "Description")
-        description.text = event_topic_dict[event_topic]["evt_description"]
-        _create_item_element(
-            st,
-            event_topic,
-            "state",
-            (
-                "int"
-                if event_topic_dict[event_topic]["type"] == "enum"
-                else event_topic_dict[event_topic]["type"]
-            ),
-            "unitless",
-            event_topic_dict[event_topic]["item_description"],
             1,
         )
 

@@ -29,7 +29,8 @@ import typing
 from collections import deque
 
 import paho.mqtt.client as mqtt
-from lsst.ts.hvac.enums import EVENT_TOPIC_DICT_ENGLISH, TOPICS_ALWAYS_ENABLED
+
+from lsst.ts.hvac.enums import TOPICS_ALWAYS_ENABLED, CommandItemEnglish, HvacTopicEnglish
 
 from ..base_mqtt_client import BaseMqttClient
 from ..mqtt_info_reader import MqttInfoReader
@@ -48,7 +49,7 @@ class SimClient(BaseMqttClient):
     def __init__(self, log: logging.Logger, start_publish_telemetry_every_second: bool = True) -> None:
         super().__init__(log)
         self.hvac_topics: dict[str, typing.Any] = {}
-        self.telemetry_task: typing.Optional[asyncio.Task] = None
+        self.telemetry_task: asyncio.Task | None = None
         self.connected = False
 
         # Holds the incoming messages so the CSC can take them from the Queue.
@@ -72,6 +73,18 @@ class SimClient(BaseMqttClient):
 
     async def connect(self) -> None:
         """Start publishing telemetry."""
+        # Set default values for all config items.
+        command_topics = self.xml.command_topics
+        for command_topic in command_topics:
+            hvac_topic = HvacTopicEnglish[command_topic]
+            items = command_topics[command_topic]
+            for item in items:
+                item_info = items[item]
+                command_item = CommandItemEnglish[item]
+                self.configuration_values[f"{hvac_topic.value}/{command_item.value}"] = (
+                    True if item_info["idl_type"] == "bool" else 0.0
+                )
+
         self.hvac_topics = self.xml.hvac_topics
         self._collect_topics()
 
@@ -208,11 +221,11 @@ class SimClient(BaseMqttClient):
             idl_type = self.hvac_topics[hvac_topic]["idl_type"]
             limits = self.hvac_topics[hvac_topic]["limits"]
             value = None
-            if hvac_topic in EVENT_TOPIC_DICT_ENGLISH:
+            if hvac_topic in self.xml.event_topics:
                 # Some Dynalene topics need to be emitted as events instead of
                 # telemetry. Some have an enum value, others a boolean value.
-                if EVENT_TOPIC_DICT_ENGLISH[hvac_topic]["type"] == "enum":
-                    enum = EVENT_TOPIC_DICT_ENGLISH[hvac_topic]["enum"]
+                if self.xml.event_topics[hvac_topic]["type"] == "enum":
+                    enum = self.xml.event_topics[hvac_topic]["enum"]
                     value = random.choice(list(enum))
                 else:
                     value = True

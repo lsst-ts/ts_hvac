@@ -183,8 +183,8 @@ def parse_limits(limits_string: str) -> typing.Tuple[int | float, int | float]:
     # This match looks for known units in the limits string which helps to
     # reveal copy/paste errors in the CSV file.
     match = re.match(
-        r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a |Hr a | LPM a | PSI a | KW a | ?ppm a | Co2 a )(-?\d+)"
-        r"( ?%| ?°C| bar| hr|%RH|Hr| LPM| PSI| KW| ppm| Hz| Co2)?$",
+        r"^(-?\d+)(/| a | ?% a |°C a | bar a |%RH a |Hr a | LPM a | PSI a | KW a | ?ppm a | Co2 a | ?Hz a )"
+        r"(-?\d+)( ?%| ?°C| bar| hr|%RH|Hr| LPM| PSI| KW| ppm| ?Hz| Co2)?$",
         limits_string,
     )
     # This match is used for limit strings like "1,2,3,4,5".
@@ -199,7 +199,7 @@ def parse_limits(limits_string: str) -> typing.Tuple[int | float, int | float]:
     elif "a" not in limits_string and "-1" not in limits_string and all_numbers_matches:
         lower_limit = int(all_numbers_matches[0])
         upper_limit = int(all_numbers_matches[-1])
-    elif limits_string in ["true o false", "-", "-1", ""]:
+    elif limits_string in ["true o false", "-", "-1", "", "MODBUS (o) ANALOGICO", "ENCENDIDO (o) APAGADO"]:
         # ignore because there really are no lower and upper limits
         pass
     else:

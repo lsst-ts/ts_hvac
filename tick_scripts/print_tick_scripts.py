@@ -10,9 +10,9 @@ var groupBy = []
 var whereFilter = lambda: {where}
 var name = 'HVAC {name} Alarm'
 var idVar = name
-var message = '{{ if eq .Level "OK" }}Summit EFD HVAC {name} is back to normal.{{ else }}Summit EFD HVAC
-{name} alarm. <PUT SLACK USER IDS HERE> please check.
-{{ end }}'
+var message = '{{{{ if eq .Level "OK" }}}}Summit EFD HVAC {name} is back to normal.{{{{ else }}}}Summit EFD
+HVAC {name} alarm. The monitored values are {monitored_values}.
+<PUT SLACK USER IDS HERE> please check.{{{{ end }}}}'
 var idTag = 'alertID'
 var levelTag = 'level'
 var messageField = 'message'
@@ -40,7 +40,6 @@ var trigger = data
         .levelTag(levelTag)
         .messageField(messageField)
         .durationField(durationField)
-        .stateChangesOnly()
         .post('<PUT SQUADCAST URL HERE>')
         .slack()
         .workspace('HVAC-alerts')
@@ -80,6 +79,7 @@ for topic in topics_with_alarms:
     crit_items = [f'"{item}" == TRUE' for item in items]
     eval_items = [f'lambda: bool("{item}")' for item in items]
     as_items = [f"{item!r}" for item in items]
+    monitored_values = [f'{item}={{{{ index .Fields "{item}" }}}}' for item in items]
     print(
         tick_script_template.format(
             topic=efd_topic,
@@ -88,5 +88,6 @@ for topic in topics_with_alarms:
             name=efd_topic,
             eval=", ".join(eval_items),
             as_str=", ".join(as_items),
+            monitored_values=", ".join(monitored_values),
         )
     )

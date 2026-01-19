@@ -21,12 +21,23 @@
 
 import unittest
 
-from lsst.ts.hvac.mqtt_info_reader import MqttInfoReader
+from lsst.ts import hvac
 
 
 class MqttInfoReaderTestCase(unittest.TestCase):
+    def test_mqtt_info_reader(self) -> None:
+        mir = hvac.MqttInfoReader()
+
+        for topic in hvac.HvacTopicEnglish:
+            if topic.value not in hvac.TOPICS_WITHOUT_TELEMETRY and topic.name not in mir.telemetry_topics:
+                self.fail(f"Missing telemetry {topic.name}")
+            if topic.value not in hvac.TOPICS_ALWAYS_ENABLED and topic.name not in mir.command_topics:
+                self.fail(f"Missing command {topic.name}")
+            if topic.value not in hvac.TOPICS_WITHOUT_EVENTS and topic.name not in mir.event_topics:
+                self.fail(f"Missing event {topic.name}")
+
     def test_extract_topic_and_item(self) -> None:
-        mir = MqttInfoReader()
+        mir = hvac.MqttInfoReader()
         topic_and_item = "LSST/PISO01/CHILLER_01/TEMPERATURA_AGUA_RETORNO_EVAPORADOR"
         topic, item, _ = mir.extract_topic_and_item(topic_and_item)
         self.assertEqual("LSST/PISO01/CHILLER_01", topic)

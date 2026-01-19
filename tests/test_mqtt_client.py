@@ -25,6 +25,7 @@ import unittest
 from unittest import mock
 
 import paho.mqtt.client as mqtt
+
 from lsst.ts.hvac import MqttClient
 
 

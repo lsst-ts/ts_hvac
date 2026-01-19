@@ -25,10 +25,12 @@ import typing
 import unittest
 
 import hvac_test_utils
+
 import lsst.ts.hvac.simulator.sim_client as sim_client
 from lsst.ts.hvac.enums import (
     TOPICS_ALWAYS_ENABLED,
     TOPICS_WITHOUT_CONFIGURATION,
+    TOPICS_WITHOUT_TELEMETRY,
     CommandItemEnglish,
     HvacTopicEnglish,
 )
@@ -134,6 +136,8 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertIn(topic, mqtt_state)
         variables = mqtt_state[topic]
         for var in variables:
+            if var not in expected_state:
+                continue
             data = mqtt_state[topic][var]
             expected_data = expected_state[var]
             if isinstance(expected_data, bool):
@@ -240,6 +244,9 @@ class SimClientTestCase(unittest.IsolatedAsyncioTestCase):
         """
         topics = self.xml.get_generic_hvac_topics()
         for topic in topics:
+            if topic in TOPICS_WITHOUT_TELEMETRY:
+                continue
+
             if topic not in TOPICS_ALWAYS_ENABLED:
                 self.verify_topic_disabled(topic)
                 await self.enable_topic(topic)

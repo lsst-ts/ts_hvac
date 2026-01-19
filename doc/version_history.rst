@@ -8,6 +8,29 @@ Version History
 
 .. towncrier release notes start
 
+v0.20.0 (2026-01-19)
+====================
+
+Bug Fixes
+---------
+
+- Restored Dynalene events. (`OSW-1232 <https://rubinobs.atlassian.net//browse/OSW-1232>`_)
+
+
+Performance Enhancement
+-----------------------
+
+- Improved TICKscripts slack messages. (`OSW-1396 <https://rubinobs.atlassian.net//browse/OSW-1396>`_)
+- Avoided superfluous warning messages. (`OSW-1500 <https://rubinobs.atlassian.net//browse/OSW-1500>`_)
+- Added new telemetry and updated enums. (`OSW-1703 <https://rubinobs.atlassian.net//browse/OSW-1703>`_)
+
+
+Other Changes and Additions
+---------------------------
+
+- Fixed the documentation build. (`OSW-1703 <https://rubinobs.atlassian.net//browse/OSW-1703>`_)
+
+
 v0.19.2 (2025-10-17)
 ====================
 

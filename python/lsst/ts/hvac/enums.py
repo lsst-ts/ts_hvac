@@ -55,10 +55,14 @@ from lsst.ts.xml.enums.HVAC import DeviceId
 TOPICS_ALWAYS_ENABLED = frozenset(
     (
         "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/BOMBA_EMERGENCIA",
+        "LSST/PISO01/COMPAIR_01",
+        "LSST/PISO01/COMPAIR_02",
         "LSST/PISO01/GENERAL",
+        "LSST/PISO01/ROTORK_01",
+        "LSST/PISO01/ROTORK_02",
         "LSST/PISO01/SENSOR_GLYCOL",
         "LSST/PISO01/VALVULA",
-        "LSST/PISO05/DYNALENE",
         "LSST/PISO02/FANCOIL01",
         "LSST/PISO02/FANCOIL02",
         "LSST/PISO02/FANCOIL03",
@@ -72,8 +76,7 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO02/FANCOIL11",
         "LSST/PISO02/FANCOIL12",
         "LSST/PISO02/VALVULA",
-        "LSST/PISO01/COMPAIR_01",
-        "LSST/PISO01/COMPAIR_02",
+        "LSST/PISO05/DYNALENE",
         "LSST/PISO05/DYNALENE/Safeties",
         "LSST/PISO05/DYNALENE/Status",
         "LSST/PISO05/DYNALENE/DynaleneState",
@@ -84,11 +87,17 @@ TOPICS_ALWAYS_ENABLED = frozenset(
 TOPICS_WITHOUT_CONFIGURATION = frozenset(
     (
         "LSST/PISO01/BOMBA_AGUA_FRIA",
+        "LSST/PISO01/BOMBA_EMERGENCIA",
+        "LSST/PISO01/COMPAIR_01",
+        "LSST/PISO01/COMPAIR_02",
         "LSST/PISO01/GENERAL",
+        "LSST/PISO01/ROTORK_01",
+        "LSST/PISO01/ROTORK_02",
         "LSST/PISO01/SENSOR_GLYCOL",
         "LSST/PISO01/VALVULA",
+        "LSST/PISO01/VEC_01",
+        "LSST/PISO01/VIN_01",
         "LSST/PISO01/VEA_01",
-        "LSST/PISO05/DYNALENE",
         "LSST/PISO05/VEA_01",
         "LSST/PISO05/VEA_08",
         "LSST/PISO05/VEA_09",
@@ -100,10 +109,7 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO05/VEA_15",
         "LSST/PISO05/VEA_16",
         "LSST/PISO05/VEA_17",
-        "LSST/PISO01/VEC_01",
-        "LSST/PISO01/VIN_01",
-        "LSST/PISO01/COMPAIR_01",
-        "LSST/PISO01/COMPAIR_02",
+        "LSST/PISO05/DYNALENE",
         "LSST/PISO05/DYNALENE/Safeties",
         "LSST/PISO05/DYNALENE/DynaleneState",
         "LSST/PISO05/DYNALENE/Status",
@@ -115,14 +121,21 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
 TOPICS_WITHOUT_EVENTS = frozenset(
     (
         "LSST/PISO01/BOMBA_AGUA_FRIA",
-        "LSST/PISO02/VALVULA",
+        "LSST/PISO01/BOMBA_EMERGENCIA",
         "LSST/PISO01/COMPAIR_01",
         "LSST/PISO01/COMPAIR_02",
-        "LSST/PISO05/DYNALENE",
         "LSST/PISO01/GENERAL",
+        "LSST/PISO01/ROTORK_01",
+        "LSST/PISO01/ROTORK_02",
         "LSST/PISO01/SENSOR_GLYCOL",
         "LSST/PISO01/VALVULA",
+        "LSST/PISO01/VEC_01",
+        "LSST/PISO01/VIN_01",
         "LSST/PISO01/VEA_01",
+        "LSST/PISO02/VALVULA",
+        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
+        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+        "LSST/PISO05/DYNALENE",
         "LSST/PISO05/VEA_01",
         "LSST/PISO05/VEA_08",
         "LSST/PISO05/VEA_09",
@@ -134,10 +147,6 @@ TOPICS_WITHOUT_EVENTS = frozenset(
         "LSST/PISO05/VEA_15",
         "LSST/PISO05/VEA_16",
         "LSST/PISO05/VEA_17",
-        "LSST/PISO01/VEC_01",
-        "LSST/PISO01/VIN_01",
-        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
-        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
     )
 )
 
@@ -206,6 +215,9 @@ class HvacTopicEnglish(Enum):
     centrifugalSupplyFan01P01 = "LSST/PISO01/VIN_01"
     lowerDamperFan03P04 = "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL"
     loadingBayFan04P04 = "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL"
+    rotork01P01 = "LSST/PISO01/ROTORK_01"
+    rotork02P01 = "LSST/PISO01/ROTORK_02"
+    emergencyPumpP01 = "LSST/PISO01/BOMBA_EMERGENCIA"
 
 
 TELEMETRY_TOPICS = [
@@ -864,6 +876,7 @@ class TelemetryItemEnglish(Enum):
     comfortSupplyFlowFloor02 = "COMFORT/INY_FLOW_PISO_2"
     comfortSupplyPressFloor02 = "COMFORT/INY_PRESS_PISO_2"
     comfortSupplyTempFloor02 = "COMFORT/INY_TEMP_PISO_2"
+    communicationMode = "MODO_COMUNICACION"
     compressor01Alarm = "COMPRESOR_01_ALARMADO"
     compressor01Hours = "HORAS_COMPRESOR_01"
     compressor01Plus2pEnabledWhole = "COMPRESSOR_1_PLUS2P_ENABLED_WHOLE"
@@ -958,6 +971,7 @@ class TelemetryItemEnglish(Enum):
     fanDemand = "FanDemand"
     fanState = "ESTADO_VENTILADOR"
     faultDevice = "FAULT_DEVICE"
+    feedback = "FEEDBACK"
     filterAlarm = "ALARMA_FILTRO"
     generalAlarm = "ALARMA_GENERAL"
     groupVolume = "Volume, Group"
@@ -982,6 +996,7 @@ class TelemetryItemEnglish(Enum):
     lowestServiceCounter = "Lowest Service Counter"
     maxFanSetpoint = "SETPOINT_VENTILADOR_MAX"
     mediumFanContact = "FanContactMed"
+    modulationFeedback = "FEEDBACK_MODULACION"
     motor1Speed = "Speed, Motor 1"
     motor2Speed = "Speed, Motor 2"
     motorCurrent = "Current,motor"
@@ -1212,6 +1227,7 @@ class TelemetryItemDescription(Enum):
     chiller04 = "Chiller 04."
     closeAperture = "Close the aperture."
     coldValveOpening = "Cold Valve Opening Percentage."
+    communicationMode = "Communication Mode (Modbus or Analog)."
     comfortRetPressFloor02 = "Comfort return pressure on floor 2."
     comfortRetTempFloor02 = "Comfort return temperature on floor 2."
     comfortSupplyFlowFloor02 = "Comfort supply flow on floor 2."
@@ -1312,6 +1328,7 @@ class TelemetryItemDescription(Enum):
     fanDemand = "Fan Demand."
     fanState = "Fan State - a UnitState enum."
     faultDevice = "Device Fault."
+    feedback = "Feedback (between 50 and 100%)."
     filterAlarm = "Filter Alarm."
     generalAlarm = "General Alarm."
     groupVolume = "Group volume."
@@ -1336,6 +1353,7 @@ class TelemetryItemDescription(Enum):
     lowFanContact = "Low fan contact mode set?"
     maxFanSetpoint = "Max Fan Setpoint."
     mediumFanContact = "Medium fan contact mode set?"
+    modulationFeedback = "Modulation Feedback (between 20 and 60 Hz)."
     motor1Speed = "Motor 1 speed."
     motor2Speed = "Motor 2 speed."
     motorCurrent = "Motor current."

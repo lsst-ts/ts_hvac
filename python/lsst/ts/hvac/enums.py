@@ -1227,7 +1227,7 @@ class TelemetryItemDescription(Enum):
     chiller04 = "Chiller 04."
     closeAperture = "Close the aperture."
     coldValveOpening = "Cold Valve Opening Percentage."
-    communicationMode = "Communication Mode (Modbus or Analog)."
+    communicationMode = "Communication Mode (Modbus==True or Analog==False)."
     comfortRetPressFloor02 = "Comfort return pressure on floor 2."
     comfortRetTempFloor02 = "Comfort return temperature on floor 2."
     comfortSupplyFlowFloor02 = "Comfort supply flow on floor 2."

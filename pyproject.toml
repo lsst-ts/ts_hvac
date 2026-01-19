@@ -7,7 +7,7 @@ name = "ts_hvac"
 description = "Interface to control the HVAC system."
 license = { text = "GPL" }
 classifiers = ["Programming Language :: Python :: 3"]
-urls = { documentation = "https://ts-hvac.lsst.io", repository = "https://github.com/lsst-ts/ts_hvac" }
+urls = { documentation = "https://ts-hvac.lsst.io", source_code = "https://github.com/lsst-ts/ts_hvac" }
 dynamic = ["version"]
 dependencies = ["paho-mqtt", "pandas", "lxml"]
 

@@ -8,7 +8,7 @@ Version History
 
 .. towncrier release notes start
 
-v0.20.0 (2026-01-19)
+v0.20.0 (2026-01-20)
 ====================
 
 Bug Fixes

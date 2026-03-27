@@ -62,7 +62,6 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO01/ROTORK_01",
         "LSST/PISO01/ROTORK_02",
         "LSST/PISO01/SENSOR_GLYCOL",
-        "LSST/PISO01/VALVULA",
         "LSST/PISO02/FANCOIL01",
         "LSST/PISO02/FANCOIL02",
         "LSST/PISO02/FANCOIL03",
@@ -94,7 +93,6 @@ TOPICS_WITHOUT_CONFIGURATION = frozenset(
         "LSST/PISO01/ROTORK_01",
         "LSST/PISO01/ROTORK_02",
         "LSST/PISO01/SENSOR_GLYCOL",
-        "LSST/PISO01/VALVULA",
         "LSST/PISO01/VEC_01",
         "LSST/PISO01/VIN_01",
         "LSST/PISO01/VEA_01",
@@ -128,13 +126,12 @@ TOPICS_WITHOUT_EVENTS = frozenset(
         "LSST/PISO01/ROTORK_01",
         "LSST/PISO01/ROTORK_02",
         "LSST/PISO01/SENSOR_GLYCOL",
-        "LSST/PISO01/VALVULA",
         "LSST/PISO01/VEC_01",
         "LSST/PISO01/VIN_01",
         "LSST/PISO01/VEA_01",
         "LSST/PISO02/VALVULA",
-        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
-        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+        "LSST/PISO04/VEC_03/MONTACARGA/GENERAL",
+        "LSST/PISO04/VEC_04/DOMO/GENERAL",
         "LSST/PISO05/DYNALENE",
         "LSST/PISO05/VEA_01",
         "LSST/PISO05/VEA_08",
@@ -164,111 +161,109 @@ TOPICS_WITHOUT_TELEMETRY = frozenset(
 class HvacTopicEnglish(Enum):
     """English HVAC topic names."""
 
-    coldWaterPump01 = "LSST/PISO01/BOMBA_AGUA_FRIA"
-    chiller01P01 = "LSST/PISO01/CHILLER_01"
-    chiller02P01 = "LSST/PISO01/CHILLER_02"
-    chiller03P01 = "LSST/PISO01/CHILLER_03"
-    chiller04P01 = "LSST/PISO01/CHILLER_04"
-    chillerValve = "LSST/PISO02/VALVULA"
-    crac01P02 = "LSST/PISO02/CRACK01"
-    crac02P02 = "LSST/PISO02/CRACK02"
-    compair01 = "LSST/PISO01/COMPAIR_01"
-    compair02 = "LSST/PISO01/COMPAIR_02"
-    dynaleneP05 = "LSST/PISO05/DYNALENE"
-    dynaleneP05Safeties = "LSST/PISO05/DYNALENE/Safeties"
-    dynaleneP05State = "LSST/PISO05/DYNALENE/DynaleneState"
-    dynaleneP05Status = "LSST/PISO05/DYNALENE/Status"
-    fancoil01P02 = "LSST/PISO02/FANCOIL01"
-    fancoil02P02 = "LSST/PISO02/FANCOIL02"
-    fancoil03P02 = "LSST/PISO02/FANCOIL03"
-    fancoil04P02 = "LSST/PISO02/FANCOIL04"
-    fancoil05P02 = "LSST/PISO02/FANCOIL05"
-    fancoil06P02 = "LSST/PISO02/FANCOIL06"
-    fancoil07P02 = "LSST/PISO02/FANCOIL07"
-    fancoil08P02 = "LSST/PISO02/FANCOIL08"
-    fancoil09P02 = "LSST/PISO02/FANCOIL09"
-    fancoil10P02 = "LSST/PISO02/FANCOIL10"
-    fancoil11P02 = "LSST/PISO02/FANCOIL11"
-    fancoil12P02 = "LSST/PISO02/FANCOIL12"
-    generalP01 = "LSST/PISO01/GENERAL"
-    glycolSensor = "LSST/PISO01/SENSOR_GLYCOL"
-    lowerAHU01P05 = "LSST/PISO05/MANEJADORA/LOWER_01"
-    lowerAHU02P05 = "LSST/PISO05/MANEJADORA/LOWER_02"
-    lowerAHU03P05 = "LSST/PISO05/MANEJADORA/LOWER_03"
-    lowerAHU04P05 = "LSST/PISO05/MANEJADORA/LOWER_04"
-    whiteRoomAHU01P05 = "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA"
-    cleanRoomAHU01P05 = "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA"
-    valveP01 = "LSST/PISO01/VALVULA"
-    airInletFan01P01 = "LSST/PISO01/VEA_01"
-    airInletFan01P05 = "LSST/PISO05/VEA_01"
-    airInletFan08P05 = "LSST/PISO05/VEA_08"
-    airInletFan09P05 = "LSST/PISO05/VEA_09"
-    airInletFan10P05 = "LSST/PISO05/VEA_10"
-    airInletFan11P05 = "LSST/PISO05/VEA_11"
-    airInletFan12P05 = "LSST/PISO05/VEA_12"
-    airInletFan13P05 = "LSST/PISO05/VEA_13"
-    airInletFan14P05 = "LSST/PISO05/VEA_14"
-    airInletFan15P05 = "LSST/PISO05/VEA_15"
-    airInletFan16P05 = "LSST/PISO05/VEA_16"
-    airInletFan17P05 = "LSST/PISO05/VEA_17"
-    centrifugalExtractionFan01P01 = "LSST/PISO01/VEC_01"
-    centrifugalSupplyFan01P01 = "LSST/PISO01/VIN_01"
-    lowerDamperFan03P04 = "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL"
-    loadingBayFan04P04 = "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL"
-    rotork01P01 = "LSST/PISO01/ROTORK_01"
-    rotork02P01 = "LSST/PISO01/ROTORK_02"
-    emergencyPumpP01 = "LSST/PISO01/BOMBA_EMERGENCIA"
+    glycolChiller03BoosterPump = "LSST/PISO01/BOMBA_AGUA_FRIA"
+    coldGlycolChiller01 = "LSST/PISO01/CHILLER_01"
+    coldGlycolChiller02 = "LSST/PISO01/CHILLER_02"
+    comfortGlycolChiller03 = "LSST/PISO01/CHILLER_03"
+    coatingGlycolChiller04 = "LSST/PISO01/CHILLER_04"
+    comfortGlycolSwitchValvesComputerRoom = "LSST/PISO02/VALVULA"
+    crac01 = "LSST/PISO02/CRACK01"
+    crac02 = "LSST/PISO02/CRACK02"
+    airCompressor01 = "LSST/PISO01/COMPAIR_01"
+    airCompressor02 = "LSST/PISO01/COMPAIR_02"
+    dynalene = "LSST/PISO05/DYNALENE"
+    dynaleneSafeties = "LSST/PISO05/DYNALENE/Safeties"
+    dynaleneState = "LSST/PISO05/DYNALENE/DynaleneState"
+    dynaleneStatus = "LSST/PISO05/DYNALENE/Status"
+    fancoilUnit01ITOffice = "LSST/PISO02/FANCOIL01"
+    fancoilUnit02BreakRoom = "LSST/PISO02/FANCOIL02"
+    fancoilUnit03ControlRoom = "LSST/PISO02/FANCOIL03"
+    fancoilUnit04ControlRoom = "LSST/PISO02/FANCOIL04"
+    fancoilUnit05ControlRoom = "LSST/PISO02/FANCOIL05"
+    fancoilUnit06ManagersOffice = "LSST/PISO02/FANCOIL06"
+    fancoilUnit07SafetyOffice = "LSST/PISO02/FANCOIL07"
+    fancoilUnit08ElectricalOffice = "LSST/PISO02/FANCOIL08"
+    fancoilUnit09MeetingRoom = "LSST/PISO02/FANCOIL09"
+    fancoilUnit10WorkRoom = "LSST/PISO02/FANCOIL10"
+    fancoilUnit11WorkRoom = "LSST/PISO02/FANCOIL11"
+    fancoilUnit12CoatingOffice = "LSST/PISO02/FANCOIL12"
+    ambientFloor1 = "LSST/PISO01/GENERAL"
+    glycolLineSensors = "LSST/PISO01/SENSOR_GLYCOL"
+    airHandlingUnit01Dome = "LSST/PISO05/MANEJADORA/LOWER_01"
+    airHandlingUnit02Dome = "LSST/PISO05/MANEJADORA/LOWER_02"
+    airHandlingUnit03Dome = "LSST/PISO05/MANEJADORA/LOWER_03"
+    airHandlingUnit04Dome = "LSST/PISO05/MANEJADORA/LOWER_04"
+    airHandlingUnit05WhiteRoom = "LSST/PISO04/MANEJADORA/GENERAL/SBLANCA"
+    airHandlingUnit06CleanRoom = "LSST/PISO04/MANEJADORA/GENERAL/SLIMPIA"
+    airCirculationFan01ElectricalRoom = "LSST/PISO01/VEA_01"
+    airCirculationFan01Lab = "LSST/PISO05/VEA_01"
+    airCirculationFan08Pier = "LSST/PISO05/VEA_08"
+    airCirculationFan09Pier = "LSST/PISO05/VEA_09"
+    airCirculationFan10Pier = "LSST/PISO05/VEA_10"
+    airCirculationFan11Pier = "LSST/PISO05/VEA_11"
+    airCirculationFan12Pier = "LSST/PISO05/VEA_12"
+    airCirculationFan13Pier = "LSST/PISO05/VEA_13"
+    airCirculationFan14Pier = "LSST/PISO05/VEA_14"
+    airCirculationFan15Pier = "LSST/PISO05/VEA_15"
+    airCirculationFan16Lab = "LSST/PISO05/VEA_16"
+    airCirculationFan17Lab = "LSST/PISO05/VEA_17"
+    airExtractionFan01MRCR = "LSST/PISO01/VEC_01"
+    airIntakeFan01MainBuilding = "LSST/PISO01/VIN_01"
+    airExtractionFan03HighBay = "LSST/PISO04/VEC_03/MONTACARGA/GENERAL"
+    airExtractionFan04Dome = "LSST/PISO04/VEC_04/DOMO/GENERAL"
+    glycolChiller03SwitchValves01 = "LSST/PISO01/ROTORK_01"
+    glycolChiller03SwitchValves02 = "LSST/PISO01/ROTORK_02"
+    coldGlycolRecirculationPump = "LSST/PISO01/BOMBA_EMERGENCIA"
 
 
 TELEMETRY_TOPICS = [
-    HvacTopicEnglish.coldWaterPump01,
-    HvacTopicEnglish.chiller01P01,
-    HvacTopicEnglish.chiller02P01,
-    HvacTopicEnglish.chiller03P01,
-    HvacTopicEnglish.chiller04P01,
-    HvacTopicEnglish.chillerValve,
-    HvacTopicEnglish.crac01P02,
-    HvacTopicEnglish.crac02P02,
-    HvacTopicEnglish.compair01,
-    HvacTopicEnglish.compair02,
-    HvacTopicEnglish.dynaleneP05,
-    HvacTopicEnglish.fancoil01P02,
-    HvacTopicEnglish.fancoil02P02,
-    HvacTopicEnglish.fancoil03P02,
-    HvacTopicEnglish.fancoil04P02,
-    HvacTopicEnglish.fancoil05P02,
-    HvacTopicEnglish.fancoil06P02,
-    HvacTopicEnglish.fancoil07P02,
-    HvacTopicEnglish.fancoil08P02,
-    HvacTopicEnglish.fancoil09P02,
-    HvacTopicEnglish.fancoil10P02,
-    HvacTopicEnglish.fancoil11P02,
-    HvacTopicEnglish.fancoil12P02,
-    HvacTopicEnglish.generalP01,
-    HvacTopicEnglish.glycolSensor,
-    HvacTopicEnglish.lowerAHU01P05,
-    HvacTopicEnglish.lowerAHU02P05,
-    HvacTopicEnglish.lowerAHU03P05,
-    HvacTopicEnglish.lowerAHU04P05,
-    HvacTopicEnglish.whiteRoomAHU01P05,
-    HvacTopicEnglish.cleanRoomAHU01P05,
-    HvacTopicEnglish.valveP01,
-    HvacTopicEnglish.airInletFan01P01,
-    HvacTopicEnglish.airInletFan01P05,
-    HvacTopicEnglish.airInletFan08P05,
-    HvacTopicEnglish.airInletFan09P05,
-    HvacTopicEnglish.airInletFan10P05,
-    HvacTopicEnglish.airInletFan11P05,
-    HvacTopicEnglish.airInletFan12P05,
-    HvacTopicEnglish.airInletFan13P05,
-    HvacTopicEnglish.airInletFan14P05,
-    HvacTopicEnglish.airInletFan15P05,
-    HvacTopicEnglish.airInletFan16P05,
-    HvacTopicEnglish.airInletFan17P05,
-    HvacTopicEnglish.centrifugalExtractionFan01P01,
-    HvacTopicEnglish.centrifugalSupplyFan01P01,
-    HvacTopicEnglish.lowerDamperFan03P04,
-    HvacTopicEnglish.loadingBayFan04P04,
+    HvacTopicEnglish.glycolChiller03BoosterPump,
+    HvacTopicEnglish.coldGlycolChiller01,
+    HvacTopicEnglish.coldGlycolChiller02,
+    HvacTopicEnglish.comfortGlycolChiller03,
+    HvacTopicEnglish.coatingGlycolChiller04,
+    HvacTopicEnglish.comfortGlycolSwitchValvesComputerRoom,
+    HvacTopicEnglish.crac01,
+    HvacTopicEnglish.crac02,
+    HvacTopicEnglish.airCompressor01,
+    HvacTopicEnglish.airCompressor02,
+    HvacTopicEnglish.dynalene,
+    HvacTopicEnglish.fancoilUnit01ITOffice,
+    HvacTopicEnglish.fancoilUnit02BreakRoom,
+    HvacTopicEnglish.fancoilUnit03ControlRoom,
+    HvacTopicEnglish.fancoilUnit04ControlRoom,
+    HvacTopicEnglish.fancoilUnit05ControlRoom,
+    HvacTopicEnglish.fancoilUnit06ManagersOffice,
+    HvacTopicEnglish.fancoilUnit07SafetyOffice,
+    HvacTopicEnglish.fancoilUnit08ElectricalOffice,
+    HvacTopicEnglish.fancoilUnit09MeetingRoom,
+    HvacTopicEnglish.fancoilUnit10WorkRoom,
+    HvacTopicEnglish.fancoilUnit11WorkRoom,
+    HvacTopicEnglish.fancoilUnit12CoatingOffice,
+    HvacTopicEnglish.ambientFloor1,
+    HvacTopicEnglish.glycolLineSensors,
+    HvacTopicEnglish.airHandlingUnit01Dome,
+    HvacTopicEnglish.airHandlingUnit02Dome,
+    HvacTopicEnglish.airHandlingUnit03Dome,
+    HvacTopicEnglish.airHandlingUnit04Dome,
+    HvacTopicEnglish.airHandlingUnit05WhiteRoom,
+    HvacTopicEnglish.airHandlingUnit06CleanRoom,
+    HvacTopicEnglish.airCirculationFan01ElectricalRoom,
+    HvacTopicEnglish.airCirculationFan01Lab,
+    HvacTopicEnglish.airCirculationFan08Pier,
+    HvacTopicEnglish.airCirculationFan09Pier,
+    HvacTopicEnglish.airCirculationFan10Pier,
+    HvacTopicEnglish.airCirculationFan11Pier,
+    HvacTopicEnglish.airCirculationFan12Pier,
+    HvacTopicEnglish.airCirculationFan13Pier,
+    HvacTopicEnglish.airCirculationFan14Pier,
+    HvacTopicEnglish.airCirculationFan15Pier,
+    HvacTopicEnglish.airCirculationFan16Lab,
+    HvacTopicEnglish.airCirculationFan17Lab,
+    HvacTopicEnglish.airExtractionFan01MRCR,
+    HvacTopicEnglish.airIntakeFan01MainBuilding,
+    HvacTopicEnglish.airExtractionFan03HighBay,
+    HvacTopicEnglish.airExtractionFan04Dome,
 ]
 
 
@@ -1876,8 +1871,8 @@ DEVICE_GROUPS_ENGLISH = {
         "LSST/PISO01/VEC_01",
     ],
     "FAN": [
-        "LSST/PISO04/VEX_03/DAMPER_LOWER/GENERAL",
-        "LSST/PISO04/VEX_04/ZONA_CARGA/GENERAL",
+        "LSST/PISO04/VEC_03/MONTACARGA/GENERAL",
+        "LSST/PISO04/VEC_04/DOMO/GENERAL",
     ],
 }
 
@@ -1891,44 +1886,44 @@ GLYCOL_SENSORS_LEVELS = [
 # These subsystems do not report COMANDO_ENCENDIDO but ESTADO_FUNCIONAMIENTO
 TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH = frozenset(
     (
-        "glycolSensor",
-        "fancoil01P02",
-        "fancoil02P02",
-        "fancoil03P02",
-        "fancoil04P02",
-        "fancoil05P02",
-        "fancoil06P02",
-        "fancoil07P02",
-        "fancoil08P02",
-        "fancoil09P02",
-        "fancoil10P02",
-        "fancoil11P02",
-        "fancoil12P02",
-        "lowerAHU01P05",
-        "lowerAHU02P05",
-        "lowerAHU03P05",
-        "lowerAHU04P05",
+        "glycolLineSensors",
+        "fancoilUnit01ITOffice",
+        "fancoilUnit02BreakRoom",
+        "fancoilUnit03ControlRoom",
+        "fancoilUnit04ControlRoom",
+        "fancoilUnit05ControlRoom",
+        "fancoilUnit06ManagersOffice",
+        "fancoilUnit07SafetyOffice",
+        "fancoilUnit08ElectricalOffice",
+        "fancoilUnit09MeetingRoom",
+        "fancoilUnit10WorkRoom",
+        "fancoilUnit11WorkRoom",
+        "fancoilUnit12CoatingOffice",
+        "airHandlingUnit01Dome",
+        "airHandlingUnit02Dome",
+        "airHandlingUnit03Dome",
+        "airHandlingUnit04Dome",
     )
 )
 
 # These subsystems do not report COMANDO_ENCENDIDO not ESTADO_FUNCIONAMIENTO
 TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO = frozenset(
     (
-        "fancoil01P02",
-        "fancoil02P02",
-        "fancoil03P02",
-        "fancoil04P02",
-        "fancoil05P02",
-        "fancoil06P02",
-        "fancoil07P02",
-        "fancoil08P02",
-        "fancoil09P02",
-        "fancoil10P02",
-        "fancoil11P02",
-        "fancoil12P02",
-        "chillerValve",
-        "compair01",
-        "compair02",
+        "fancoilUnit01ITOffice",
+        "fancoilUnit02BreakRoom",
+        "fancoilUnit03ControlRoom",
+        "fancoilUnit04ControlRoom",
+        "fancoilUnit05ControlRoom",
+        "fancoilUnit06ManagersOffice",
+        "fancoilUnit07SafetyOffice",
+        "fancoilUnit08ElectricalOffice",
+        "fancoilUnit09MeetingRoom",
+        "fancoilUnit10WorkRoom",
+        "fancoilUnit11WorkRoom",
+        "fancoilUnit12CoatingOffice",
+        "comfortGlycolSwitchValvesComputerRoom",
+        "airCompressor01",
+        "airCompressor02",
     )
 )
 

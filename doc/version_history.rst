@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.21.0 (2026-03-27)
+====================
+
+New Features
+------------
+
+- Renamed HVAC devices. (`OSW-1895 <https://rubinobs.atlassian.net//browse/OSW-1895>`_)
+
+
 v0.20.0 (2026-01-20)
 ====================
 

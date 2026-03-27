@@ -45,7 +45,7 @@ GENERAL_REGEX = re.compile(r"LSST/PISO0\d/[A-Z_0-9]+")
 GLYCOL_SENSOR_REGEX = re.compile(r"LSST/PISO0\d/SENSOR[_/]GLYCOL")
 LOWER_MANEJADORS_REGEX = re.compile(r"LSST/PISO05/MANEJADORA/LOWER_\d\d")
 ROTORK_REGEX = re.compile(r"LSST/PISO01/ROTORK/0\d")
-VEX_MANEJADORS_REGEX = re.compile(r"LSST/PISO04/VEX_0\d/[A-Z_]+/GENERAL")
+VEC_VENTILADORES_REGEX = re.compile(r"LSST/PISO04/VEC_0\d/[A-Z_]+/GENERAL")
 
 # Find the data directory relative to the location of this file.
 DATA_DIR = pathlib.Path(__file__).resolve().parents[0] / "data"
@@ -204,7 +204,7 @@ class MqttInfoReader:
         m = GENERAL_MANEJADORS_REGEX.match(mqtt_topic)
         if m:
             return m.group(), None
-        m = VEX_MANEJADORS_REGEX.match(mqtt_topic)
+        m = VEC_VENTILADORES_REGEX.match(mqtt_topic)
         if m:
             return m.group(), None
         m = GLYCOL_SENSOR_REGEX.match(mqtt_topic)
@@ -219,7 +219,7 @@ class MqttInfoReader:
             device = m.group().replace("/0", "_0")
             return device, m.group()
         if mqtt_topic.startswith("LSST/PISO02/APERTURA"):
-            return HvacTopicEnglish.chillerValve.value, "LSST/PISO02/APERTURA"
+            return HvacTopicEnglish.comfortGlycolSwitchValvesComputerRoom.value, "LSST/PISO02/APERTURA"
 
         # Handle the default case.
         m = GENERAL_REGEX.match(mqtt_topic)

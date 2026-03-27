@@ -22,7 +22,6 @@
 import enum
 import math
 import random
-import re
 import typing
 import unittest
 
@@ -45,7 +44,9 @@ from lsst.ts.xml.enums.HVAC import DeviceId
 STD_TIMEOUT = 2  # standard command timeout (sec)
 
 # These topics don't report whether they are switched on or not.
-TOPICS_NOT_REPORT_SWITCHED_ON = frozenset(("generalP01", "dynaleneP05"))
+TOPICS_NOT_REPORT_SWITCHED_ON = frozenset(
+    (hvac.HvacTopicEnglish.ambientFloor1.name, hvac.HvacTopicEnglish.dynalene.name)
+)
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
@@ -121,8 +122,6 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         all_telemetry = await self._retrieve_all_telemetry()
 
         comando_encendido = hvac.TelemetryItemEnglish.switchedOn.name
-        valve_name = "valveP01"
-        valve_state = "valve12State"
         working_state = hvac.TelemetryItemEnglish.workingState.name
 
         for name, telemetry in all_telemetry.items():
@@ -135,10 +134,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             else:
                 # The other systems should be disabled.
                 status_to_check = False
-            if name == valve_name:
-                attr = getattr(telemetry, valve_state)
-                self.assertEqual(attr, status_to_check)
-            elif name == "glycolSensor":
+            if name == hvac.HvacTopicEnglish.glycolLineSensors.name:
                 # No status to check.
                 pass
             elif name in TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO:
@@ -185,8 +181,6 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         all_telemetry = await self._retrieve_all_telemetry()
 
         comando_encendido = hvac.TelemetryItemEnglish.switchedOn.name
-        valve_name = "valveP01"
-        attr_name = "valve12State"
         topic_enum: enum.EnumType = HvacTopicEnglish
         working_state = hvac.TelemetryItemEnglish.workingState.name
 
@@ -200,10 +194,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             else:
                 # The other systems should be disabled.
                 status_to_check = False
-            if name == valve_name:
-                attr = getattr(telemetry, attr_name)
-                self.assertEqual(attr, status_to_check)
-            elif name == "glycolSensor":
+            if name == hvac.HvacTopicEnglish.glycolLineSensors.name:
                 # No status to check.
                 pass
             elif name in TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO:
@@ -283,13 +274,13 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
         ci = ComponentInfo(name="HVAC", topic_subname="")
         config_commands = [topic for topic in ci.topics if topic.startswith("cmd_config")]
         device_ids_to_use = {
-            "cmd_configAhu": DeviceId.cleanRoomAHU01P05,
-            "cmd_configChiller": DeviceId.chiller01P01,
-            "cmd_configCrac": DeviceId.crac01P02,
-            "cmd_configFancoil": DeviceId.fancoil01P02,
-            "cmd_configLowerAhu": DeviceId.lowerAHU01P05,
-            "cmd_configFan": DeviceId.lowerDamperFan03P04,
-            "cmd_configChillerValve": DeviceId.chillerValve,
+            "cmd_configAhu": DeviceId.airHandlingUnit06CleanRoom,
+            "cmd_configChiller": DeviceId.coldGlycolChiller01,
+            "cmd_configCrac": DeviceId.crac01,
+            "cmd_configFancoil": DeviceId.fancoilUnit01ITOffice,
+            "cmd_configLowerAhu": DeviceId.airHandlingUnit01Dome,
+            "cmd_configFan": DeviceId.airExtractionFan03HighBay,
+            "cmd_configChillerValve": DeviceId.comfortGlycolSwitchValvesComputerRoom,
         }
         async with self.make_csc(
             initial_state=salobj.State.ENABLED,
@@ -325,8 +316,12 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                         await self.remote.cmd_enableDevice.set_start(**enable_data, timeout=STD_TIMEOUT)
 
                     # Retrieve the config command of the subsystem.
-                    command_group = re.sub(r"\d{0,2}P\d{2}$", r"", device_id.name)
-                    command_group = command_group[0].upper() + command_group[1:]
+                    command_group = [
+                        g
+                        for g in hvac.DEVICE_GROUPS_ENGLISH
+                        if hvac_topic.value in hvac.DEVICE_GROUPS_ENGLISH[g]
+                    ][0]
+                    command_group = command_group[0].upper() + command_group[1:].lower()
                     if "AHU" in command_group:
                         command_group = command_group.replace("AHU", "Ahu")
                     if "White" in command_group or "Clean" in command_group:

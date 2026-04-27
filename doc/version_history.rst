@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.21.1 (2026-04-27)
+====================
+
+Bug Fixes
+---------
+
+- Fixed handling of VEC_03 and VEC_04 telemetry. (`OSW-2228 <https://rubinobs.atlassian.net//browse/OSW-2228>`_)
+
+
 v0.21.0 (2026-03-27)
 ====================
 

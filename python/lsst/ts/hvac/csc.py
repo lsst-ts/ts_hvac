@@ -437,12 +437,16 @@ class HvacCsc(salobj.BaseCsc):
                     )
                     continue
 
-            topic, item, _ = self.xml.extract_topic_and_item(topic_and_item)
             # Handle renamed topics.
-            if "VEX_03" in topic or "VEC_03" in topic:
-                topic = "LSST/PISO04/VEC_03/MONTACARGA/GENERAL"
-            if "VEX_04" in topic or "VEC_04" in topic:
-                topic = "LSST/PISO04/VEC_04/DOMO/GENERAL"
+            if "VEX_03" in topic_and_item or "VEC_03" in topic_and_item:
+                topic_and_item = topic_and_item.replace("VEX_03", "VEC_03")
+                topic_and_item = topic_and_item.replace("DAMPER_LOWER", "MONTACARGA")
+            if "VEX_04" in topic_and_item or "VEC_04" in topic_and_item:
+                topic_and_item = topic_and_item.replace("VEX_04", "VEC_04")
+                topic_and_item = topic_and_item.replace("ZONA_CARGA", "DOMO")
+
+            topic, item, _ = self.xml.extract_topic_and_item(topic_and_item)
+
             # Handle Dynalene event items.
             for dyn_evt_topic in DynaleneEventTopic:
                 if item.startswith(dyn_evt_topic.value):

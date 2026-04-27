@@ -46,6 +46,7 @@ GLYCOL_SENSOR_REGEX = re.compile(r"LSST/PISO0\d/SENSOR[_/]GLYCOL")
 LOWER_MANEJADORS_REGEX = re.compile(r"LSST/PISO05/MANEJADORA/LOWER_\d\d")
 ROTORK_REGEX = re.compile(r"LSST/PISO01/ROTORK/0\d")
 VEC_VENTILADORES_REGEX = re.compile(r"LSST/PISO04/VEC_0\d/[A-Z_]+/GENERAL")
+VEX_VENTILADORES_REGEX = re.compile(r"LSST/PISO04/VEX_0\d/[A-Z_]+/GENERAL")
 
 # Find the data directory relative to the location of this file.
 DATA_DIR = pathlib.Path(__file__).resolve().parents[0] / "data"
@@ -205,6 +206,9 @@ class MqttInfoReader:
         if m:
             return m.group(), None
         m = VEC_VENTILADORES_REGEX.match(mqtt_topic)
+        if m:
+            return m.group(), None
+        m = VEX_VENTILADORES_REGEX.match(mqtt_topic)
         if m:
             return m.group(), None
         m = GLYCOL_SENSOR_REGEX.match(mqtt_topic)

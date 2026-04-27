@@ -1,1 +1,0 @@
-Fixed handling of VEC_03 and VEC_04 telemetry.

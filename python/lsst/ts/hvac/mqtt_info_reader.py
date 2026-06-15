@@ -173,7 +173,9 @@ class MqttInfoReader:
             if row["READ / WRITE"] == "READ " and row["TOPIC MQTT"] not in EVENT_TOPIC_ITEMS
         ]
         command_topic_rows = [row for row in mqtt_topic_rows if row["READ / WRITE"] == "WRITE"]
-        event_topic_rows = [row for row in mqtt_topic_rows if row["TOPIC MQTT"] in EVENT_TOPIC_ITEMS]
+        event_topic_rows = [row for row in mqtt_topic_rows if row["TOPIC MQTT"] in EVENT_TOPIC_ITEMS] + [
+            row for row in command_topic_rows if row["TOPIC MQTT"].endswith("_LSST")
+        ]
 
         self._validate_all_event_topics(event_topic_rows)
 

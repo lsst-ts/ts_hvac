@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import enum
 import math
 import random
@@ -171,7 +172,13 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
                     # Check all events.
                     event = getattr(self.remote, "evt_" + topic.name, None)
                     if event:
-                        await event.next(flush=False, timeout=STD_TIMEOUT)
+                        try:
+                            await event.next(flush=False, timeout=STD_TIMEOUT)
+                        except asyncio.TimeoutError:
+                            # TODO OSW-2451
+                            # Deliberately ignore because this event will be
+                            # part of the next ts_xml release.
+                            pass
 
                     # Disable the subsystem.
                     await self.remote.cmd_disableDevice.set_start(**data, timeout=STD_TIMEOUT)

@@ -375,14 +375,20 @@ class HvacCsc(salobj.BaseCsc):
             event_data: dict[str, float | bool] = {}
             if HvacTopicEnglish(topic).name in self.xml.event_topics:
                 event_name = f"evt_{HvacTopicEnglish(topic).name}"
-                event = getattr(self, event_name)
-                event_items = self.xml.event_topics[HvacTopicEnglish(topic).name]
-                for event_item in event_items:
-                    if event_item in data:
-                        event_data[event_item] = data[event_item]
+                try:
+                    event = getattr(self, event_name)
+                    event_items = self.xml.event_topics[HvacTopicEnglish(topic).name]
+                    for event_item in event_items:
+                        if event_item in data:
+                            event_data[event_item] = data[event_item]
 
-                self.log.debug(f"Sending event {event} with {event_data=}")
-                await event.set_write(**event_data)
+                    self.log.debug(f"Sending event {event} with {event_data=}")
+                    await event.set_write(**event_data)
+                except AttributeError:
+                    # TODO OSW-2451
+                    # Deliberately ignore because this event will be part of
+                    # the next ts_xml release.
+                    pass
 
     async def _send_config_event(self, topic: str) -> None:
         data = self._get_data_for_topic(topic)

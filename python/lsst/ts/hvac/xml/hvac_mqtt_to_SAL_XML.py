@@ -79,7 +79,7 @@ events_root.addprevious(
 
 xml = MqttInfoReader()
 
-unknown_telemetry_descriptions = set()
+unknown_telemetry_descriptions: typing.Set[str] = set()
 
 
 def _split_event_description(item: str) -> str:

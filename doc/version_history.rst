@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.21.2 (2026-06-18)
+====================
+
+Performance Enhancement
+-----------------------
+
+- Added event items for HVAC command replies. (`OSW-2230 <https://rubinobs.atlassian.net//browse/OSW-2230>`_)
+
+
 v0.21.1 (2026-04-27)
 ====================
 

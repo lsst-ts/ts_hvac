@@ -46,7 +46,13 @@ STD_TIMEOUT = 2  # standard command timeout (sec)
 
 # These topics don't report whether they are switched on or not.
 TOPICS_NOT_REPORT_SWITCHED_ON = frozenset(
-    (hvac.HvacTopicEnglish.ambientFloor1.name, hvac.HvacTopicEnglish.dynalene.name)
+    (
+        hvac.HvacTopicEnglish.ambientFloor1.name,
+        hvac.HvacTopicEnglish.dynalene.name,
+        hvac.HvacTopicEnglish.coldGlycolRecirculationPump.name,
+        hvac.HvacTopicEnglish.glycolChiller03SwitchValves01.name,
+        hvac.HvacTopicEnglish.glycolChiller03SwitchValves02.name,
+    )
 )
 
 

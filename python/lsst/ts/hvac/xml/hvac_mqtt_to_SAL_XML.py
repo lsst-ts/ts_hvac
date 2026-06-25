@@ -432,7 +432,7 @@ def _create_events_xml(command_items_per_group: dict[str, typing.Any]) -> None:
         efdb_topic = etree.SubElement(st, "EFDB_Topic")
         efdb_topic.text = f"HVAC_logevent_{event_topic}"
         description = etree.SubElement(st, "Description")
-        description.text = f"{event_topic[0].upper()}"
+        description.text = _split_event_description(event_topic)
         for event_item in xml.event_topics[event_topic]:
             _create_item_element(
                 st,

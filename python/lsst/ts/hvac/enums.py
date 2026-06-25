@@ -74,6 +74,8 @@ TOPICS_ALWAYS_ENABLED = frozenset(
         "LSST/PISO02/FANCOIL10",
         "LSST/PISO02/FANCOIL11",
         "LSST/PISO02/FANCOIL12",
+        "LSST/PISO01/ROTORK_01",
+        "LSST/PISO01/ROTORK_02",
         "LSST/PISO02/VALVULA",
         "LSST/PISO05/DYNALENE",
         "LSST/PISO05/DYNALENE/Safeties",
@@ -264,6 +266,9 @@ TELEMETRY_TOPICS = [
     HvacTopicEnglish.airIntakeFan01MainBuilding,
     HvacTopicEnglish.airExtractionFan03HighBay,
     HvacTopicEnglish.airExtractionFan04Dome,
+    HvacTopicEnglish.glycolChiller03SwitchValves01,
+    HvacTopicEnglish.glycolChiller03SwitchValves02,
+    HvacTopicEnglish.coldGlycolRecirculationPump,
 ]
 
 
@@ -1574,7 +1579,7 @@ class TelemetryItemDescription(Enum):
     valve06State = "Valve 06 State; a UnitState enum."
     valve12State = "Valve 12 State; a UnitState enum."
     valveOpening = "Valve Opening Percentage."
-    valveState = "Valve State; a UnitState enum."
+    valveState = "Valve State."
     waterEvaporatorReturnTemp = "Water Evaporator Return Temperature."
     waterEvaporatorSupplyTemp = "Water Evaporator Supply Temperature."
     workingCapacity = "Working Capacity."
@@ -1984,6 +1989,9 @@ TOPICS_WITHOUT_COMANDO_ENCENDIDO_ENGLISH = frozenset(
         "airHandlingUnit02Dome",
         "airHandlingUnit03Dome",
         "airHandlingUnit04Dome",
+        "glycolChiller03SwitchValves01",
+        "glycolChiller03SwitchValves02",
+        "coldGlycolRecirculationPump",
     )
 )
 
@@ -2010,8 +2018,10 @@ TOPICS_WITHOUT_ESTADO_FUNCIONAMIENTO = frozenset(
 
 # These strings cannot be decoded by JSON and need to be treated separately.
 STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON = {
+    b"APAGADO {ok} @ 10",
     b"AUTOMATICO {ok} @ 10",
     b"ENCENDIDO {ok} @ 10",
+    b"MODBUS {ok} @ 10",
 }
 
 # For these topics, the data are in bar which need to be converted to Pa.

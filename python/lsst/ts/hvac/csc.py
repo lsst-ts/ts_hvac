@@ -362,6 +362,7 @@ class HvacCsc(salobj.BaseCsc):
 
                 telemetry_method = getattr(self, "tel_" + HvacTopicEnglish(topic).name)
                 if data:
+                    self.log.debug(f"Sending telemetry {telemetry_method} with {data=}.")
                     await telemetry_method.set_write(**data)
 
         await self.evt_deviceEnabled.set_write(device_ids=enabled_mask)
@@ -434,6 +435,9 @@ class HvacCsc(salobj.BaseCsc):
             topic_and_item: str = msg.topic
             if msg.payload in STRINGS_THAT_CANNOT_BE_DECODED_BY_JSON:
                 payload = msg.payload.decode("utf-8")
+                # Special case handling.
+                if "ROTORK" in msg.topic and "MODO_COMUNICACION" in msg.topic:
+                    payload = True if "MODBUS" in payload else False
             else:
                 try:
                     payload = json.loads(msg.payload)

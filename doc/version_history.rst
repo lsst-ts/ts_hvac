@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.21.3 (2026-06-25)
+====================
+
+Performance Enhancement
+-----------------------
+
+- Fixed several minor bugs. (`OSW-2550 <https://rubinobs.atlassian.net//browse/OSW-2550>`_)
+
+
 v0.21.2 (2026-06-18)
 ====================
 

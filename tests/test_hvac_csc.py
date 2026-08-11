@@ -57,6 +57,8 @@ TOPICS_NOT_REPORT_SWITCHED_ON = frozenset(
 
 
 class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
+    _randomize_topic_subname = True
+
     def basic_make_csc(
         self,
         initial_state: salobj.State,

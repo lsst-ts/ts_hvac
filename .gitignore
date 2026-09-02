@@ -31,3 +31,4 @@ python/lsst/ts/hvac/data/output/
 .pre-commit-config.yaml
 .ruff.toml
 towncrier.toml
+.LICENSE.txt
